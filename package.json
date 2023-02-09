@@ -1,0 +1,16 @@
+{
+  "name": "gizmo",
+  "version": "0.0.1",
+  "main": "dist/gizmo.js",
+  "scripts": {
+    "build": "esbuild js/index.js --bundle --format=iife --global-name=gizmo --outfile=dist/gizmo.js",
+    "mbuild": "esbuild js/index.js --bundle --format=esm --outfile=dist/gizmo.mjs",
+    "index": "node indexer.js"
+  },
+  "dependencies": {
+    "esbuild": "^0.17.6"
+  },
+  "devDependencies": {
+    "glob": "^8.1.0"
+  }
+}
