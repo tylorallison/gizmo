@@ -11,6 +11,7 @@ window.onload = async function() {
 
     // start the game
     //Minia.start();
+    console.log(`this would start`);
 
     window.requestAnimationFrame(loop);
 
