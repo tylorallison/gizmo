@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: animator.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: animator.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { Animator };
+
+//import { EvtStream, Events } from './event.js';
+import { Fmt } from './fmt.js';
+import { EvtSystem, ExtEvtReceiver } from './event.js';
+import { Schema } from './schema.js';
+import { Sketch } from './sketch.js';
+import { GizmoData } from './gizmoData.js';
+
+
+/** ========================================================================
+ * An animator is responsible for driving animations based on state passed through event updates
+ */
+class Animator extends Sketch {
+
+    static {
+        // -- sketch state mapping
+        Schema.apply(this, 'trunkKey', { dflt: 'state', readonly: true });
+        Schema.apply(this, 'sketches', { dflt: {}, readonly: true });
+        // map of transitions
+        // { &lt;target state>: [ { from: &lt;source state>, sketch: &lt;sketch> }, ... ]}
+        Schema.apply(this, 'transitions', { dflt: {}, readonly: true });
+        // -- state tracking
+        Schema.apply(this, 'state', { dflt: 'idle', renderable: true, setter: (o,x,v) => {
+            if (o.sketches.hasOwnProperty(v)) {
+                if (o.sketch) o.sketch.disable();
+                let targetSketch = o.sketches[v];
+                let transition = false;
+                // check for transition
+                if (o.sketch &amp;&amp; o.transitions.hasOwnProperty(v)) {
+                    // find best
+                    let possibles = o.transitions[v];
+                    let match;
+                    for (const possible of possibles) {
+                        if (!possible.sketch) return;
+                        if (possible.from === o.state) {
+                            match = possible.sketch;
+                            break;
+                        } else if ( !possible.from ) {
+                            match = possible.sketch;
+                        }
+                    }
+                    if (match) {
+                        match.reset();
+                        if (!match.done) {
+                            transition = true;
+                            targetSketch = match;
+                        }
+                    }
+                }
+                o.sketch = targetSketch;
+                if (transition) {
+                    let root = GizmoData.root(o);
+                    let path = `${GizmoData.path(o.sketch)}.done`;
+                    if (EvtSystem.isEmitter(root)) {
+                        EvtSystem.listen(root, o, 'gizmo.updated', (evt) => {
+                            if (o.state === v) {
+                                o.sketch.disable();
+                                o.sketch = o.sketches[v];
+                                o.sketch.reset();
+                                o.sketch.enable();
+                            }
+                        }, { once: true, filter: (evt) => evt.update.hasOwnProperty(path) });
+                    }
+                }
+                o.sketch.reset();
+                o.sketch.enable();
+                return v;
+            }
+            return o.state;
+        } });
+        Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) });
+        Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) });
+        Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) });
+        Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )});
+        Schema.apply(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )});
+        ExtEvtReceiver.apply(this);
+    }
+
+    // DATA CHANGE HANDLERS ------------------------------------------------
+    atLink(trunk) {
+        // if linked to gizmo
+        let self = this;
+        if (EvtSystem.isEmitter(trunk)) {
+            EvtSystem.listen(trunk, this, 'gizmo.updated', (evt) => { self.state = evt.update.state }, { filter: (evt) => evt.update.hasOwnProperty(this.trunkKey) });
+        }
+        if (this.state !== trunk[this.trunkKey]) this.state = trunk[this.trunkKey];
+    }
+    atUnlink(trunk) {
+        if (EvtSystem.isEmitter(trunk)) {
+            EvtSystem.ignore(trunk, this, 'gizmo.updated');
+        }
+    }
+
+    // METHODS -------------------------------------------------------------
+    enable() {
+        if (!this.active) {
+            if (this.sketch) this.sketch.enable();
+        }
+        super.enable();
+    }
+
+    disable() {
+        // disable current sketch
+        if (this.sketch) this.sketch.disable();
+        super.disable();
+    }
+
+    subrender(ctx, x=0, y=0, width=0, height=0) {
+        if (this.sketch) this.sketch.render(ctx, x, y, width, height);
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

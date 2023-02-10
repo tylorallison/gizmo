@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: updateSystem.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: updateSystem.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { UpdateSystem };
+
+import { EvtSystem } from './event.js';
+import { Fmt } from './fmt.js';
+import { Schema } from './schema.js';
+import { System } from './system.js';
+import { Util } from './util.js';
+
+/** ========================================================================
+ * UpdateSystem listens for gizmo key/value updates, correlates/condenses those to a single update
+ * and then publishes a gizmo update event for each updated gizmo per system iteration (frame).
+ */
+class UpdateSystem extends System {
+
+    // STATIC VARIABLES ----------------------------------------------------
+    // -- override default TTL (zero means update every frame)
+    static dfltIterateTTL = 0;
+
+    // SCHEMA --------------------------------------------------------------
+    static {
+        Schema.apply(this, 'updates', { eventable: false, parser: (o,x) => new Map() });
+        Schema.apply(this, 'waiting', { eventable: false, parser: (o,x) => [] });
+        Schema.apply(this, 'renders', { eventable: false, parser: (o,x) => new Set() });
+    }
+
+    // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    cpost(spec) {
+        super.cpost(spec);
+        // -- default transitions system to idle
+        this.active = false;
+        // -- handle events
+        this.onSet = this.onSet.bind(this);
+        EvtSystem.listen(this.gctx, this, 'gizmo.set', this.onSet);
+    }
+
+    // EVENT HANDLERS ------------------------------------------------------
+    onSet(evt) {
+        if (!('actor' in evt)) return;
+        if (!('set' in evt)) return;
+        this.setUpdate(evt.actor, evt.set);
+        if (evt.render) {
+            this.renders.add(evt.actor.gid);
+        }
+    }
+
+    // METHODS -------------------------------------------------------------
+    setUpdate(g, set) {
+        if (!this.updates.has(g.gid)) this.updates.set(g.gid, {});
+        Util.update(this.updates.get(g.gid), set);
+        // update store
+        if (this.iterating) {
+            this.waiting.push(g);
+        } else {
+            this.store.set(g.gid, g);
+        }
+        // set system active state
+        this.active = true;
+    }
+
+    prepare(evt) {
+        // swap out set of prepared updates from events
+        // -- this allows events to trigger while the update system is iterating through updates
+        this.currentUpdates = this.updates;
+        this.currentRenders = this.renders;
+        this.updates = new Map();
+        this.renders = new Set();
+        // waiting list for updated gizmos that are encountered while iterating in system (e.g.: an update event causes an kv update)
+        this.waiting = [];
+    }
+
+    iterate(evt, e) {
+        let updates = this.currentUpdates.get(e.gid);
+        if (!updates) return;
+        // trigger entity updates
+        let data = { update: updates };
+        if (this.currentRenders.has(e.gid)) data.render = true;
+        EvtSystem.trigger(e, 'gizmo.updated', data);
+    }
+
+    finalize(evt) {
+        // update current store 
+        // -- clear old entries
+        this.store.clear();
+        // -- add any gizmo updated during iteration
+        for (const g of this.waiting) {
+            this.store.set(g.gid, g);
+        }
+        this.waiting.slice(0);
+        this.active = (this.updates.size !== 0);
+    }
+
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

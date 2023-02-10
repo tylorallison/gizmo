@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: event.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: event.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { ExtEvtEmitter, ExtEvtReceiver, EvtLink, EvtSystem, Evt };
+
+import { Fmt } from './fmt.js';
+import { GizmoData } from './gizmoData.js';
+import { Schema } from './schema.js';
+
+class EvtLink {
+    constructor(tag, emitter, receiver, fcn, opts={}) {
+        this.tag = tag;
+        this.emitter = emitter;
+        this.receiver = receiver;
+        this.fcn = fcn;
+        this.priority = opts.priority || 0;
+        this.once = opts.hasOwnProperty('once') ? opts.once : false;
+        this.filter = opts.filter;
+    }
+}
+
+class EvtSystem {
+
+    static isEmitter(obj) {
+        return obj.hasOwnProperty('evtEmitterLinks') &amp;&amp; obj.hasOwnProperty('evtCounts');
+    }
+    static isReceiver(obj) {
+        return obj.hasOwnProperty('evtReceiverLinks');
+    }
+
+    static addCount(emitter, tag) {
+        if (emitter.evtCounts.has(tag)) {
+            emitter.evtCounts.set(tag, emitter.evtCounts.get(tag)+1);
+        } else {
+            emitter.evtCounts.set(tag, 1);
+        }
+    }
+
+    static getCount(emitter, tag) {
+        if (emitter.evtCounts.has(tag)) {
+            return emitter.evtCounts.get(tag);
+        }
+        return 0;
+    }
+
+    static addEmitterLink(emitter, link) {
+        if (emitter.evtEmitterLinks.has(link.tag)) {
+            emitter.evtEmitterLinks.get(link.tag).push(link);
+        } else {
+            emitter.evtEmitterLinks.set(link.tag, [ link ]);
+        }
+    }
+
+    static delEmitterLink(emitter, link) {
+        let links = emitter.evtEmitterLinks.get(link.tag);
+        if (links) {
+            let idx = links.indexOf(link);
+            if (idx !== -1) {
+                links.splice(idx, 1);
+            }
+            if (!links.length) emitter.evtEmitterLinks.delete(link.tag);
+        }
+    }
+
+    static addReceiverLink(receiver, link) {
+        receiver.evtReceiverLinks.push(link);
+    }
+    static delReceiverLink(receiver, link) {
+        let idx = receiver.evtReceiverLinks.indexOf(link);
+        if (idx !== -1) {
+            receiver.evtReceiverLinks.splice(idx, 1);
+        }
+    }
+    static clearEmitterLinks(emitter) {
+        emitter.evtEmitterLinks.clear();
+        for (const linksForTag of Array.from(emitter.evtEmitterLinks.values())) {
+            for (const link of linksForTag) {
+                console.log(`clear receiver link for ${Fmt.ofmt(link)}`);
+                if (link.emitter === emitter) this.delReceiverLink(link.receiver, link);
+            }
+        }
+    }
+    static clearReceiverLinks(receiver) {
+        let links = Array.from(receiver.evtReceiverLinks);
+        receiver.evtReceiverLinks.splice(0);
+        for (const link of links) {
+            if (link.emitter) this.delEmitterLink(link.emitter, link);
+        }
+    }
+
+    static findLinksForEvt(obj, evt, links=[]) {
+        if (!obj || !evt) return;
+        if (obj.evtEmitterLinks.has(evt.tag)) {
+            links.push(...obj.evtEmitterLinks.get(evt.tag));
+        }
+        return links;
+    }
+
+    static trigger(emitter, tag, atts) {
+        // build event
+        let evt = new Evt(tag, Object.assign({ actor: emitter }, atts));
+        // update event counts
+        this.addCount(emitter, tag);
+        // get listeners for event
+        let links = [];
+        // -- emitter listeners
+        this.findLinksForEvt(emitter, evt, links);
+        // -- global listeners
+        this.findLinksForEvt(emitter.gctx, evt, links);
+        if (!links.length) return;
+        // sort listeners
+        links.sort((a,b) => a.priority-b.priority);
+        // delete any listener from emitter if marked w/ once attribute
+        for (const link of links.filter((v) => v.once &amp;&amp; (!v.filter || v.filter(evt)))) {
+            this.delEmitterLink(emitter, link);
+            this.delReceiverLink(link.receiver, link);
+        }
+        // trigger callback for each listener
+        for (const link of links) {
+            if (link.filter &amp;&amp; !link.filter(evt)) continue;
+            link.fcn(evt);
+        }
+    }
+
+    static listen(emitter, receiver, tag, fcn, opts={}) {
+        let link = new EvtLink(tag, emitter, receiver, fcn, opts);
+        this.addEmitterLink(emitter, link)
+        this.addReceiverLink(receiver, link)
+    }
+
+    static ignore(emitter, receiver, tag, fcn) {
+        let evt = new Evt(tag, Object.assign({ actor: emitter }));
+        let links = [];
+        this.findLinksForEvt(emitter, evt, links);
+        if (!links.length) return;
+        for (const link of links) {
+            if (link.receiver === receiver &amp;&amp; (!fcn || fcn === link.fcn)) {
+                this.delEmitterLink(emitter, link);
+                this.delReceiverLink(receiver, link);
+            }
+        }
+    }
+}
+
+
+/** ========================================================================
+ * represents an instance of an event that is triggered, along w/ associated event data
+ */
+class Evt {
+    // CONSTRUCTOR ---------------------------------------------------------
+    constructor(tag, atts={}) {
+        this.tag = tag;
+        Object.assign(this, atts);
+    }
+
+    // METHODS -------------------------------------------------------------
+    toString() {
+        return Fmt.ofmt(this, this.constructor.name);
+    }
+}
+
+class ExtEvtEmitter {
+
+    static apply(cls, spec={}) {
+        // data
+        Schema.apply(cls, 'evtCounts', { eventable: false, serializable: false, parser: () =>  new Map() });
+        Schema.apply(cls, 'evtEmitterLinks', { eventable: false, serializable: false, parser: () => new Map() });
+    }
+
+    static gen(spec={}) {
+        let cls = class {
+            static schema = {};
+            constructor() {
+                for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
+            }
+        }
+        this.apply(cls);
+        return new cls();
+    }
+
+}
+
+class ExtEvtReceiver {
+
+    static apply(cls, spec={}) {
+        // -- data
+        Schema.apply(cls, 'evtReceiverLinks', { eventable: false, serializable: false, parser: () => [] });
+    }
+
+    static gen(spec={}) {
+        let cls = class {
+            static schema = {};
+            constructor() {
+                for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
+            }
+        }
+        this.apply(cls);
+        return new cls();
+    }
+
+}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

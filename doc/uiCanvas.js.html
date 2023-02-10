@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: uiCanvas.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: uiCanvas.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { UiCanvas };
+
+import { EvtSystem } from './event.js';
+import { Schema } from './schema.js';
+import { UiView } from './uiView.js';
+import { XForm } from './xform.js';
+
+/** ========================================================================
+ * class representing base canvas as a UI view
+ */
+class UiCanvas extends UiView {
+    // STATIC VARIABLES ----------------------------------------------------
+    static dfltCanvasID = 'game.canvas';
+    static canvasable = true;
+
+    // STATIC PROPERTIES ---------------------------------------------------
+    static getCanvas(id=this.dfltCanvasID) {
+        let canvas = document.getElementById(id);
+        if (canvas) return canvas;
+        canvas = document.createElement('canvas');
+        canvas.id = id;
+        canvas.constructed = true;
+        document.body.appendChild(canvas);
+        return canvas;
+    }
+
+    // SCHEMA --------------------------------------------------------------
+    static {
+        Schema.apply(this, 'active', {dflt: true});
+        Schema.apply(this, 'canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
+        Schema.apply(this, 'canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
+        Schema.apply(this, 'xform', { link: true, renderable: true, parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height })});
+        Schema.apply(this, 'ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
+        Schema.apply(this, 'fitToWindow', { readonly: true, dflt: true });
+    }
+
+    // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    cpre(spec) {
+        super.cpre(spec);
+        // -- bind event handlers
+        this.onWindowResize = this.onWindowResize.bind(this);
+    }
+    cpost(spec) {
+        super.cpost(spec);
+        // -- handle fit to window
+        let targetWidth = this.xform.fixedWidth;
+        let targetHeight = this.xform.fixedHeight;
+        if (this.fitToWindow) {
+            targetWidth = window.innerWidth;
+            targetHeight = window.innerHeight;
+        }
+        // -- adjust xform/canvas to target dimensions
+        this.canvas.width = this.xform.fixedWidth = targetWidth;
+        this.canvas.height = this.xform.fixedHeight = targetHeight;
+        //console.log(`canvas xform: ${this.xform.bounds}`);
+        // -- setup event handlers
+        if (this.fitToWindow) {
+            window.addEventListener('resize', this.onWindowResize); // resize when window resizes
+        }
+    }
+
+    destroy() {
+        if (this.canvas &amp;&amp; this.canvas.constructed) this.canvas.remove();
+        window.removeEventListener('resize', this.onWindowResize); // resize when window resizes
+        super.destroy();
+    }
+
+    // METHODS -------------------------------------------------------------
+    onWindowResize() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.xform.fixedWidth = width;
+        this.xform.fixedHeight = height;
+        EvtSystem.trigger(this, 'gizmo.resized', { width: width, height: height });
+        // FIXME: remove?
+        /*
+        for (const child of Hierarchy.children(this)) {
+            EvtSystem.trigger(child, 'gizmo.resized', { root: this });
+        }
+        */
+    }  
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

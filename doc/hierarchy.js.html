@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: hierarchy.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: hierarchy.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { Hierarchy, ExtHierarchy }
+
+import { EvtSystem } from './event.js';
+import { Schema } from './schema.js';
+
+class Hierarchy {
+
+    // STATIC METHODS ------------------------------------------------------
+    static adopt(parent, child) {
+        // ensure child is orphaned
+        if (child.parent) {
+            this.orphan(child);
+        }
+        // avoid cycles in parent
+        if (this.findInRoot(parent, (v) => v === child)) {
+            console.error(`hierarchy loop detected ${child} already in root for parent: ${parent}`);
+            return;
+        }
+        // avoid cycles in children
+        if ('children' in parent) {
+            if (this.find(child, (v) => v === parent)) {
+                console.error(`hierarchy loop detected ${child} already in children of parent: ${parent}`);
+                return;
+            }
+        }
+        // assign parent/child links
+        child.parent = parent;
+        if ('children' in parent) parent.children.push(child);
+        // event handling
+        EvtSystem.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
+        let root = this.root(parent);
+        EvtSystem.trigger(child, 'gizmo.rooted', {root: root});
+        for (const dec of this.children(child)) {
+            EvtSystem.trigger(dec, 'gizmo.rooted', {root: root});
+        }
+    }
+
+    static orphan(child) {
+        if (child.parent) {
+            let parent = child.parent;
+            if ('children' in parent) {
+                let idx = parent.children.indexOf(child);
+                if (idx != -1) {
+                    parent.children.splice(idx, 1);
+                }
+            }
+            child.parent = null;
+            // trigger events
+            EvtSystem.trigger(child, 'gizmo.orphaned', {parent: parent, child: child});
+        }
+    }
+
+    /**
+     * find root for given object
+     * @param {*} obj 
+     */
+    static root(obj) {
+        while(obj &amp;&amp; obj.parent) obj = obj.parent;
+        return obj;
+    }
+
+    /**
+     * find object in entire hierarchy
+     * @param {*} obj 
+     * @param {*} filter 
+     */
+    static findInRoot(obj, filter) {
+        return this.find(this.root(obj), filter);
+    }
+
+    /**
+     * find object in hierarchy (evaluating object and its children)
+     * @param {*} obj 
+     * @param {*} filter 
+     */
+    static find(obj, filter) {
+        if (filter(obj)) return obj;
+        for (const child of (obj.children || [])) {
+            if (filter(child)) return child;
+            let match = this.find(child, filter);
+            if (match) return match;
+        }
+        return null;
+    }
+
+    /**
+     * find object in parent hierarchy (evaluating parent hierarchy)
+     * @param {*} obj 
+     * @param {*} filter 
+     */
+    static findInParent(obj, filter) {
+        for (let parent = obj.parent; parent; parent = parent.parent) {
+            if (filter(parent)) return parent;
+        }
+        return null;
+    }
+
+    static *children(obj, filter) {
+        for (const child of (Array.from(obj.children || []))) {
+            if (child.children) {
+                yield *this.children(child, filter);
+            }
+            if (!filter || filter(child)) yield child;
+        }
+    }
+
+}
+
+class ExtHierarchy {
+    static apply(cls, spec={}) {
+        Schema.apply(cls, 'parent', { serializable: false, parser: () => null });
+        Schema.apply(cls, 'children', { gizmo: true, parser: (o,x) => { 
+            let v = x.children || [];
+            for (const el of v) Hierarchy.adopt(o, el);
+            return v;
+        }, readonly: true });
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

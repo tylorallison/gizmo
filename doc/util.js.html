@@ -1,4 +1,32 @@
-export { Util };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: util.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: util.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { Util };
 
 // =========================================================================
 class Util {
@@ -7,7 +35,7 @@ class Util {
         //console.log(`target: ${Fmt.ofmt(target)} exts: ${Fmt.ofmt(ext)}`)
         for (const [k,v] of Object.entries(ext)) {
             // -- handle simple objects
-            if (v && v.constructor && v.constructor.name === 'Object') {
+            if (v &amp;&amp; v.constructor &amp;&amp; v.constructor.name === 'Object') {
             // -- handle simple values ... overwrite or assign target property
                 target[k] = this._update((k in target) ? target[k] : {}, v);
             } else {
@@ -25,9 +53,9 @@ class Util {
      * @returns target
      */
     static update(target, ...exts) {
-        if (target && typeof target === 'object') {
+        if (target &amp;&amp; typeof target === 'object') {
             for (const ext of exts) {
-                if (ext && typeof ext === 'object') {
+                if (ext &amp;&amp; typeof ext === 'object') {
                     this._update(target, ext);
                 }
             }
@@ -39,11 +67,11 @@ class Util {
         if (cache.has(obj)) return;
         if (Array.isArray(obj)) {
             cache.add(obj);
-            for (let i=0; i<obj.length; i++) {
+            for (let i=0; i&lt;obj.length; i++) {
                 yield [i,obj[i],obj];
                 yield *this.kvWalk(obj[i], cache);
             }
-        } else if (typeof obj === 'object' && obj !== null) {
+        } else if (typeof obj === 'object' &amp;&amp; obj !== null) {
             cache.add(obj);
             for (const [k,v] of Object.entries(obj)) {
                 yield [k,v,obj];
@@ -81,7 +109,7 @@ class Util {
         var binary = '';
         var bytes = new Uint8Array(buffer);
         var len = bytes.byteLength;
-        for (var i=0; i<len; i++) {
+        for (var i=0; i&lt;len; i++) {
             binary += String.fromCharCode( bytes[i] );
         }
         return btoa( binary );
@@ -153,7 +181,7 @@ class xUtil {
     }
 
     static objKeyValue(obj, key, dflt) {
-        return (obj && obj.hasOwnProperty(key)) ? obj[key] : dflt;
+        return (obj &amp;&amp; obj.hasOwnProperty(key)) ? obj[key] : dflt;
     }
 
     static bind(obj, ...names) {
@@ -163,7 +191,7 @@ class xUtil {
     }
 
     static feq(v1, v2) {
-        return Math.abs(v1 - v2) < .00001;
+        return Math.abs(v1 - v2) &lt; .00001;
     }
 
     static iterable(obj) {
@@ -188,7 +216,7 @@ class xUtil {
         if (a === b) return true;
         if (a == null || b == null) return false;
         if (a.length !== b.length) return false;
-        for (let i=0; i<a.length; i++) {
+        for (let i=0; i&lt;a.length; i++) {
             if (a[i] !== b[i]) return false;
         }
         return true;
@@ -238,7 +266,7 @@ class xUtil {
     }
 
 
-    static findBest(items, evalFcn=(v)=>v, cmpFcn=(v1,v2) => v1<v2, filterFcn=(v)=>true, itemFilterFcn=(v)=>true) {
+    static findBest(items, evalFcn=(v)=>v, cmpFcn=(v1,v2) => v1&lt;v2, filterFcn=(v)=>true, itemFilterFcn=(v)=>true) {
         let bestItem;
         let bestValue;
         for (const item of items) {
@@ -262,19 +290,19 @@ class xUtil {
     // Refer to: http://rosettacode.org/wiki/Bitmap/Bresenham's_line_algorithm#JavaScript
     static *pixelsInSegment(x0, y0, x1, y1) {
         let dx = Math.abs(x1 - x0);
-        let sx = x0 < x1 ? 1 : -1;
+        let sx = x0 &lt; x1 ? 1 : -1;
         let dy = Math.abs(y1 - y0);
-        let sy = y0 < y1 ? 1 : -1; 
+        let sy = y0 &lt; y1 ? 1 : -1; 
         let err = (dx>dy ? dx : -dy)/2;        
         while (true) {
             yield [x0,y0];
-            if (x0 === x1 && y0 === y1) break;
+            if (x0 === x1 &amp;&amp; y0 === y1) break;
             var e2 = err;
             if (e2 > -dx) { 
                 err -= dy; 
                 x0 += sx; 
             }
-            if (e2 < dy) { 
+            if (e2 &lt; dy) { 
                 err += dx; 
                 y0 += sy; 
             }
@@ -298,7 +326,7 @@ class xUtil {
         let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
         let t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
         // collision detected
-        if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+        if (s >= 0 &amp;&amp; s &lt;= 1 &amp;&amp; t >= 0 &amp;&amp; t &lt;= 1) {
             return {x: p0_x + (t * s1_x), y: p0_y + (t * s1_y)};
         }
         // no collision
@@ -306,7 +334,7 @@ class xUtil {
     }
 
     static *pixelsInSegmentWidth(x0, y0, x1, y1, width) {
-        if (width <= 1) {
+        if (width &lt;= 1) {
             yield *this.pixelsInSegment(x0, y0, x1, y1);
             return;
         }
@@ -330,9 +358,9 @@ class xUtil {
         let minj = Math.floor(Math.min(r0y, r1y, r2y, r3y));
         let maxj = Math.round(Math.max(r0y, r1y, r2y, r3y));
         // sweep rectangle
-        if (Math.abs(angle) < Math.PI*.25 || Math.abs(angle) > Math.PI*.75) {
+        if (Math.abs(angle) &lt; Math.PI*.25 || Math.abs(angle) > Math.PI*.75) {
             // -- sweep full i range
-            for (let i = mini; i <= maxi; i++) {
+            for (let i = mini; i &lt;= maxi; i++) {
                 let iminj = maxj;
                 let imaxj = minj;
                 for (const [s0x, s0y, s1x, s1y] of [
@@ -346,18 +374,18 @@ class xUtil {
                 if (intersection) {
                     let j = Math.round(intersection.y);
                     if (j > imaxj) imaxj = j;
-                    if (j < iminj) iminj = j;
+                    if (j &lt; iminj) iminj = j;
                 }
                 }
                 // -- sweep j range based on detected intersections
-                for (let j = iminj; j <= imaxj; j++) {
+                for (let j = iminj; j &lt;= imaxj; j++) {
                     yield [i, j];
                 }
             }
 
         } else {
             // -- sweep full j range
-            for (let j = minj; j <= maxj; j++) {
+            for (let j = minj; j &lt;= maxj; j++) {
                 let imini = maxi;
                 let imaxi = mini;
                 for (const [s0x, s0y, s1x, s1y] of [
@@ -371,11 +399,11 @@ class xUtil {
                 if (intersection) {
                     let i = Math.round(intersection.x);
                     if (i > imaxi) imaxi = i;
-                    if (i < imini) imini = i;
+                    if (i &lt; imini) imini = i;
                 }
                 }
                 // -- sweep i range based on detected intersections
-                for (let i = imini; i <= imaxi; i++) {
+                for (let i = imini; i &lt;= imaxi; i++) {
                     yield [i, j];
                 }
             }
@@ -384,4 +412,26 @@ class xUtil {
     }
 
 
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

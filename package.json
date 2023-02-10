@@ -1,16 +1,21 @@
 {
   "name": "gizmo",
   "version": "0.0.1",
+  "source": "js/index.js",
   "main": "dist/gizmo.js",
+  "module": "dist/gizmo.mjs",
   "scripts": {
-    "build": "esbuild js/index.js --bundle --format=iife --global-name=gizmo --outfile=dist/gizmo.js",
-    "mbuild": "esbuild js/index.js --bundle --format=esm --outfile=dist/gizmo.mjs",
+    "rbuild": "rollup js/index.js --format iife --name gizmo -o dist/gizmo.js",
+    "rmbuild": "rollup js/index.js --format es --name gizmo -o dist/gizmo.mjs",
+    "pbuild": "parcel build",
+    "xbuild": "esbuild js/index.js --bundle --format=iife --global-name=gizmo --outfile=dist/gizmo.js",
+    "xmbuild": "esbuild js/index.js --bundle --format=esm --outfile=dist/gizmo.mjs",
+    "doc": "jsdoc js/ -r -d doc -c jsdoc.conf",
     "index": "node indexer.js"
   },
-  "dependencies": {
-    "esbuild": "^0.17.6"
-  },
   "devDependencies": {
-    "glob": "^8.1.0"
+    "glob": "^8.1.0",
+    "jsdoc": "^4.0.0",
+    "rollup": "^3.14.0"
   }
 }

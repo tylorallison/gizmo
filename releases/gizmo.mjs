@@ -620,7 +620,8 @@ var GizmoDataArray = class {
 };
 
 // js/sketch.js
-var _Sketch = class extends GizmoData {
+var _Sketch;
+_Sketch = class extends GizmoData {
   // STATIC PROPERTIES ---------------------------------------------------
   static get zero() {
     return new _Sketch();

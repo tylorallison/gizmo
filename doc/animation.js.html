@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: animation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: animation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>export { Animation };
+
+import { Sketch } from './sketch.js';
+import { Timer } from './timer.js';
+import { Random } from './random.js';
+import { Schema } from './schema.js';
+
+/** ========================================================================
+ * An animation is a sketch used to render a series of animation cels (sketches).
+ */
+class Animation extends Sketch {
+    // SCHEMA --------------------------------------------------------------
+    static {
+        Schema.apply(this, 'loop', { dflt: true });
+        Schema.apply(this, 'timer', { link: true, eventable: false });
+        Schema.apply(this, 'sketchIdx', { eventable: false, dflt: 0 });
+        Schema.apply(this, 'sketches', { dflt: [], readonly: true });
+        Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches &amp;&amp; o.sketches.length) ? o.sketches[o.sketchIdx] : null)) });
+        Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) });
+        Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) });
+        Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) });
+    }
+
+    // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    constructor(spec) {
+        let sketches = spec.sketches || [];
+        if (spec.jitter) spec.sketchIdx = Random.rangeInt(0, sketches.length-1);
+        super(spec);
+        this.onTimer = this.onTimer.bind(this);
+    }
+
+    // EVENT HANDLERS ------------------------------------------------------
+    onTimer(evt) {
+        console.log(`animation timer`);
+        this.timer = null;
+        // advance frame accounting for timer overflow
+        let overflow = evt.overflow || 0;
+        do {
+            let ok = this.advance();
+            // if frame does not advance, last frame has been hit and we are not looping... signal we are done and exit
+            if (!ok) {
+                if (!this.done) this.done = true;
+                break;
+            }
+            // otherwise, continue to advance cels while cel ttl is &lt; overflow
+            if (this.sketch.ttl >= overflow) {
+                this.timer = new Timer({gctx: this.constructor.root(this).gctx, ttl: this.sketch.ttl-overflow, cb: this.onTimer});
+                break;
+            } else {
+                overflow -= this.sketch.ttl;
+            }
+        } while (overflow > 0);
+    }
+
+    // METHODS -------------------------------------------------------------
+    enable() {
+        console.log(`animation enable done: ${this.done} sketches.length: ${this.sketches.length} active: ${this.active}`);
+        if (!this.active) {
+            console.log(`animation not active`);
+            if (this.sketch) this.sketch.enable();
+            // start timer
+            //console.log(`!this.done: ${!this.done}`)
+            //console.log(`length check: ${this.sketches.length > 1}`)
+            if ((!this.done) &amp;&amp; (this.sketches.length > 1 || !this.loop)) {
+                console.log(`gctx: ${this.constructor.root(this).gctx} ttl: ${this.sketch.ttl}`);
+                this.timer = new Timer({gctx: this.constructor.root(this).gctx, ttl: this.sketch.ttl, cb: this.onTimer});
+            }
+        }
+        super.enable();
+    }
+
+    disable() {
+        // disable current sketch
+        if (this.sketch) this.sketch.disable();
+        // stop timer
+        if (this.timer) {
+            this.timer.destroy();
+            this.timer = null;
+        }
+        super.disable();
+    }
+
+    reset() {
+        this.sketchIdx = 0;
+        this.done = false;
+    }
+
+    advance() {
+        if (!this.sketches &amp;&amp; !this.sketches.length) return false;
+        let idx = this.sketchIdx + 1;
+        if (idx >= this.sketches.length) {
+            if (!this.loop) return false;
+            idx = 0;
+        }
+        if (idx !== this.sketchIdx) {
+            this.sketch.disable();
+            this.sketchIdx = idx;
+            this.sketch = this.sketches[this.sketchIdx];
+            this.sketch.enable();
+        }
+        return true;
+    }
+
+    rewind() {
+        if (!this.sketches &amp;&amp; !this.sketches.length) return false;
+        let idx = this.sketchIdx - 1;
+        if (idx &lt; 0) {
+            if (!this.loop) return false;
+            idx = this.sketches.length-1;
+        }
+        if (idx !== this.sketchIdx) {
+            this.sketch.disable();
+            this.sketchIdx = idx;
+            this.sketch = this.sketches[this.sketchIdx];
+            this.sketch.enable();
+        }
+        return true;
+    }
+
+    subrender(ctx, x=0, y=0, width=0, height=0) {
+        if (this.sketch) this.sketch.render(ctx, x, y, width, height);
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Feb 09 2023 16:59:10 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
