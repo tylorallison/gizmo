@@ -7,9 +7,10 @@ import { Stats } from './stats.js';
 
 /**
  * A sketch is the base abstract data object that represents something that can be drawn to the screen... 
- * -- an image (sprite)
- * -- an animation
- * -- simple js primitives for drawing
+ * - an image (sprite)
+ * - an animation
+ * - simple js primitives (e.g.: rectangle) for drawing
+ * @extends GizmoData
  */
 class Sketch extends GizmoData {
 
@@ -24,6 +25,9 @@ class Sketch extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     static {
+        /**
+         * @property {string}   assetTag - tag associated with asset definition (if applicable)
+         */
         Schema.apply(this, 'assetTag', { readonly: true });
         Schema.apply(this, 'width', {dflt: 0, readonly: true});
         Schema.apply(this, 'height', {dflt: 0, readonly: true});
@@ -35,12 +39,6 @@ class Sketch extends GizmoData {
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
-    /**
-     * create a new sketch
-     */
-    cpost(spec) {
-        super.cpost(spec);
-    }
     destroy() {
         this.disable();
         super.destroy();

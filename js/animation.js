@@ -5,8 +5,10 @@ import { Timer } from './timer.js';
 import { Random } from './random.js';
 import { Schema } from './schema.js';
 
-/** ========================================================================
+// =========================================================================
+/** 
  * An animation is a sketch used to render a series of animation cels (sketches).
+ * @extends Sketch
  */
 class Animation extends Sketch {
     // SCHEMA --------------------------------------------------------------
