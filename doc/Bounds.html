@@ -1,23 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="utf-8">
-    <title>JSDoc: Class: Bounds</title>
-
-    <script src="scripts/prettify/prettify.js"> </script>
-    <script src="scripts/prettify/lang-css.js"> </script>
+    <title>Bounds - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
-    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-
 <body>
 
-<div id="main">
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
 
-    <h1 class="page-title">Class: Bounds</h1>
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a><ul class='methods'><li data-type='method'><a href="Animation.html#atLink">atLink</a></li><li data-type='method'><a href="Animation.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Animation.html#destroy">destroy</a></li><li data-type='method'><a href="Animation.html#render">render</a></li><li data-type='method'><a href="Animation.html#reset">reset</a></li><li data-type='method'><a href="Animation.html#toString">toString</a></li></ul></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a><ul class='methods'><li data-type='method'><a href="Bounds.html#contains">contains</a></li><li data-type='method'><a href="Bounds.html#containsXY">containsXY</a></li><li data-type='method'><a href="Bounds.html#copy">copy</a></li><li data-type='method'><a href="Bounds.html#extend">extend</a></li><li data-type='method'><a href="Bounds.html#intersects">intersects</a></li><li data-type='method'><a href="Bounds.html#overlaps">overlaps</a></li></ul></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a><ul class='methods'><li data-type='method'><a href="GameState.html#doinit">doinit</a></li><li data-type='method'><a href="GameState.html#doload">doload</a></li><li data-type='method'><a href="GameState.html#doprepare">doprepare</a></li></ul></li><li><a href="Generator.html">Generator</a></li><li><a href="Gizmo.html">Gizmo</a><ul class='methods'><li data-type='method'><a href="Gizmo.html#atLink">atLink</a></li><li data-type='method'><a href="Gizmo.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Gizmo.html#destroy">destroy</a></li><li data-type='method'><a href="Gizmo.html#toString">toString</a></li></ul></li><li><a href="GizmoData.html">GizmoData</a><ul class='methods'><li data-type='method'><a href="GizmoData.html#atLink">atLink</a></li><li data-type='method'><a href="GizmoData.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="GizmoData.html#destroy">destroy</a></li><li data-type='method'><a href="GizmoData.html#toString">toString</a></li><li data-type='method'><a href="GizmoData.html#.findInPath">findInPath</a></li><li data-type='method'><a href="GizmoData.html#.findInTrunk">findInTrunk</a></li><li data-type='method'><a href="GizmoData.html#.init">init</a></li><li data-type='method'><a href="GizmoData.html#.path">path</a></li><li data-type='method'><a href="GizmoData.html#.root">root</a></li><li data-type='method'><a href="GizmoData.html#.xspec">xspec</a></li></ul></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a><ul class='methods'><li data-type='method'><a href="Sketch.html#atLink">atLink</a></li><li data-type='method'><a href="Sketch.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Sketch.html#destroy">destroy</a></li><li data-type='method'><a href="Sketch.html#render">render</a></li><li data-type='method'><a href="Sketch.html#reset">reset</a></li><li data-type='method'><a href="Sketch.html#toString">toString</a></li></ul></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul><h3><a href="global.html">Global</a></h3>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">Bounds</h1>
+    
 
     
 
@@ -28,29 +47,73 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Bounds<span class="signature">(x, y, width, height)</span><span class="type-signature"></span></h2>
+        <h2>
+        
+            Bounds
+        
+        </h2>
         
     
 </header>
 
 <article>
-    <div class="container-overview">
     
+        <div class="container-overview">
         
+            
 
     
 
-    
     <h4 class="name" id="Bounds"><span class="type-signature"></span>new Bounds<span class="signature">(x, y, width, height)</span><span class="type-signature"></span></h4>
-    
 
     
 
 
 
-<div class="description">
-    <p>create a new bounds</p>
-</div>
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>create a new bounds</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line171">line 171</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
 
 
 
@@ -60,7 +123,11 @@
 
 
 
-    <h5>Parameters:</h5>
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -94,6 +161,7 @@
 <span class="param-type">*</span>
 
 
+
             
             </td>
 
@@ -115,6 +183,7 @@
             
                 
 <span class="param-type">*</span>
+
 
 
             
@@ -140,6 +209,7 @@
 <span class="param-type">*</span>
 
 
+
             
             </td>
 
@@ -163,6 +233,7 @@
 <span class="param-type">*</span>
 
 
+
             
             </td>
 
@@ -182,37 +253,87 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        </div>
+    
+
+    
+
+    
+
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="contains"><span class="type-signature"></span>contains<span class="signature">(pos)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
 <dl class="details">
-
     
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>determine if the given position (in world space) is within the current bounds</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line171">line 171</a>
+        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line239">line 239</a>
     </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
     
 
     
@@ -234,59 +355,7 @@
 
 
 
-
-
-
-
-
-
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="contains"><span class="type-signature"></span>contains<span class="signature">(pos)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>determine if the given position (in world space) is within the current bounds</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -320,6 +389,7 @@
 <span class="param-type">Vect</span>
 
 
+
             
             </td>
 
@@ -339,52 +409,6 @@
 
 
 
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line239">line 239</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
 
 
 
@@ -403,54 +427,17 @@
 
     
 
-    
     <h4 class="name" id="containsXY"><span class="type-signature"></span>containsXY<span class="signature">()</span><span class="type-signature"></span></h4>
-    
 
     
-
-
-
-<div class="description">
-    <p>determine if the given position (in world space) is within the current bounds</p>
-</div>
-
-
-
-
-
-
-
-
-
 
 
 
 
 <dl class="details">
-
     
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>determine if the given position (in world space) is within the current bounds</p></li></ul></dd>
     
 
     
@@ -465,7 +452,41 @@
     
 
     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 </dl>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -491,54 +512,17 @@
 
     
 
-    
     <h4 class="name" id="copy"><span class="type-signature"></span>copy<span class="signature">()</span><span class="type-signature"></span></h4>
-    
 
     
-
-
-
-<div class="description">
-    <p>make a copy of the current bounds and return</p>
-</div>
-
-
-
-
-
-
-
-
-
 
 
 
 
 <dl class="details">
-
     
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>make a copy of the current bounds and return</p></li></ul></dd>
     
 
     
@@ -553,7 +537,41 @@
     
 
     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 </dl>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -579,17 +597,56 @@
 
     
 
-    
     <h4 class="name" id="extend"><span class="type-signature"></span>extend<span class="signature">(other)</span><span class="type-signature"></span></h4>
-    
 
     
 
 
 
-<div class="description">
-    <p>Extend the current bounds to include the extend of given bounds</p>
-</div>
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Extend the current bounds to include the extend of given bounds</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line270">line 270</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
 
 
 
@@ -599,7 +656,11 @@
 
 
 
-    <h5>Parameters:</h5>
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -633,6 +694,7 @@
 <span class="param-type">*</span>
 
 
+
             
             </td>
 
@@ -652,52 +714,6 @@
 
 
 
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bounds.js.html">bounds.js</a>, <a href="bounds.js.html#line270">line 270</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
 
 
 
@@ -716,103 +732,17 @@
 
     
 
-    
     <h4 class="name" id="intersects"><span class="type-signature"></span>intersects<span class="signature">(other)</span><span class="type-signature"></span></h4>
-    
 
     
-
-
-
-<div class="description">
-    <p>determine if given bounds intersects current bounds</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>other</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Bounds.html">Bounds</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>other bounds to evaluate</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
 
 
 
 
 <dl class="details">
-
     
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>determine if given bounds intersects current bounds</p></li></ul></dd>
     
 
     
@@ -827,6 +757,30 @@
     
 
     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 </dl>
 
 
@@ -841,39 +795,7 @@
 
 
 
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="overlaps"><span class="type-signature"></span>overlaps<span class="signature">(other)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>determine if given bounds overlaps current bounds</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    <h5 class="h5-parameters">Parameters:</h5>
     
 
 <table class="params">
@@ -907,6 +829,7 @@
 <span class="param-type"><a href="Bounds.html">Bounds</a></span>
 
 
+
             
             </td>
 
@@ -926,30 +849,35 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="overlaps"><span class="type-signature"></span>overlaps<span class="signature">(other)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
 <dl class="details">
-
     
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>determine if given bounds overlaps current bounds</p></li></ul></dd>
     
 
     
@@ -964,8 +892,92 @@
     
 
     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 </dl>
 
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>other</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Bounds.html">Bounds</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>other bounds to evaluate</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -998,19 +1010,21 @@
 
 
 
+    
+    
 </div>
-
-<nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="GizmoData.html">GizmoData</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
-</nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a> using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
-<script> prettyPrint(); </script>
-<script src="scripts/linenumber.js"> </script>
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
 </body>
 </html>

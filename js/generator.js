@@ -6,6 +6,9 @@ import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
 import { Util } from './util.js';
 
+/**
+ * The Generator class creates instances of {@link GizmoData} or {@link Gizmo} based on specified GizmoSpec object specification.
+ */
 class Generator {
     // STATIC VARIABLES ----------------------------------------------------
     static _main;

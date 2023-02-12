@@ -1,23 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="utf-8">
-    <title>JSDoc: Source: main.js</title>
-
-    <script src="scripts/prettify/prettify.js"> </script>
-    <script src="scripts/prettify/lang-css.js"> </script>
+    <title>main.js - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
-    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-
 <body>
 
-<div id="main">
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
 
-    <h1 class="page-title">Source: main.js</h1>
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a><ul class='methods'><li data-type='method'><a href="Animation.html#atLink">atLink</a></li><li data-type='method'><a href="Animation.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Animation.html#destroy">destroy</a></li><li data-type='method'><a href="Animation.html#render">render</a></li><li data-type='method'><a href="Animation.html#reset">reset</a></li><li data-type='method'><a href="Animation.html#toString">toString</a></li></ul></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a><ul class='methods'><li data-type='method'><a href="Bounds.html#contains">contains</a></li><li data-type='method'><a href="Bounds.html#containsXY">containsXY</a></li><li data-type='method'><a href="Bounds.html#copy">copy</a></li><li data-type='method'><a href="Bounds.html#extend">extend</a></li><li data-type='method'><a href="Bounds.html#intersects">intersects</a></li><li data-type='method'><a href="Bounds.html#overlaps">overlaps</a></li></ul></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a><ul class='methods'><li data-type='method'><a href="GameState.html#doinit">doinit</a></li><li data-type='method'><a href="GameState.html#doload">doload</a></li><li data-type='method'><a href="GameState.html#doprepare">doprepare</a></li></ul></li><li><a href="Generator.html">Generator</a></li><li><a href="Gizmo.html">Gizmo</a><ul class='methods'><li data-type='method'><a href="Gizmo.html#atLink">atLink</a></li><li data-type='method'><a href="Gizmo.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Gizmo.html#destroy">destroy</a></li><li data-type='method'><a href="Gizmo.html#toString">toString</a></li></ul></li><li><a href="GizmoData.html">GizmoData</a><ul class='methods'><li data-type='method'><a href="GizmoData.html#atLink">atLink</a></li><li data-type='method'><a href="GizmoData.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="GizmoData.html#destroy">destroy</a></li><li data-type='method'><a href="GizmoData.html#toString">toString</a></li><li data-type='method'><a href="GizmoData.html#.findInPath">findInPath</a></li><li data-type='method'><a href="GizmoData.html#.findInTrunk">findInTrunk</a></li><li data-type='method'><a href="GizmoData.html#.init">init</a></li><li data-type='method'><a href="GizmoData.html#.path">path</a></li><li data-type='method'><a href="GizmoData.html#.root">root</a></li><li data-type='method'><a href="GizmoData.html#.xspec">xspec</a></li></ul></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a><ul class='methods'><li data-type='method'><a href="Sketch.html#atLink">atLink</a></li><li data-type='method'><a href="Sketch.html#atUnlink">atUnlink</a></li><li data-type='method'><a href="Sketch.html#destroy">destroy</a></li><li data-type='method'><a href="Sketch.html#render">render</a></li><li data-type='method'><a href="Sketch.html#reset">reset</a></li><li data-type='method'><a href="Sketch.html#toString">toString</a></li></ul></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul><h3><a href="global.html">Global</a></h3>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">main.js</h1>
+    
 
     
 
@@ -68,19 +87,21 @@ window.onload = async function() {
 
 
 
+    
+    
 </div>
-
-<nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Animation.html">Animation</a></li><li><a href="Animator.html">Animator</a></li><li><a href="Bounds.html">Bounds</a></li><li><a href="Evt.html">Evt</a></li><li><a href="FileLoader.html">FileLoader</a></li><li><a href="Game.html">Game</a></li><li><a href="GameState.html">GameState</a></li><li><a href="Gizmo.html">Gizmo</a></li><li><a href="GizmoData.html">GizmoData</a></li><li><a href="Rect.html">Rect</a></li><li><a href="Sfx.html">Sfx</a></li><li><a href="Sketch.html">Sketch</a></li><li><a href="Sprite.html">Sprite</a></li><li><a href="UiCanvas.html">UiCanvas</a></li><li><a href="UiText.html">UiText</a></li><li><a href="UiView.html">UiView</a></li><li><a href="UpdateSystem.html">UpdateSystem</a></li></ul>
-</nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.0</a> using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
-<script> prettyPrint(); </script>
-<script src="scripts/linenumber.js"> </script>
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
 </body>
 </html>

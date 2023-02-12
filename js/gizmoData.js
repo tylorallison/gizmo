@@ -7,6 +7,7 @@ import { Stats } from './stats.js';
 /**
  * A GizmoData instance is the base class for the majority of all Gizmo classes.  It defines a data schema mechanism
  * that links object properties with events and actions that can be taken when that property is accessed or set.
+ * GizmoData instances may be chained together to form dependencies and complex data structures.
  */
 class GizmoData {
     static registry = {};
@@ -21,15 +22,31 @@ class GizmoData {
         }
         return this._autogenKeys;
     }
-    
+
     /**
      * init performs static class initialization, including updating the global class registry for this class instance.
+     * @static
      */
     static init() {
         if (!(this.name in this.registry)) {
             this.registry[this.name] = this;
         }
     }
+    
+    /**
+     * GizmoSpec defines an specification argument for the GizmoData constructor that can be passed to a {@link Generator} instance.
+     * The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
+     * for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.
+     * @typedef {Object} GizmoSpec
+     * @property {boolean} $gzx=true - Indicates this is a GizmoData specification 
+     * @property {string} cls - Name of class associated with specification
+     */
+
+    /**
+     * xspec provides an GizmoSpec which can be used by a {@link Generator} class to create a GizmoData object.
+     * @param {Object} spec={} - overrides for properties to create in the GizmoSpec
+     * @returns {...GizmoSpec}
+     */
     static xspec(spec={}) {
         this.init();
         return Object.assign({
@@ -38,6 +55,11 @@ class GizmoData {
         }, spec);
     }
 
+    /**
+     * root returns the root of the given GizmoData structure (if any)
+     * @param {GizmoData} gzd - The object to find the root for
+     * @returns {GizmoData} - The root of the GizmoData chain (if any)
+     */
     static root(gzd) {
         while (gzd) {
             if (gzd.$trunk) {
@@ -49,6 +71,11 @@ class GizmoData {
         return null;
     }
 
+    /**
+     * path returns a string representing the path of the given GizmoData object relative to the root in dot notation.
+     * @param {GizmoData} gzd - The object to determine the path of.
+     * @returns {string} - dot notation path (e.g. 'root.attribute.attribute')
+     */
     static path(gzd) {
         let path = null;
         while (gzd.$trunk) {
@@ -59,6 +86,19 @@ class GizmoData {
         return path;
     }
 
+    /**
+     * This callback is displayed as part of the Requester class.
+     * @callback GizmoData~filter
+     * @param {GizmoData} gzd - GizmoData node to evaluate
+     * @returns {boolean} - boolean indicating if filter function matches for given GizmoData node
+     */
+
+    /**
+     * findinTrunk attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
+     * @param {GizmoData} gzd - The object to start the search at.
+     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
+     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
+     */
     static findInTrunk(gzd, filter) {
         for (let trunk=gzd.$trunk; trunk; trunk=trunk.$trunk) {
             if (filter(trunk)) return trunk;
@@ -66,12 +106,19 @@ class GizmoData {
         return null;
     }
 
+    /**
+     * findinPath attempts to find a GizmoData node matching the given filter in the path (node and parent nodes) of the given GizmoData object.
+     * @param {GizmoData} gzd - The object to start the search at.
+     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
+     * @returns {GizmoData} - the first node that matches the filter, otherwise null.
+     */
     static findInPath(gzd, filter) {
         for (let node=gzd; node; node=node.$trunk) {
             if (filter(node)) return node;
         }
         return null;
     }
+
     static applySchema(schema, gzd, spec) {
         // parse value from spec
         let storedValue = schema.parser(gzd, spec);
@@ -238,6 +285,9 @@ class GizmoData {
         }
     }
 
+    /**
+     * destroy is called to unlink this GizmoData instance
+     */
     destroy() {
         for (const schema of Object.values(this.constructor.schema)) {
             if (schema.link && this[schema.key]) {
@@ -277,6 +327,10 @@ class GizmoData {
         }
     }
 
+    /**
+     * toString prints a string representation of the GizmoData
+     * @returns {string}
+     */
     toString() {
         return Fmt.toString(this.constructor.name);
     }

@@ -10,6 +10,8 @@ import { Schema } from './schema.js';
 /**
  * Gizmo is the base class for all game state objects, including game model and view components.
  * - Global gizmo events are triggered on creation/destruction.
+ * - Every gizmo is associated with a {@link GizmoContext} that provides access to the global run environment and events.
+ * - Gizmos can have parent/child hierarchical relationships
  * @extends GizmoData
  */
 class Gizmo extends GizmoData {

@@ -9,6 +9,7 @@ import { Schema } from './schema.js';
 /** 
  * An animation is a sketch used to render a series of animation cels (sketches).
  * @extends Sketch
+ * @property {boolean} [loop=true] - indicates if the animation should loop
  */
 class Animation extends Sketch {
     // SCHEMA --------------------------------------------------------------
