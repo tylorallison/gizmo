@@ -30,19 +30,27 @@ describe('gizmo data r2', () => {
 describe('gizmo data', () => {
 
     it('can trigger trunk update on child update', ()=>{
-        class TGizmoDataSub extends GizmoData {
+        class TLeaf extends GizmoData {
             static { 
-                Schema.apply(this, 'data'); 
+                Schema.apply(this, 'el'); 
             };
         };
-        class TGizmoData extends GizmoData {
+        class TSub extends GizmoData {
+            static { 
+                Schema.apply(this, 'leaf', { onBranchSet: (o,k,ov,nv) => { console.log( `${o} set ${k} from ${ov} to ${nv}`); }, link: true }); 
+            };
+        };
+        class TRoot extends GizmoData {
             static { 
                 Schema.apply(this, 'sub', { onBranchSet: (o,k,ov,nv) => { console.log( `${o} set ${k} from ${ov} to ${nv}`); }, link: true }); 
             };
         };
-        let o = new TGizmoData({sub: new TGizmoDataSub({data: 'foo'})});
-        o.sub.data = 'bar';
-        //console.log(`o.sub.tick: ${o.sub.tick}`);
+        let root = new TRoot({sub: new TSub({leaf: new TLeaf({el: 'hello'})})});
+        root.sub.leaf.el = 'there';
+        //let sub = new TSub({leaf: new TLeaf({el: 'hello'})});
+        //console.log(`sub.leaf.el: ${sub.leaf.el}`);
+        //console.log(`sub.leaf: ${sub.leaf}`);
+        //sub.leaf.el = 'there;'
     });
 
     it('can be registered', ()=>{
