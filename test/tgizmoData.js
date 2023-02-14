@@ -29,6 +29,22 @@ describe('gizmo data r2', () => {
 
 describe('gizmo data', () => {
 
+    it('can trigger trunk update on child update', ()=>{
+        class TGizmoDataSub extends GizmoData {
+            static { 
+                Schema.apply(this, 'data'); 
+            };
+        };
+        class TGizmoData extends GizmoData {
+            static { 
+                Schema.apply(this, 'sub', { onBranchSet: (o,k,ov,nv) => { console.log( `${o} set ${k} from ${ov} to ${nv}`); }, link: true }); 
+            };
+        };
+        let o = new TGizmoData({sub: new TGizmoDataSub({data: 'foo'})});
+        o.sub.data = 'bar';
+        //console.log(`o.sub.tick: ${o.sub.tick}`);
+    });
+
     it('can be registered', ()=>{
         let cls = class TRegister extends GizmoData {};
         let o = new cls;

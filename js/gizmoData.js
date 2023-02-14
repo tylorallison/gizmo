@@ -171,6 +171,11 @@ class GizmoData {
                         gzd[agk] = agschema.dflt;
                     }
                     if (schema.onSet) schema.onSet(gzd, oldValue, newValue);
+                    console.log(`gzd: ${gzd} key: ${schema.key}`);
+                    let trunkSetter = gzd.constructor.findInPath(gzd, (gzn) => gzn.$schema && gzn.$schema.onBranchSet);
+                    if (trunkSetter) {
+                        trunkSetter.$schema.onBranchSet(gzd, schema.key, oldValue, newValue);
+                    }
                     // trigger update if attribute is eventable
                     if (schema.eventable && !gzd.constructor.findInPath(gzd, (gzn) => gzn.$schema && !gzn.$schema.eventable)) {
                         // find event emitter in path
