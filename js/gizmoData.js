@@ -150,13 +150,6 @@ class GizmoData {
         // this local variable is the backing store to the property that will be assigned to the given GizmoData object for this schema entry.
         // -- parse value from spec.
         let storedValue = schema.parser(gzd, spec);
-        // more local variables used as cache variables associated with the schema applied to the given GizmoData object
-        // -- pathEventable, events are triggered for this schema entry if (a) the schema.eventable is true and (b) no nodes in the path of this GizmoData object
-        //    have schema.eventable set to false
-        let pathEventable = true;
-        // -- pathUpdatable: when the value for this schema entry changes, those changes can cause atUpdates to be triggered along the path of the GizmoData object,
-        //    but only if a node in the path has a atUpdate registered within schema
-        let pathUpdatable = false;
 
         // linkable arrays create a proxy object for value
         if (schema.link === 'array') {
@@ -173,6 +166,10 @@ class GizmoData {
         // assign setter for property (if not readonly/callable)
         if (!schema.readonly && !schema.callable) {
             d.set = (newValue) => {
+                // if attribute is attached to a readonly trunk, don't allow updates
+                if (gzd.$pathReadonly) {
+                    return;
+                }
                 // schema setter (if set) is used to finalize data before being stored
                 if (schema.setter) {
                     newValue = schema.setter(gzd, spec, newValue);
@@ -209,22 +206,19 @@ class GizmoData {
                         //console.log(`reset ${gzd}[${agk}] to ${agschema.dflt} due to change in ${schema.key}`);
                         gzd[agk] = agschema.dflt;
                     }
-                    if (schema.onSet) schema.onSet(gzd, oldValue, newValue);
-                    //console.log(`gzd: ${gzd} key: ${schema.key}`);
-
-                    // FIXME: this is looking for atUpdate
-                    // set this when the object is linked
-
-                    for (const gzt of gzd.constructor.eachInPath(gzd, (gzn) => (gzn.$schema && gzn.$schema.onBranchSet))) {
-                        //console.log(`gzt: ${gzt} schema: ${gzt.$schema.onBranchSet}`);
-                        gzt.$schema.onBranchSet(gzd, schema.key, oldValue, newValue);
+                    // handle atUpdate updates
+                    // -- per attribute settings are controlled by attribute schema
+                    if (schema.atUpdate) schema.atUpdate(gzd, schema.key, oldValue, newValue);
+                    // -- path updates are controlled by GizmoData.$pathUpdatable
+                    if (gzd.$pathUpdatable) {
+                        for (const gzt of gzd.constructor.eachInPath(gzd, (gzn) => (gzn.$schema && gzn.$schema.atUpdate))) {
+                            //console.log(`gzt: ${gzt} schema: ${gzt.$schema.onBranchSet}`);
+                            gzt.$schema.atUpdate(gzd, schema.key, oldValue, newValue);
+                        }
                     }
 
-                    // FIXME: this is looking for eventable
-                    // set this when the object is linked
-
                     // trigger update if attribute is eventable
-                    if (schema.eventable && !gzd.constructor.findInPath(gzd, (gzn) => gzn.$schema && !gzn.$schema.eventable)) {
+                    if (schema.eventable && gzd.$pathEventable) {
                         // find event emitter in path
                         let root = gzd.constructor.root(gzd);
                         // emit
@@ -262,9 +256,23 @@ class GizmoData {
     constructor(spec={}, applySchema=true) {
         this.constructor.init();
 
+        // local variables used as cache variables associated with the state of this GizmoData object
         let trunk;
         let schema;
         let keyFcn = () => (schema) ? schema.key : null;
+        // -- pathEventable, events are triggered for this GizmoData if 
+        //    (a) object is not linked or linked schema for this object has schema.eventable set to true and 
+        //    (b) no nodes in the path of this GizmoData object have schema.eventable set to false
+        let pathEventable = true;
+        // -- pathUpdatable: atUpdate is called when values for attributes of this GizmoData are updated.  atUpdate can be called 
+        //    per-attribute but also if any node in the tree has an atUpdate callback.  pathUpdatable is set for this gizmoData if
+        //    (a) object is linked and linked schema for this object has schema.atUpdate set
+        //    (b) object is linked and a node in the path of this GizmoData object has schema.atUpdate set
+        let pathUpdatable = false;
+        // -- pathReadonly: set to indicate that an node in the path of the given GizmoData is readonly.  Set to be true if:
+        //    (a) object is linked and linked schema indicates this element is readonly
+        //    (b) object is linked and a node in the path of this GizmoData object has schema.readonly set
+        let pathReadonly = false;
 
         Object.defineProperty(this, '$trunk', {
             enumerable: false,
@@ -273,28 +281,41 @@ class GizmoData {
                 return trunk;
             }),
         });
-        Object.defineProperty(this, '$schema', {
-            enumerable: false,
-            get: (() => {
-                Stats.count('gzd.$schema');
-                return schema;
-            }),
-        });
-        Object.defineProperty(this, '$keyFcn', {
-            enumerable: false,
-            get: (() => {
-                Stats.count('gzd.$keyFcn');
-                return keyFcn;
+        Object.defineProperty(this, '$schema', { enumerable: false, get: (() => { return schema; }) });
+        Object.defineProperty(this, '$keyFcn', { enumerable: false, get: (() => { return keyFcn; }) });
+        Object.defineProperty(this, '$pathEventable', { enumerable: false, get: (() => { return pathEventable; }) });
+        Object.defineProperty(this, '$pathUpdatable', { enumerable: false, get: (() => { return pathUpdatable; }) });
+        Object.defineProperty(this, '$pathReadonly', { enumerable: false, get: (() => { return pathReadonly; }) });
+
+        Object.defineProperty(this, '$linkUpdate', {
+            get: () => ((seen=new WeakSet()) => {
+                if (seen.has(this)) return;
+                seen.add(this);
+                if (trunk) {
+                    pathEventable = schema.eventable && trunk.$pathEventable;
+                    pathUpdatable = schema.atUpdate || trunk.$pathUpdatable;
+                    pathReadonly = schema.readonly || trunk.$pathReadonly;
+                } else {
+                    pathEventable = true;
+                    pathUpdatable = false;
+                    pathReadonly = false;
+                }
+                for (const aschema of Object.values(this.constructor.schema)) {
+                    let att = this[aschema.key];
+                    if (att && att instanceof GizmoData) {
+                        att.$linkUpdate(seen);
+                    }
+                }
             }),
         });
 
         Object.defineProperty(this, '$link', {
             get: () => ((p, s, kf) => {
-                // FIXME: link/unlink need to reset state for pathUpdatable/pathEventable/etc
-                //console.log(`-- gzd link p:${p} s:${s}`);
                 trunk = p;
                 schema = s;
                 if (kf) keyFcn = kf;
+                // update path variables for this node and all dependent branch nodes
+                this.$linkUpdate()
 
                 this.atLink(trunk);
 
@@ -312,11 +333,11 @@ class GizmoData {
 
         Object.defineProperty(this, '$unlink', {
             get: () => (() => {
-                // FIXME: link/unlink need to reset state for pathUpdatable/pathEventable/etc
-                //console.log(`-- gzd unlink`);
                 let oldTrunk = trunk;
                 trunk = null;
                 schema = null;
+                // update path variables for this node and all dependent branch nodes
+                this.$linkUpdate()
 
                 this.atUnlink(oldTrunk);
 

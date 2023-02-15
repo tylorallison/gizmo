@@ -35,8 +35,7 @@ class Schema {
         this.renderable = spec.hasOwnProperty('renderable') ? spec.renderable : false;
         this.eventable = (this.readonly) ? false : spec.hasOwnProperty('eventable') ? spec.eventable : true;
         this.gizmo = spec.hasOwnProperty('gizmo') ? spec.gizmo : false;
-        this.onSet = spec.onSet;
-        this.onBranchSet = spec.onBranchSet;
+        this.atUpdate = spec.atUpdate;
         this.serializable = spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
         this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => target[this.serializeKey] = JSON.parse(JSON.stringify(value)));
