@@ -41,6 +41,12 @@ class Vect extends GizmoData {
     }
 
     // STATIC METHODS ------------------------------------------------------
+    static hasVect(obj) {
+        return obj && 
+               obj.x !== undefined &&
+               obj.y !== undefined;
+    }
+
     static add(v1, v2) {
         let r = v1.copy();
         return r.add(v2);

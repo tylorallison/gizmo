@@ -11,6 +11,9 @@ import { UiButton } from '../js/uiButton.js';
 import { Sfx } from '../js/sfx.js';
 import { SfxRef } from '../js/refs.js';
 import { UiInput, UiInputText } from '../js/uiInput.js';
+import { UiGrid } from '../js/uiGrid.js';
+import { UiView } from '../js/uiView.js';
+import { Bounds } from '../js/bounds.js';
 
 class UITest extends Game {
     static assetSpecs = [
@@ -103,6 +106,24 @@ class UITest extends Game {
             })
         });
         Hierarchy.adopt(cvs, input)
+
+        let grid = new UiGrid({
+            dbg: { xform: true },
+            createFilter: (gzo) => gzo.tag === 'grid',
+            rows: 16,
+            cols: 16,
+            bounds: new Bounds(0, 0, 256, 256),
+            xform: new XForm({ 
+                grip: .5, 
+                x: 0, 
+                y: 150, 
+                fixedWidth: this.size, 
+                fixedHeight: this.size,
+            }),
+        });
+        Hierarchy.adopt(cvs, grid)
+
+        let view = new UiView({tag: 'grid', xform: new XForm({ x: 16, y: 16, fixedWidth: 16, fixedHeight: 16, origx: 0, origy: 0})});
 
         //new Timer({ ttl: 5000, cb: () => input.text = 'regular programming'});
 

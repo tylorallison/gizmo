@@ -2,6 +2,7 @@ export { Array2D };
 
 import { Direction } from './direction.js';
 import { GizmoData } from './gizmoData.js';
+import { Schema } from './schema.js';
 
 class Array2D extends GizmoData {
     static dfltCols = 16;

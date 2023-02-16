@@ -30,7 +30,7 @@ class UiInputText extends UiView {
         Schema.apply(this, 'cursorIdx', { serializable: false, renderable: true, parser: (o,x) => o.token.text.length });
         Schema.apply(this, 'cursorOn', { serializable: false, dflt: false, renderable: true });
         Schema.apply(this, 'timer', { link: true, eventable: false, serializable: false });
-        Schema.apply(this, 'selected', { serializable: false, dflt: false, renderable: true, onSet: (o,k,v) => o.updateSelected(v)});
+        Schema.apply(this, 'selected', { serializable: false, dflt: false, renderable: true, atUpdate: (o,k,ov,nv) => o.updateSelected(nv)});
     }
 
     updateSelected(value) {
@@ -78,7 +78,7 @@ class UiInput extends UiPanel {
     static {
         Schema.apply(this, 'sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch, link: true, renderable: true });
         Schema.apply(this, 'highlight', { parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight, link: true, renderable: true });
-        Schema.apply(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', renderable: true, onSet: (o,k,v) => o.updateText(v) }),
+        Schema.apply(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', renderable: true, atUpdate: (o,k,ov,nv) => o.updateText(nv) }),
         Schema.apply(this, 'emptyText', { renderable: true, dflt: 'enter value' }),
 
         Schema.apply(this, 'textFmt', { eventable: false, renderable: false, parser: (o,x) => (x.textFmt || this.dfltTextFmt)});

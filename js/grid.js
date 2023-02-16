@@ -17,26 +17,24 @@ class Grid extends Array2D {
 
     static {
         Schema.apply(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
-        Schema.apply(this, 'bounds', { parser: (o,x) => x.bounds || Bounds.zero });
+        Schema.apply(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
+        Schema.apply(this, 'dbg', { dflt: false });
+        Schema.apply(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
+        Schema.apply(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
     }
 
     constructor(spec={}) {
         super(spec);
-        this.locator = spec.locator || ((v) => v);
-        this.bounds = spec.bounds || Bounds.zero;
+        //this.locator = spec.locator || ((v) => v);
+        //this.bounds = spec.bounds || Bounds.zero;
         this.gridSort = spec.gridSort;
-        this.dbg = spec.dbg;
-        this.rowSize = this.bounds.height/this.rows;
-        this.colSize = this.bounds.width/this.cols;
+        //this.dbg = spec.dbg;
+        //this.rowSize = this.bounds.height/this.rows;
+        //this.colSize = this.bounds.width/this.cols;
         this.rowHalfSize = this.rowSize * .5;
         this.colHalfSize = this.colSize * .5;
         this.gidxs = new Map();
     }
-
-    get minx() { return this.bounds.minx };
-    get maxx() { return this.bounds.maxx };
-    get miny() { return this.bounds.miny };
-    get maxy() { return this.bounds.maxy };
 
     // STATIC METHODS ------------------------------------------------------
     static ifromx(x, colSize, minx=0, cols=undefined) {
