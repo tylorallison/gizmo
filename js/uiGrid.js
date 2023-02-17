@@ -8,7 +8,8 @@ import { Fmt } from "./fmt.js";
 //import { Fmt } from "./fmt.js";
 //import { Grid } from "./grid.js";
 import { Schema } from "./schema.js";
-//import { Stats } from "./stats.js";
+import { Timer } from "./timer.js";
+import { Stats } from "./stats.js";
 import { UiView } from "./uiView.js";
 import { Vect } from "./vect.js";
 //import { Vect } from "./vect.js";
@@ -40,12 +41,13 @@ class UiGrid extends UiView {
             if (x.chunks) return x.chunks;
             return new Array2D({rows: x.rows || 8, cols: x.cols || 8});
         }});
-        Schema.apply(this, 'gidUpdates', { readonly: true, parser: (o,x) => new Set()});
+        Schema.apply(this, 'gzoIdxMap', { parser: (o,x) => new Map() });
+        Schema.apply(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
         Schema.apply(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         Schema.apply(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
         Schema.apply(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         Schema.apply(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
-        Schema.apply(this, 'gridSort', { readonly: true, parser: (o,x) => x.gridSort || ((a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z) });
+        Schema.apply(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z) });
 
         // FIXME: eval
         Schema.apply(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
@@ -59,15 +61,17 @@ class UiGrid extends UiView {
         /*
         this.onAdopted = this.onAdopted.bind(this);
         this.onOrphaned = this.onOrphaned.bind(this);
-        this.onChildUpdate = this.onChildUpdate.bind(this);
         this.evt.listen(this.constructor.evtAdopted, this.onAdopted);
         this.evt.listen(this.constructor.evtOrphaned, this.onOrphaned);
         this.evt.listen(this.constructor.evtRooted, this.onResized);
         */
 
+        this.onChildUpdate = this.onChildUpdate.bind(this);
+        this.onChildDestroyed = this.onChildUpdate.bind(this);
+        this.onViewCreated = this.onViewCreated.bind(this);
+
         // handle view creation event handling
         if (this.createFilter) {
-            this.onViewCreated = this.onViewCreated.bind(this);
             EvtSystem.listen(this.gctx, this, 'gizmo.created', this.onViewCreated, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
         }
 
@@ -84,7 +88,7 @@ class UiGrid extends UiView {
             gridSort: (a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z,
         });
         */
-        //this.gidupdates = new Set();
+        //this.chunkUpdates = new Set();
         // offscreen canvases for rendering
         //this.sliceCanvas = document.createElement('canvas');
         //this.sliceCtx = this.sliceCanvas.getContext('2d');
@@ -103,8 +107,9 @@ class UiGrid extends UiView {
     // EVENT HANDLERS ------------------------------------------------------
     onViewCreated(evt) {
         console.log(`${this} onViewCreated: ${Fmt.ofmt(evt)}`);
-        let gidxs = this.getgidx(evt.actor);
-        console.log(`gidxs: ${gidxs}`);
+        //let gidxs = this.getGridIdxs(evt.actor);
+        //console.log(`gidxs: ${gidxs}`);
+        new Timer({ttl: 0, cb: () => this.add(evt.actor)});
     }
 
     /*
@@ -119,7 +124,7 @@ class UiGrid extends UiView {
         this.grid.add(child);
         let gidx = this.grid.idxof(child);
         //if (child.idx === 6757) console.log(`====> ${child} has idxs: ${gidx}`);
-        for (const idx of gidx) this.gidupdates.add(idx);
+        for (const idx of gidx) this.chunkUpdates.add(idx);
     }
     */
 
@@ -132,30 +137,35 @@ class UiGrid extends UiView {
         child.evt.ignore(child.constructor.evtUpdated, this.onChildUpdate)
         // -- remove from grid and note grid index updates
         let gidx = this.grid.idxof(child);
-        for (const idx of gidx) this.gidupdates.add(idx);
-        //console.log(`gid updates ${Array.from(this.gidupdates)}`);
+        for (const idx of gidx) this.chunkUpdates.add(idx);
+        //console.log(`gid updates ${Array.from(this.chunkUpdates)}`);
         this.grid.remove(child);
         this.evt.trigger(this.constructor.evtUpdated, {actor: this});
     }
     */
 
-    /*
     onChildUpdate(evt) {
         Stats.count("UiGrid.onChildUpdate");
+        console.log(`${this} onChildUpdate ${Fmt.ofmt(evt)}`);
+        /*
         let view = evt.actor;
         if (!this.grid.contains(view)) return;
         //console.error(`-- onChildUpdate: ${Fmt.ofmt(evt)}`);
         // -- keep track of grid indices that need to be rerendered (e.g.: all grid indices associated with updated view before and after rechecking grid)
         let gidx = this.grid.idxof(view);
-        for (const idx of gidx) this.gidupdates.add(idx);
+        for (const idx of gidx) this.chunkUpdates.add(idx);
         // -- recheck grid to update grid position
         this.grid.recheck(view);
         gidx = this.grid.idxof(view);
         //if (view.idx === 6757) console.log(`====> ${view} has idxs: ${gidx}`);
-        for (const idx of gidx) this.gidupdates.add(idx);
+        for (const idx of gidx) this.chunkUpdates.add(idx);
         this.evt.trigger(this.constructor.evtUpdated, {actor: this});
+        */
     }
-    */
+
+    onChildDestroyed(evt) {
+        console.log(`${this} onChildDestroyed ${Fmt.ofmt(evt)}`);
+    }
 
     /*
     onResized(evt) {
@@ -170,7 +180,7 @@ class UiGrid extends UiView {
             this.sliceCanvas.height = bounds.height;
             this.gridCanvas.width = bounds.width;
             this.gridCanvas.height = bounds.height;
-            for (const gidx of this.grid.keys()) this.gidupdates.add(gidx);
+            for (const gidx of this.grid.keys()) this.chunkUpdates.add(gidx);
         }
         //console.log(`*** uiGrid on resize: ${Fmt.ofmt(evt)} bounds: ${this.xform.bounds}`);
         super.onResized(evt);
@@ -199,7 +209,7 @@ class UiGrid extends UiView {
         return miny + ((Math.floor(idx/cols) * rowSize) + ((center) ? rowSize*.5 : 0));
     }
 
-    static getgidx(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
+    static getGridIdxs(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
         // FIXME: need to ensure that if gzo doesn't have dimensions, but does have position, that it will result in an index
         // check that object overlaps w/ grid
         // check if object has bounds...
@@ -238,14 +248,54 @@ class UiGrid extends UiView {
         return gidx;
     }
 
-    getgidx(gzo) {
+    getGridIdxs(gzo) {
         let loc = this.locator(gzo);
         console.log(`loc: ${loc}`);
-        return this.constructor.getgidx(loc, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows)
+        return this.constructor.getGridIdxs(loc, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows)
+    }
+
+    idxof(gzo) {
+        let gidxs = this.gzoIdxMap.get(gzo.gid) || [];
+        return gidxs.slice();
     }
 
     add(gzo) {
+        let gidxs = this.getGridIdxs(gzo);
+        console.log(`add ${gzo} gidxs: ${gidxs}`);
+        if (!gidxs) return;
+        // assign object to grid
+        for (const idx of gidxs) {
+            if (!this.chunks[idx]) this.chunks[idx] = [];
+            this.chunks[idx].push(gzo);
+            if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
+            // update list of updated chunks
+            this.chunkUpdates.add(idx);
+        }
+        // assign gizmo gidx
+        this.gzoIdxMap.set(gzo.gid, gidxs);
+        if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidxs}`);
+
+        // listen for gizmo events
+        EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
+        EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+
     }
+
+    remove(gzo) {
+        if (!gzo) return;
+        // ignore gizmo events
+        EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
+        EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+
+        let gidxs = this.getGridIdxs.get(gzo.gid) || [];
+        this.gzoIdxMap.delete(gzo.gid);
+        for (const idx of gidxs) {
+            let entries = this.chunks[idx] || [];
+            let i = entries.indexOf(gzo);
+            if (i >= 0) entries.splice(i, 1);
+        }
+    }
+
 
     /*
     renderSlice(idx) {
@@ -278,21 +328,21 @@ class UiGrid extends UiView {
     /*
     _childrender(ctx) {
         // render any updated slices
-        //console.log(`--- child render: ${Array.from(this.gidupdates).sort()}`);
-        let gidupdates = Array.from(this.gidupdates);
-        this.gidupdates.clear();
-        for (const idx of gidupdates) {
+        //console.log(`--- child render: ${Array.from(this.chunkUpdates).sort()}`);
+        let chunkUpdates = Array.from(this.chunkUpdates);
+        this.chunkUpdates.clear();
+        for (const idx of chunkUpdates) {
             //console.log(`  >> render slice for ${idx}`);
             this.renderSlice(idx);
         }
-        //console.log(`--- after renderslices: ${Array.from(this.gidupdates).sort()}`);
+        //console.log(`--- after renderslices: ${Array.from(this.chunkUpdates).sort()}`);
         // -- render grid canvas to given context
         if (this.gridCanvas.width && this.gridCanvas.height) {
             ctx.drawImage(this.gridCanvas, 
                 0, 0, this.gridCanvas.width, this.gridCanvas.height,
                 this.xform.minx, this.xform.miny, this.gridCanvas.width, this.gridCanvas.height);
         }
-        if (this.gidupdates.size) this.evt.trigger(this.constructor.evtUpdated, {actor: this});
+        if (this.chunkUpdates.size) this.evt.trigger(this.constructor.evtUpdated, {actor: this});
     }
     */
 

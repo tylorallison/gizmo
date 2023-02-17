@@ -125,7 +125,7 @@ class UITest extends Game {
 
         let view = new UiView({tag: 'grid', xform: new XForm({ x: 16, y: 16, fixedWidth: 16, fixedHeight: 16, origx: 0, origy: 0})});
 
-        //new Timer({ ttl: 5000, cb: () => input.text = 'regular programming'});
+        new Timer({ ttl: 2000, cb: () => view.xform.x = 20 });
 
     }
 }
