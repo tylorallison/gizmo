@@ -93,6 +93,22 @@ class Util {
         return ar.join('');
     }
 
+    static arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+        for (let i=0; i<a.length; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
+    static iterable(obj) {
+        if (obj == null) return false;
+        if (typeof obj[Symbol.iterator] === 'function') return true;
+        return false;
+    }
+
 }
 
 class xUtil {
@@ -166,12 +182,6 @@ class xUtil {
         return Math.abs(v1 - v2) < .00001;
     }
 
-    static iterable(obj) {
-        if (obj == null) return false;
-        if (typeof obj[Symbol.iterator] === 'function') return true;
-        return false;
-    }
-
     /*
     static empty(obj) {
         if (!obj) return true;
@@ -183,16 +193,6 @@ class xUtil {
         return true;
     }
     */
-
-    static arraysEqual(a, b) {
-        if (a === b) return true;
-        if (a == null || b == null) return false;
-        if (a.length !== b.length) return false;
-        for (let i=0; i<a.length; i++) {
-            if (a[i] !== b[i]) return false;
-        }
-        return true;
-    }
 
     static arrayContains(array, obj) {
         if (!obj.equals) return false;

@@ -4,190 +4,90 @@ import { Array2D } from "./array2d.js";
 import { Bounds } from "./bounds.js";
 import { EvtSystem } from "./event.js";
 import { Fmt } from "./fmt.js";
-//import { Bounds } from "./bounds.js";
-//import { Fmt } from "./fmt.js";
-//import { Grid } from "./grid.js";
 import { Schema } from "./schema.js";
-import { Timer } from "./timer.js";
 import { Stats } from "./stats.js";
 import { UiView } from "./uiView.js";
 import { Vect } from "./vect.js";
-//import { Vect } from "./vect.js";
-
+import { Util } from "./util.js";
 
 class UiGrid extends UiView {
 
     static {
-        //Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => gzo.xform) });
-        /*
-        Schema.apply(this, 'locator', { readonly: true, dflt: (gzo) => {
-            let wmin = gzo.xform.getWorld(new Vect(gzo.xform.bounds.minx, gxo.xform.bounds.miny), false);
-            let wmax = gzo.xform.getWorld(new Vect(gzo.xform.bounds.maxx, gxo.xform.bounds.maxy), false);
-            return new Bounds(wmin.x, wmin.y, wmax.x-wmin.x, wmax.y-wmin.y);
-        }});
-        */
-
         Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds(gzo.xform.bounds.minx+gzo.xform.x, gzo.xform.bounds.miny+gzo.xform.y, gzo.xform.bounds.width, gzo.xform.bounds.height)) });
-        Schema.apply(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
-
-        //Schema.apply(this, 'dbg', { dflt: false });
-        //Schema.apply(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
-        //Schema.apply(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
-
+        Schema.apply(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (o, k, ov, nv) => { console.log(`o: ${o}`); o.resize(); }});
         Schema.apply(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
-
         Schema.apply(this, 'renderFilter', { dflt: ((idx, view) => true) });
+        Schema.apply(this, 'optimizeRender', { dflt: true });
         Schema.apply(this, 'chunks', { parser: (o,x) => {
             if (x.chunks) return x.chunks;
             return new Array2D({rows: x.rows || 8, cols: x.cols || 8});
         }});
-        Schema.apply(this, 'gzoIdxMap', { parser: (o,x) => new Map() });
+        Schema.apply(this, 'gzoIdxMap', { readonly: true, parser: (o,x) => new Map() });
+        Schema.apply(this, 'rerender', { renderable: true, parser: (o,x) => true });
         Schema.apply(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
         Schema.apply(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         Schema.apply(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
         Schema.apply(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         Schema.apply(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
         Schema.apply(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z) });
-
-        // FIXME: eval
-        Schema.apply(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
-        Schema.apply(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
+        Schema.apply(this, 'alignx', { dflt: .5, renderable: true });
+        Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
+        Schema.apply(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
+        Schema.apply(this, 'colSize', { renderable: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    cpre(spec) {
+        super.cpre(spec);
+        this.onChildUpdate = this.onChildUpdate.bind(this);
+        this.onChildDestroyed = this.onChildDestroyed.bind(this);
+        this.onViewCreated = this.onViewCreated.bind(this);
+    }
     cpost(spec) {
         super.cpost(spec);
-        // -- event handlers
-        /*
-        this.onAdopted = this.onAdopted.bind(this);
-        this.onOrphaned = this.onOrphaned.bind(this);
-        this.evt.listen(this.constructor.evtAdopted, this.onAdopted);
-        this.evt.listen(this.constructor.evtOrphaned, this.onOrphaned);
-        this.evt.listen(this.constructor.evtRooted, this.onResized);
-        */
-
-        this.onChildUpdate = this.onChildUpdate.bind(this);
-        this.onChildDestroyed = this.onChildUpdate.bind(this);
-        this.onViewCreated = this.onViewCreated.bind(this);
-
+        // -- resize offscreen canvases
+        this.gridCanvas.width = this.bounds.width;
+        this.gridCanvas.height = this.bounds.height;
+        this.chunkCanvas.width = this.colSize;
+        this.chunkCanvas.height = this.rowSize;
         // handle view creation event handling
         if (this.createFilter) {
             EvtSystem.listen(this.gctx, this, 'gizmo.created', this.onViewCreated, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
         }
-
-        // -- render filter
-        //this.renderFilter = spec.renderFilter || ((idx, view) => true);
-        // -- grid
-        /*
-        this.rows = spec.rows || this.constructor.dfltRows;
-        this.cols = spec.cols || this.constructor.dfltCols;
-        this.grid = new Grid({
-            bounds: this.xform.bounds, 
-            //dbg: true, 
-            locator: (v) => v.xform.getWorldBounds(false),
-            gridSort: (a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z,
-        });
-        */
-        //this.chunkUpdates = new Set();
-        // offscreen canvases for rendering
-        //this.sliceCanvas = document.createElement('canvas');
-        //this.sliceCtx = this.sliceCanvas.getContext('2d');
-        //this.gridCanvas = document.createElement('canvas');
-        //this.gridCtx = this.gridCanvas.getContext('2d');
     }
-    destroy(spec) {
-        /*
-        this.evt.ignore(this.constructor.evtAdopted, this.onAdopted);
-        this.evt.ignore(this.constructor.evtOrphaned, this.onOrphaned);
-        this.evt.ignore(this.constructor.evtRooted, this.onResized);
-        */
-        super.destroy();
-    }
+    
 
     // EVENT HANDLERS ------------------------------------------------------
     onViewCreated(evt) {
-        console.log(`${this} onViewCreated: ${Fmt.ofmt(evt)}`);
-        //let gidxs = this.getGridIdxs(evt.actor);
-        //console.log(`gidxs: ${gidxs}`);
-        new Timer({ttl: 0, cb: () => this.add(evt.actor)});
+        this.add(evt.actor);
     }
-
-    /*
-    onAdopted(evt) {
-        if (evt.actor !== this) return;
-        let child = evt.child;
-        //console.log(`-----  onAdopted: ${child}`)
-        if (!child) return;
-        // -- listen for child updates
-        child.evt.listen(child.constructor.evtUpdated, this.onChildUpdate)
-        // -- add to grid and note grid index updates
-        this.grid.add(child);
-        let gidx = this.grid.idxof(child);
-        //if (child.idx === 6757) console.log(`====> ${child} has idxs: ${gidx}`);
-        for (const idx of gidx) this.chunkUpdates.add(idx);
-    }
-    */
-
-    /*
-    onOrphaned(evt) {
-        if (evt.actor !== this) return;
-        let child = evt.child;
-        if (!child) return;
-        // -- ignore child updates
-        child.evt.ignore(child.constructor.evtUpdated, this.onChildUpdate)
-        // -- remove from grid and note grid index updates
-        let gidx = this.grid.idxof(child);
-        for (const idx of gidx) this.chunkUpdates.add(idx);
-        //console.log(`gid updates ${Array.from(this.chunkUpdates)}`);
-        this.grid.remove(child);
-        this.evt.trigger(this.constructor.evtUpdated, {actor: this});
-    }
-    */
 
     onChildUpdate(evt) {
-        Stats.count("UiGrid.onChildUpdate");
-        console.log(`${this} onChildUpdate ${Fmt.ofmt(evt)}`);
-        /*
+        Stats.count('UiGrid.onChildUpdate');
+        //console.log(`onChildUpdate: ${Fmt.ofmt(evt)}`);
         let view = evt.actor;
-        if (!this.grid.contains(view)) return;
-        //console.error(`-- onChildUpdate: ${Fmt.ofmt(evt)}`);
+        let needsUpdate = evt.render;
         // -- keep track of grid indices that need to be rerendered (e.g.: all grid indices associated with updated view before and after rechecking grid)
-        let gidx = this.grid.idxof(view);
-        for (const idx of gidx) this.chunkUpdates.add(idx);
+        let gidxs = this.idxof(view);
+        for (const idx of gidxs) {
+            needsUpdate = true;
+            this.chunkUpdates.add(idx);
+        }
         // -- recheck grid to update grid position
-        this.grid.recheck(view);
-        gidx = this.grid.idxof(view);
-        //if (view.idx === 6757) console.log(`====> ${view} has idxs: ${gidx}`);
-        for (const idx of gidx) this.chunkUpdates.add(idx);
-        this.evt.trigger(this.constructor.evtUpdated, {actor: this});
-        */
+        this.recheck(view);
+        gidxs = this.idxof(view);
+        for (const idx of gidxs) {
+            needsUpdate = true;
+            this.chunkUpdates.add(idx);
+        }
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
     }
 
     onChildDestroyed(evt) {
-        console.log(`${this} onChildDestroyed ${Fmt.ofmt(evt)}`);
+        this.remove(evt.actor);
     }
 
-    /*
-    onResized(evt) {
-        let bounds = this.xform.bounds;
-        // grid update
-        if (!bounds.equals(this.grid.bounds)) {
-            this.grid.resize(bounds, this.grid.cols, this.grid.rows);
-        }
-        // canvas update
-        if (bounds.width !== this.sliceCanvas.width || bounds.height !== this.sliceCanvas.height) {
-            this.sliceCanvas.width = bounds.width;
-            this.sliceCanvas.height = bounds.height;
-            this.gridCanvas.width = bounds.width;
-            this.gridCanvas.height = bounds.height;
-            for (const gidx of this.grid.keys()) this.chunkUpdates.add(gidx);
-        }
-        //console.log(`*** uiGrid on resize: ${Fmt.ofmt(evt)} bounds: ${this.xform.bounds}`);
-        super.onResized(evt);
-    }
-    */
-
-    // METHODS -------------------------------------------------------------
+    // STATIC METHODS ------------------------------------------------------
     static ifromx(x, colSize, minx=0, cols=undefined) {
         let i = Math.floor((x-minx)/colSize);
         if (i < 0) i = 0;
@@ -210,7 +110,6 @@ class UiGrid extends UiView {
     }
 
     static getGridIdxs(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
-        // FIXME: need to ensure that if gzo doesn't have dimensions, but does have position, that it will result in an index
         // check that object overlaps w/ grid
         // check if object has bounds...
         let minx = 0, miny = 0, maxx = 0, maxy = 0;
@@ -227,13 +126,11 @@ class UiGrid extends UiView {
             maxy = gzo.y;
         // object doesn't have dimensions or position, so cannot be tracked in grid...
         } else {
-            return null;
+            return [];
         }
         if (!Bounds._overlaps(gbounds.minx, gbounds.miny, gbounds.maxx, gbounds.maxy, minx, miny, maxx, maxy, true)) {
-            console.log(`no overlap`);
-            return null;
+            return [];
         }
-        //if (!gbounds.overlaps(loc)) return null;
         let gidx = [];
         let maxi = this.ifromx(maxx, colSize, gbounds.minx, cols);
         let maxj = this.jfromy(maxy, rowSize, gbounds.miny, rows);
@@ -248,10 +145,53 @@ class UiGrid extends UiView {
         return gidx;
     }
 
+    // METHODS -------------------------------------------------------------
+    has(gzo) {
+        return this.gzoIdxMap.has(gzo.gid);
+    }
+
+    recheck(gzo) {
+        if (!gzo) return;
+        let ogidxs = this.gzoIdxMap.get(gzo.gid) || [];
+        let ngidxs = this.getGridIdxs(gzo);
+        if (!Util.arraysEqual(ogidxs, ngidxs)) {
+            // remove old
+            for (const idx of ogidxs) {
+                if (!ngidxs.includes(idx)) {
+                    let entries = this.chunks[idx] || [];
+                    let i = entries.indexOf(gzo);
+                    if (i >= 0) entries.splice(i, 1);
+                }
+            }
+            // add new
+            for (const idx of ngidxs) {
+                if (!ogidxs.includes(idx)) {
+                    if (!this.chunks[idx]) this.chunks[idx] = [];
+                    this.chunks[idx].push(gzo);
+                }
+                if (this.gridSort) this.chunks[idx].sort(this.gridSort);
+            }
+            // assign new gidxs
+            this.gzoIdxMap.set(gzo.gid, ngidxs);
+        } else {
+            // resort
+            for (const idx of ngidxs) {
+                if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
+            }
+        }
+    }
+
+
     getGridIdxs(gzo) {
         let loc = this.locator(gzo);
-        console.log(`loc: ${loc}`);
         return this.constructor.getGridIdxs(loc, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows)
+    }
+
+    xfromidx(idx, center=false) {
+        return (((idx % this.chunks.cols) * this.colSize) + ((center) ? this.colSize/2 : 0));
+    }
+    yfromidx(idx, center=false) {
+        return ((Math.floor(idx/this.chunks.cols) * this.rowSize) + ((center) ? this.rowSize/2 : 0));
     }
 
     idxof(gzo) {
@@ -259,12 +199,95 @@ class UiGrid extends UiView {
         return gidxs.slice();
     }
 
+    *[Symbol.iterator]() {
+        for (let idx=0; idx<this.chunks.length; idx++) {
+            if (this.chunks[idx]) {
+                yield *Array.from(this.chunks[idx]);
+            }
+        }
+    }
+
+    *keys() {
+        for (let i=0; i<this.chunks.length; i++) {
+            if (this.chunks[i]) yield i;
+        }
+    }
+
+    *getij(i, j) {
+        let idx = this.chunks.idxfromij(i, j);
+        if (this.chunks[idx]) {
+            yield *Array.from(this.chunks[idx]);
+        }
+    }
+
+    *getidx(idx) {
+        if (this.chunks[idx]) {
+            yield *Array.from(this.chunks[idx]);
+        }
+    }
+
+    *find(filter=(v) => true) {
+        let found = new Set();
+        for (let i=0; i<this.chunks.length; i++) {
+            if (this.chunks[i]) {
+                let entries = Array.from(this.chunks[i]);
+                for (const gzo of entries) {
+                    if (found.has(gzo.gid)) continue;
+                    if (filter(gzo)) {
+                        found.add(gzo.gid);
+                        yield gzo;
+                    }
+                }
+            }
+        }
+    }
+
+    first(filter=(v) => true) {
+        for (let i=0; i<this.chunks.length; i++) {
+            if (this.chunks[i]) {
+                let entries = Array.from(this.chunks[i]);
+                for (const gzo of entries) {
+                    if (filter(gzo)) return gzo;
+                }
+            }
+        }
+        return null;
+    }
+
+    *findAtIdx(gidxs, filter=(v) => true) {
+        if (!Util.iterable(gidxs)) gidxs = [gidxs];
+        let found = new Set();
+        for (const idx of gidxs) {
+            let entries = this.chunks[idx] || [];
+            for (const gzo of Array.from(entries)) {
+                if (found.has(gzo.gid)) continue;
+                if (filter(gzo)) {
+                    found.add(gzo.gid);
+                    yield gzo;
+                }
+            }
+        }
+    }
+
+    *firstAtIdx(gidxs, filter=(v) => true) {
+        if (!Util.iterable(gidxs)) gidxs = [gidxs];
+        for (const idx of gidxs) {
+            let entries = this.chunks[idx] || [];
+            for (const gzo of Array.from(entries)) {
+                if (filter(gzo)) {
+                    return gzo;
+                }
+            }
+        }
+        return null;
+    }
+
     add(gzo) {
         let gidxs = this.getGridIdxs(gzo);
-        console.log(`add ${gzo} gidxs: ${gidxs}`);
-        if (!gidxs) return;
+        let needsUpdate = false;
         // assign object to grid
         for (const idx of gidxs) {
+            needsUpdate = true;
             if (!this.chunks[idx]) this.chunks[idx] = [];
             this.chunks[idx].push(gzo);
             if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
@@ -273,97 +296,127 @@ class UiGrid extends UiView {
         }
         // assign gizmo gidx
         this.gzoIdxMap.set(gzo.gid, gidxs);
-        if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidxs}`);
-
         // listen for gizmo events
         EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+        // if chunkUpdates have been set, trigger update for grid
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
 
     }
 
     remove(gzo) {
         if (!gzo) return;
         // ignore gizmo events
-        EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
-        EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+        EvtSystem.ignore(gzo, this, 'gizmo.updated', this.onChildUpdate);
+        EvtSystem.ignore(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
 
-        let gidxs = this.getGridIdxs.get(gzo.gid) || [];
+        let gidxs = this.gzoIdxMap.get(gzo.gid);
         this.gzoIdxMap.delete(gzo.gid);
+        let needsUpdate = false;
         for (const idx of gidxs) {
+            needsUpdate = true;
             let entries = this.chunks[idx] || [];
             let i = entries.indexOf(gzo);
             if (i >= 0) entries.splice(i, 1);
+            console.log(`remove adding idx to update: ${idx}`);
+            this.chunkUpdates.add(idx);
+        }
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
+    }
+
+    resize() {
+        console.log(`resize: ${this.bounds}`);
+        if ((this.bounds.width !== this.gridCanvas.width) || (this.bounds.height !== this.gridCanvas.height)) {
+            this.rowSize = this.bounds.height/this.chunks.rows;
+            this.colSize = this.bounds.width/this.chunks.cols;
+            this.gridCanvas.width = this.bounds.width;
+            this.gridCanvas.height = this.bounds.height;
+            this.chunkCanvas.width = this.colSize;
+            this.chunkCanvas.height = this.rowSize;
+            let gzos = Array.from(this);
+            this.chunks.clear();
+            for (const gzo of gzos) {
+                let gidxs = this.getGridIdxs(gzo);
+                for (const idx of gidxs) {
+                    if (!this.chunks[idx]) this.chunks[idx] = [];
+                    this.chunks[idx].push(gzo);
+                    if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
+                }
+            }
+            if (this.chunkSort) {
+                for (let idx=0; idx<this.chunks.length; idx++) {
+                    if (this.chunks[idx]) this.chunks[idx].sort(this.chunkSort);
+                }
+            }
+            this.rerender = true;
         }
     }
 
-
-    /*
-    renderSlice(idx) {
-        // everything from the grid "slice" is rendered to an offscreen slice canvas
-        let dx = this.grid.xfromidx(idx) - this.grid.minx;
-        let dy = this.grid.yfromidx(idx) - this.grid.miny;
-        let tx = -this.xform.minx;
-        let ty = -this.xform.miny;
-        this.sliceCtx.clearRect( dx, dy, this.grid.colSize, this.grid.rowSize );
-        //console.log(`slice translate ${tx},${ty}`);
-        this.sliceCtx.translate(tx, ty);
+    renderChunk(idx, dx, dy) {
+        // everything from the grid "chunk" is rendered to an offscreen chunk canvas
+        let tx = this.xfromidx(idx);
+        let ty = this.yfromidx(idx);
+        if (this.optimizeRender) {
+            if (!this.xform.bounds.overlaps(new Bounds(dx+tx, dy+ty, this.colSize, this.rowSize))) {
+                //console.log(`-- chunk: ${idx} is out of bounds against ${this.xform.bounds}`);
+                return;
+            }
+        }
+        this.chunkCtx.clearRect( 0, 0, this.colSize, this.rowSize );
+        this.chunkCtx.translate(-tx, -ty);
         // iterate through all views at given idx
         let rendered = false;
-        for (const view of this.grid.getidx(idx)) {
+        for (const view of this.getidx(idx)) {
             rendered = true;
-            if (this.renderFilter(idx, view)) view.render(this.sliceCtx);
-            //console.log(`    >> render ${view} ${this.renderFilter(idx, view)}`);
+            if (this.renderFilter(idx, view)) view.render(this.chunkCtx);
         }
-        this.sliceCtx.translate(-tx, -ty);
-        //console.log(`renderSlice: ${idx} dx: ${dx} dy: ${dy} rendered: ${rendered}`);
-        // -- resulting slice is rendered to grid canvas
-        this.gridCtx.clearRect(dx, dy, this.grid.colSize, this.grid.rowSize);
-        //console.log(`drawImage: ${this.xform.minx+dx},${this.xform.miny+dy}`);
-        this.gridCtx.drawImage(this.sliceCanvas, 
-            dx, dy, this.grid.colSize, this.grid.rowSize, 
-            dx, dy, this.grid.colSize, this.grid.rowSize);
+        this.chunkCtx.translate(tx, ty);
+        // -- resulting chunk is rendered to grid canvas
+        this.gridCtx.clearRect(tx, ty, this.colSize, this.rowSize);
+        this.gridCtx.drawImage(this.chunkCanvas, tx, ty);
     }
-    */
-
-    /*
-    _childrender(ctx) {
-        // render any updated slices
-        //console.log(`--- child render: ${Array.from(this.chunkUpdates).sort()}`);
-        let chunkUpdates = Array.from(this.chunkUpdates);
-        this.chunkUpdates.clear();
-        for (const idx of chunkUpdates) {
-            //console.log(`  >> render slice for ${idx}`);
-            this.renderSlice(idx);
-        }
-        //console.log(`--- after renderslices: ${Array.from(this.chunkUpdates).sort()}`);
-        // -- render grid canvas to given context
-        if (this.gridCanvas.width && this.gridCanvas.height) {
-            ctx.drawImage(this.gridCanvas, 
-                0, 0, this.gridCanvas.width, this.gridCanvas.height,
-                this.xform.minx, this.xform.miny, this.gridCanvas.width, this.gridCanvas.height);
-        }
-        if (this.chunkUpdates.size) this.evt.trigger(this.constructor.evtUpdated, {actor: this});
-    }
-    */
-
-    /*
-    _render(ctx) {
-        //console.log(`--- uiGrid._render bounds ${this.bounds}`);
-        if (this.dbg && this.dbg.viewGrid) this.grid.render(ctx, this.xform.minx, this.xform.miny);
-    }
-    */
 
     subrender(ctx) {
-        ctx.strokeStyle = 'red';
-        let width = 50;
-        let height = 250;
-        let alignx = 0;
-        let aligny = 0;
-        let xo = Math.round((this.xform.width - width)*alignx);
-        let yo = Math.round((this.xform.height - height)*aligny);
-        let dx = 25;
-        let dy = 0;
-        ctx.strokeRect(dx+xo+this.xform.minx, dy+yo+this.xform.miny, 50, 250);
+        // compute delta between xform space and grid space
+        let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
+        let dy = this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        // render any updated chunks
+        if (this.rerender) {
+            this.chunkUpdates.clear();
+            this.rerender = false;
+            for (let idx=0; idx<this.chunks.length; idx++) {
+                this.renderChunk(idx, dx, dy);
+            }
+        } else {
+            let chunkUpdates = Array.from(this.chunkUpdates);
+            this.chunkUpdates.clear();
+            for (const idx of chunkUpdates) {
+                this.renderChunk(idx, dx, dy);
+            }
+        }
+        // render grid canvas
+        ctx.drawImage(this.gridCanvas, dx, dy);
+        // overlay grid
+        if (this.dbg && this.dbg.grid) {
+            //let minx = this.xform.minx+xo;
+            //let miny = this.xform.miny+yo;
+            for (let i=0; i<=this.chunks.cols; i++) {
+                ctx.strokeStyle = 'rgba(0,255,0,.5)';
+                ctx.beginPath();
+                ctx.moveTo(dx+i*this.colSize, dy);
+                ctx.lineTo(dx+i*this.colSize, dy+this.bounds.height);
+                ctx.stroke();
+            }
+            for (let j=0; j<=this.chunks.rows; j++) {
+                ctx.strokeStyle = 'rgba(0,255,0,.5)';
+                ctx.beginPath();
+                ctx.moveTo(dx, dy+this.rowSize*j);
+                ctx.lineTo(dx+this.bounds.width, dy+this.rowSize*j);
+                ctx.stroke();
+            }
+        }
+
+
     }
 
 

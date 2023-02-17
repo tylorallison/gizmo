@@ -11,7 +11,7 @@ class Array2D extends GizmoData {
     static {
         Schema.apply(this, 'cols', { readonly: true, dflt: 16 });
         Schema.apply(this, 'rows', { readonly: true, dflt: 16 });
-        Schema.apply(this, 'nentries', { readonly: true, parser: (o,x) => o.cols*o.rows });
+        Schema.apply(this, 'length', { readonly: true, parser: (o,x) => o.cols*o.rows });
         Schema.apply(this, 'entries', { link: 'array', readonly: true, parser: (o,x) => x.entries || [] });
     }
 
@@ -27,21 +27,21 @@ class Array2D extends GizmoData {
     */
 
     // STATIC METHODS ------------------------------------------------------
-    static ifromidx(idx, cols, nentries=undefined) {
+    static ifromidx(idx, cols, length=undefined) {
         if (idx < 0) return -1;
-        if (nentries && idx >= nentries) return -1;
+        if (length && idx >= length) return -1;
         return idx % cols;
     }
 
-    static jfromidx(idx, cols, nentries=undefined) {
+    static jfromidx(idx, cols, length=undefined) {
         if (idx < 0) return -1;
-        if (nentries && idx >= nentries) return -1;
+        if (length && idx >= length) return -1;
         return Math.floor(idx/cols);
     }
 
-    static ijfromidx(idx, cols, nentries=undefined) {
+    static ijfromidx(idx, cols, length=undefined) {
         if (idx < 0) return -1;
-        if (nentries && idx >= nentries) return -1;
+        if (length && idx >= length) return -1;
         return [idx % this.cols, Math.floor(idx/this.cols)];
     }
 
@@ -77,19 +77,19 @@ class Array2D extends GizmoData {
     // -- index methods
     ifromidx(idx) {
         if (idx < 0) return -1;
-        if (idx >= this.nentries) return -1;
+        if (idx >= this.length) return -1;
         return idx % this.cols;
     }
 
     jfromidx(idx) {
         if (idx < 0) return -1;
-        if (idx >= this.nentries) return -1;
+        if (idx >= this.length) return -1;
         return Math.floor(idx/this.cols);
     }
 
     ijfromidx(idx) {
         if (idx < 0) return -1;
-        if (idx >= this.nentries) return -1;
+        if (idx >= this.length) return -1;
         return [idx % this.cols, Math.floor(idx/this.cols)];
     }
 
@@ -124,15 +124,19 @@ class Array2D extends GizmoData {
         this.entries[idx] = v;
     }
 
+    clear() {
+        this.entries.splice(0);
+    }
+
     // -- iterators
     *[Symbol.iterator]() {
-        for (let i=0; i<this.nentries; i++) {
+        for (let i=0; i<this.length; i++) {
             yield *this.entries[i];
         }
     }
 
     *find(filter=(v) => true) {
-        for (let i=0; i<this.nentries; i++) {
+        for (let i=0; i<this.length; i++) {
             let v = this.entries[i];
             if (filter(v)) yield [i, v];
         }

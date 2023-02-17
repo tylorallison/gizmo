@@ -40,7 +40,6 @@ class Bounds extends GizmoData {
         let maxx = Math.min(maxx1, maxx2);
         let miny = Math.max(miny1, miny2);
         let maxy = Math.min(maxy1, maxy2);
-        console.log(`min: ${minx},${miny} max: ${maxx},${maxy}`);
         if (inclusive) {
             return maxx >= minx && maxy >= miny;
         } else {
@@ -73,7 +72,6 @@ class Bounds extends GizmoData {
     }
 
     static overlaps(obj1, obj2, inclusive=false) {
-        console.log(`obj1: ${obj1} obj2: ${obj2}`);
         if (('minx' in obj1) && ('miny' in obj1) && ('maxx' in obj1) && ('maxy' in obj1)) {
             if (('minx' in obj2) && ('miny' in obj2) && ('maxx' in obj2) && ('maxy' in obj2)) {
                 return this._overlaps(

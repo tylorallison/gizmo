@@ -211,9 +211,9 @@ class GizmoData {
                     if (schema.atUpdate) schema.atUpdate(gzd, schema.key, oldValue, newValue);
                     // -- path updates are controlled by GizmoData.$pathUpdatable
                     if (gzd.$pathUpdatable) {
+                        //console.log(`schema.$pathUpdatable for: ${gzd}`);
                         for (const gzt of gzd.constructor.eachInPath(gzd, (gzn) => (gzn.$schema && gzn.$schema.atUpdate))) {
-                            //console.log(`gzt: ${gzt} schema: ${gzt.$schema.onBranchSet}`);
-                            gzt.$schema.atUpdate(gzd, schema.key, oldValue, newValue);
+                            gzt.$schema.atUpdate(gzt.$trunk, schema.key, oldValue, newValue);
                         }
                     }
 

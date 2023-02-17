@@ -14,6 +14,7 @@ import { UiInput, UiInputText } from '../js/uiInput.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { Bounds } from '../js/bounds.js';
+import { Rect } from '../js/rect.js';
 
 class UITest extends Game {
     static assetSpecs = [
@@ -108,11 +109,13 @@ class UITest extends Game {
         Hierarchy.adopt(cvs, input)
 
         let grid = new UiGrid({
-            dbg: { xform: true },
+            dbg: { xform: true, grid: true },
             createFilter: (gzo) => gzo.tag === 'grid',
-            rows: 16,
-            cols: 16,
+            rows: 4,
+            cols: 4,
             bounds: new Bounds(0, 0, 256, 256),
+            alignx: 0,
+            aligny: 0,
             xform: new XForm({ 
                 grip: .5, 
                 x: 0, 
@@ -123,9 +126,20 @@ class UITest extends Game {
         });
         Hierarchy.adopt(cvs, grid)
 
-        let view = new UiView({tag: 'grid', xform: new XForm({ x: 16, y: 16, fixedWidth: 16, fixedHeight: 16, origx: 0, origy: 0})});
+        let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 16, y: 48, fixedWidth: 16, fixedHeight: 16, origx: 0, origy: 0})});
 
-        new Timer({ ttl: 2000, cb: () => view.xform.x = 20 });
+        new Timer({ ttl: 2000, cb: () => { 
+            panel.xform.x = 60; 
+            new Timer({ ttl: 2000, cb: () => { 
+                panel.xform.x = 128; 
+                panel.xform.y = 64; 
+                new Timer({ ttl: 2000, cb: () => { 
+                    grid.bounds.x = 32;
+                    grid.rerender = true;
+                    //console.log(`setting bounds width => ${grid.bounds.width}`);
+                }});
+            }});
+        }});
 
     }
 }
