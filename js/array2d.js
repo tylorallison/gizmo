@@ -55,6 +55,16 @@ class Array2D extends GizmoData {
         return this.idxfromij(this.ifromidx(idx, cols) + Direction.asX(dir), this.jfromidx(idx, cols) + Direction.asY(dir), cols, rows);
     }
 
+    static *idxsBetween(idx1, idx2, cols, rows, length=undefined) {
+        let i1 = this.ifromidx(idx1, cols, length);
+        let j1 = this.jfromidx(idx1, cols, length);
+        let i2 = this.ifromidx(idx2, cols, length);
+        let j2 = this.jfromidx(idx2, cols, length);
+        for (const [i,j] of Util.pixelsInSegment(i1, j1, i2, j2)) {
+            yield this.idxfromij(i, j, cols, rows);
+        }
+    }
+
     // -- resize
     static resize(a2d, cols, rows, offi=0, offj=0) {
         // re-align data
@@ -103,6 +113,16 @@ class Array2D extends GizmoData {
 
     idxfromdir(idx, dir) {
         return this.idxfromij(this.ifromidx(idx) + Direction.asX(dir), this.jfromidx(idx) + Direction.asY(dir));
+    }
+
+    *idxsBetween(idx1, idx2) {
+        let i1 = this.ifromidx(idx1);
+        let j1 = this.jfromidx(idx1);
+        let i2 = this.ifromidx(idx2);
+        let j2 = this.jfromidx(idx2);
+        for (const [i,j] of Util.pixelsInSegment(i1, j1, i2, j2)) {
+            yield this.idxfromij(i,j);
+        }
     }
 
     // -- accessor methods

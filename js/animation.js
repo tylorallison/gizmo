@@ -57,15 +57,10 @@ class Animation extends Sketch {
 
     // METHODS -------------------------------------------------------------
     enable() {
-        console.log(`animation enable done: ${this.done} sketches.length: ${this.sketches.length} active: ${this.active}`);
         if (!this.active) {
-            console.log(`animation not active`);
             if (this.sketch) this.sketch.enable();
             // start timer
-            //console.log(`!this.done: ${!this.done}`)
-            //console.log(`length check: ${this.sketches.length > 1}`)
             if ((!this.done) && (this.sketches.length > 1 || !this.loop)) {
-                console.log(`gctx: ${this.constructor.root(this).gctx} ttl: ${this.sketch.ttl}`);
                 this.timer = new Timer({gctx: this.constructor.root(this).gctx, ttl: this.sketch.ttl, cb: this.onTimer});
             }
         }

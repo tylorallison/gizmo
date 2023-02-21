@@ -36,7 +36,7 @@ class UpdateSystem extends System {
     // EVENT HANDLERS ------------------------------------------------------
     onSet(evt) {
         if (!('actor' in evt)) return;
-        if (!('set' in evt)) return;
+        if (!('set' in evt) && !('render' in evt)) return;
         this.setUpdate(evt.actor, evt.set);
         if (evt.render) {
             this.renders.add(evt.actor.gid);
@@ -70,9 +70,9 @@ class UpdateSystem extends System {
 
     iterate(evt, e) {
         let updates = this.currentUpdates.get(e.gid);
-        if (!updates) return;
+        if (!updates && !this.currentRenders.has(e.gid)) return;
         // trigger entity updates
-        let data = { update: updates };
+        let data = { frame: evt.frame, update: updates };
         if (this.currentRenders.has(e.gid)) data.render = true;
         EvtSystem.trigger(e, 'gizmo.updated', data);
     }

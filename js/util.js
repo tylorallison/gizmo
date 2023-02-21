@@ -109,6 +109,28 @@ class Util {
         return false;
     }
 
+    // Refer to: http://rosettacode.org/wiki/Bitmap/Bresenham's_line_algorithm#JavaScript
+    static *pixelsInSegment(x0, y0, x1, y1) {
+        let dx = Math.abs(x1 - x0);
+        let sx = x0 < x1 ? 1 : -1;
+        let dy = Math.abs(y1 - y0);
+        let sy = y0 < y1 ? 1 : -1; 
+        let err = (dx>dy ? dx : -dy)/2;        
+        while (true) {
+            yield [x0,y0];
+            if (x0 === x1 && y0 === y1) break;
+            var e2 = err;
+            if (e2 > -dx) { 
+                err -= dy; 
+                x0 += sx; 
+            }
+            if (e2 < dy) { 
+                err += dx; 
+                y0 += sy; 
+            }
+        }
+    }
+
 }
 
 class xUtil {
@@ -257,28 +279,6 @@ class xUtil {
         if (tag in obj) return obj[tag];
         obj[tag] = dflt;
         return dflt;
-    }
-
-    // Refer to: http://rosettacode.org/wiki/Bitmap/Bresenham's_line_algorithm#JavaScript
-    static *pixelsInSegment(x0, y0, x1, y1) {
-        let dx = Math.abs(x1 - x0);
-        let sx = x0 < x1 ? 1 : -1;
-        let dy = Math.abs(y1 - y0);
-        let sy = y0 < y1 ? 1 : -1; 
-        let err = (dx>dy ? dx : -dy)/2;        
-        while (true) {
-            yield [x0,y0];
-            if (x0 === x1 && y0 === y1) break;
-            var e2 = err;
-            if (e2 > -dx) { 
-                err -= dy; 
-                x0 += sx; 
-            }
-            if (e2 < dy) { 
-                err += dx; 
-                y0 += sy; 
-            }
-        }
     }
 
     static *pixelsInCross(x, y, dir, width) {

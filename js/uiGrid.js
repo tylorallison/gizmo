@@ -80,10 +80,11 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
     }
 
     onChildDestroyed(evt) {
+        console.log(`onChildDestroyed: ${Fmt.ofmt(evt)}`);
         this.remove(evt.actor);
     }
 
@@ -120,10 +121,10 @@ class UiGrid extends UiView {
             maxy = Math.max(loc.miny,loc.maxy-1);
         // if object only has position...
         } else if (Vect.hasVect(loc)) {
-            minx = gzo.x;
-            miny = gzo.y;
-            maxx = gzo.x;
-            maxy = gzo.y;
+            minx = loc.x;
+            miny = loc.y;
+            maxx = loc.x;
+            maxy = loc.y;
         // object doesn't have dimensions or position, so cannot be tracked in grid...
         } else {
             return [];
@@ -187,6 +188,20 @@ class UiGrid extends UiView {
         return this.constructor.getGridIdxs(loc, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows)
     }
 
+    ifromx(x) {
+        let i = Math.floor((x-this.bounds.minx)/this.colSize);
+        if (i < 0) i = 0;
+        if (i >= this.chunks.cols) i = this.chunks.cols-1;
+        return i;
+    }
+
+    jfromy(y) {
+        let j = Math.floor((y-this.bounds.miny)/this.rowSize);
+        if (j < 0) j = 0;
+        if (j >= this.chunks.rows) j = this.chunks.rows-1;
+        return j;
+    }
+
     xfromidx(idx, center=false) {
         return (((idx % this.chunks.cols) * this.colSize) + ((center) ? this.colSize/2 : 0));
     }
@@ -200,9 +215,15 @@ class UiGrid extends UiView {
     }
 
     *[Symbol.iterator]() {
+        let found = new Set();
         for (let idx=0; idx<this.chunks.length; idx++) {
             if (this.chunks[idx]) {
-                yield *Array.from(this.chunks[idx]);
+                let entries = Array.from(this.chunks[idx]);
+                for (const gzo of entries) {
+                    if (found.has(gzo.gid)) continue;
+                    found.add(gzo.gid);
+                    yield gzo;
+                }
             }
         }
     }
@@ -269,7 +290,7 @@ class UiGrid extends UiView {
         }
     }
 
-    *firstAtIdx(gidxs, filter=(v) => true) {
+    firstAtIdx(gidxs, filter=(v) => true) {
         if (!Util.iterable(gidxs)) gidxs = [gidxs];
         for (const idx of gidxs) {
             let entries = this.chunks[idx] || [];
@@ -282,8 +303,43 @@ class UiGrid extends UiView {
         return null;
     }
 
+    *findAtPos(x, y, filter=(v) => true) {
+        let gidxs = this.constructor.getGridIdxs({ x:x, y:y }, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
+        for (const gzo of this.findAtIdx(gidxs, filter)) {
+            let otherBounds = this.locator(gzo);
+            if (Bounds.containsXY(otherBounds, x, y)) yield gzo;
+        }
+    }
+
+    firstAtPos(x, y, filter=(v) => true) {
+        let gidxs = this.constructor.getGridIdxs({ x:x, y:y }, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
+        for (const gzo of this.findAtIdx(gidxs, filter)) {
+            let otherBounds = this.locator(gzo);
+            if (Bounds.containsXY(otherBounds, x, y)) return gzo;
+        }
+        return null;
+    }
+
+    *findAtBounds(bounds, filter=(v) => true) {
+        let gidxs = this.constructor.getGridIdxs(bounds, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
+        for (const gzo of this.findAtIdx(gidxs, filter)) {
+            let otherBounds = this.locator(gzo);
+            if (Bounds.overlaps(otherBounds, bounds)) yield gzo;
+        }
+    }
+
+    firstAtBounds(bounds, filter=(v) => true) {
+        let gidxs = this.constructor.getGridIdxs(bounds, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
+        for (const gzo of this.findAtIdx(gidxs, filter)) {
+            let otherBounds = this.locator(gzo);
+            if (Bounds.overlaps(otherBounds, bounds)) return gzo;
+        }
+        return null;
+    }
+
     add(gzo) {
         let gidxs = this.getGridIdxs(gzo);
+        //console.log(`gzo: ${gzo} bounds: ${this.bounds} dim: ${this.chunks.cols},${this.chunks.rows} loc: ${this.locator(gzo)} gidxs: ${gidxs}`);
         let needsUpdate = false;
         // assign object to grid
         for (const idx of gidxs) {
@@ -300,8 +356,7 @@ class UiGrid extends UiView {
         EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
         // if chunkUpdates have been set, trigger update for grid
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
-
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
     }
 
     remove(gzo) {
@@ -309,7 +364,6 @@ class UiGrid extends UiView {
         // ignore gizmo events
         EvtSystem.ignore(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.ignore(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
-
         let gidxs = this.gzoIdxMap.get(gzo.gid);
         this.gzoIdxMap.delete(gzo.gid);
         let needsUpdate = false;
@@ -318,14 +372,13 @@ class UiGrid extends UiView {
             let entries = this.chunks[idx] || [];
             let i = entries.indexOf(gzo);
             if (i >= 0) entries.splice(i, 1);
-            console.log(`remove adding idx to update: ${idx}`);
+            //console.log(`remove adding idx to update: ${idx}`);
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated', { render: true });
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
     }
 
     resize() {
-        console.log(`resize: ${this.bounds}`);
         if ((this.bounds.width !== this.gridCanvas.width) || (this.bounds.height !== this.gridCanvas.height)) {
             this.rowSize = this.bounds.height/this.chunks.rows;
             this.colSize = this.bounds.width/this.chunks.cols;
@@ -358,7 +411,7 @@ class UiGrid extends UiView {
         let ty = this.yfromidx(idx);
         if (this.optimizeRender) {
             if (!this.xform.bounds.overlaps(new Bounds(dx+tx, dy+ty, this.colSize, this.rowSize))) {
-                //console.log(`-- chunk: ${idx} is out of bounds against ${this.xform.bounds}`);
+                if (this.dbg) console.log(`-- chunk: ${idx} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }
@@ -398,8 +451,6 @@ class UiGrid extends UiView {
         ctx.drawImage(this.gridCanvas, dx, dy);
         // overlay grid
         if (this.dbg && this.dbg.grid) {
-            //let minx = this.xform.minx+xo;
-            //let miny = this.xform.miny+yo;
             for (let i=0; i<=this.chunks.cols; i++) {
                 ctx.strokeStyle = 'rgba(0,255,0,.5)';
                 ctx.beginPath();
