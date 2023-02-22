@@ -1,4 +1,4 @@
-import { EvtSystem } from '../js/event.js';
+import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Gizmo } from '../js/gizmo.js';
 import { GizmoContext } from '../js/gizmoContext.js';
 import { UpdateSystem } from '../js/updateSystem.js';
@@ -6,15 +6,16 @@ import { WaitAction } from '../js/wait.js';
 
 describe('a wait action', () => {
 
-    let gctx, sys, actor, tevts;
+    let gctx, sys, actor, receiver, tevts;
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
         actor = new Gizmo({gctx: gctx});
         //view = new UiView({gctx: gctx});
         sys = new UpdateSystem( { gctx: gctx });
-        //receiver = ExtEvtReceiver.gen();
-        //tevts = [];
-        //EvtSystem.listen(view, receiver, 'gizmo.updated', (evt) => tevts.push(evt));
+        receiver = ExtEvtReceiver.gen();
+        tevts = [];
+        EvtSystem.listen(actor, receiver, 'action.started', (evt) => tevts.push(evt));
+        EvtSystem.listen(actor, receiver, 'action.done', (evt) => tevts.push(evt));
     });
 
     it('promises to finish', async ()=>{
@@ -25,25 +26,37 @@ describe('a wait action', () => {
         expect(ok).toBeTruthy();
     });
 
-    it('can be terminated early', async ()=>{
+    it('promises to finish even if destroyed', async ()=>{
         let w = new WaitAction({ gctx: gctx, ttl: 100, dbg: true });
         let p = w.perform(actor);
         w.destroy();
         let ok = await p;
-        expect(ok).toBeFalsey();
+        expect(ok).toBeFalsy();
     });
 
-    /*
-    it('xform updates trigger view event', ()=>{
-        let w = new WaitAction({ ttl: 100 });
-        let receiver = ExtEvtReceiver.gen();
-        let counter = 0;
-        let incr = () => counter++;
-        EvtSystem.listen(g, receiver, 'test', incr);
-        EvtSystem.trigger(g, 'test');
-        expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(1);
+    it('triggers start/done events for actor', async ()=>{
+        let w = new WaitAction({ gctx: gctx, ttl: 100, dbg: true });
+        let p = w.perform(actor);
+        expect(tevts.length).toEqual(1);
+        let tevt = tevts.pop();
+        expect(tevt.tag).toEqual('action.started');
+        expect(tevt.action).toBe(w);
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        let ok = await p;
+        expect(ok).toBeTruthy();
+        expect(tevts.length).toEqual(1);
+        tevt = tevts.pop();
+        expect(tevt.tag).toEqual('action.done');
+        expect(tevt.action).toBe(w);
     });
-*/
+
+    it('can update actor when complete', async ()=>{
+        let w = new WaitAction({ gctx: gctx, ttl: 100, dbg: true, atts: { hello: 'there'} });
+        let p = w.perform(actor);
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        let ok = await p;
+        expect(ok).toBeTruthy();
+        expect(actor.hello).toEqual('there');
+    });
 
 });
