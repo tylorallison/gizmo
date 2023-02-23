@@ -1,19 +1,19 @@
-export { MoveAction };
+export { MoveAction, MoveSystem };
 
 import { Action } from './action.js';
-//import { Events } from '../event.js';
-//import { Fmt } from '../fmt.js';
-//import { Mathf } from '../math.js';
 import { Schema } from './schema.js';
 import { EvtSystem } from './event.js';
 import { Vect } from './vect.js';
-//import { Game } from '../game.js';
-//import { UpdateSystem } from '../systems/updateSystem.js';
+import { System } from './system.js';
+import { Stats } from './stats.js';
+import { Mathf } from './math.js';
 
 class MoveAction extends Action {
 
     static {
         Schema.apply(this, 'speed', { dflt: 0 });
+        Schema.apply(this, 'targetSpeed', { parser: (o,x) => x.hasOwnProperty('targetSpeed') ? x.targetSpeed : o.speed });
+        Schema.apply(this, 'accel', { dflt: 0 });
         Schema.apply(this, 'heading', { dflt: 0 });
         Schema.apply(this, 'overx', { dflt: 0, eventable: false });
         Schema.apply(this, 'overy', { dflt: 0, eventable: false });
@@ -22,71 +22,19 @@ class MoveAction extends Action {
         Schema.apply(this, 'dy', { eventable: false, autogen: (k) => k === 'heading', setter: (o, x) => Math.sin(o.heading) });
     }
 
-    static minDelta = .001;
-
-    static actorLocator(actor) {
-        return new Vect(actor.xform.x, actor.xform.y);
-    }
-    static actorMover(actor, loc) {
-        actor.xform.x = loc.x;
-        actor.xform.y = loc.y;
-    }
-
     prepare(ctx) {
-        let locator = (ctx && ctx.actorLocator) ? ctx.actorLocator : this.constructor.actorLocator;
-        let mover = (ctx && ctx.actorMover) ? ctx.actorMover : this.constructor.actorMover;
-
         let p = new Promise( resolve => {
             this.resolver = resolve;
-            //console.log(`this.gctx: ${this.gctx} this: ${this} speed: ${this.speed}`);
-            EvtSystem.listen(this.gctx, this, 'game.tock', (evt) => {
-                // quit move if speed is set to zero
-                if (!this.speed) {
-                    this.done = true;
-                    this.resolver(this.ok);
-                // move actor
-                } else {
-                    let espeed = this.speed * evt.deltaTime;
-                    // determine desired position based on speed and heading
-                    let dx = espeed * this.dx + this.overx;
-                    let dy = espeed * this.dy + this.overy;
-                    let wantLoc = locator(this.actor);
-
-                    //console.log(`espeed: ${espeed} dx: ${dx} dy: ${dy} wantLoc: ${wantLoc}`);
-
-                    // handle rollover of partial pixels
-                    if (Math.abs(dx)>this.constructor.minDelta) {
-                        if (Math.abs(dx) >= 1) {
-                            let rx = Math.round(dx);
-                            wantLoc.x += rx;
-                            this.overx = dx-rx;
-                        } else {
-                            this.overx = dx;
-                        }
-                    }
-                    if (Math.abs(dy)>this.constructor.minDelta) {
-                        if (Math.abs(dy) >= 1) {
-                            let ry = Math.round(dy);
-                            wantLoc.y += ry;
-                            this.overy = dy-ry;
-                        } else {
-                            this.overy = dy;
-                        }
-                    }
-                    //console.log(`before mover: ${this.actor.xform.x},${this.actor.xform.y} wantLoc: ${wantLoc}`);
-                    mover(this.actor, wantLoc);
-                }
-            });
         });
         return p;
     }
 
 }
 
-/*
 class MoveToAction extends MoveAction {
     static {
         Schema.apply(this, 'target', { });
+        Schema.apply(this, 'targetSpeed', { dflt: 0 });
         Schema.apply(this, 'snap', { dflt: false });
         Schema.apply(this, 'range', { parser: (o,x) => x.hasOwnProperty('range') ? x.range : o.constructor.dfltRange });
         Schema.apply(this, 'pct', { dflt: 0 });
@@ -99,6 +47,7 @@ class MoveToAction extends MoveAction {
     }
 }
 
+/*
 
     static targetLocator(target, ctx) {
         return new Vect(target.x, target.y);
@@ -226,3 +175,123 @@ class MoveToAction extends MoveAction {
 }
 
 */
+
+class MoveSystem extends System {
+
+    static {
+        Schema.apply(this, 'actorLocator', { eventable: false, dflt: (actor) => (actor) ? new Vect(actor.xform.x, actor.xform.y) : Vect.zero });
+        Schema.apply(this, 'targetLocator', { eventable: false, dflt: (target) => target });
+        Schema.apply(this, 'actorMover', { eventable: false, dflt: (actor, loc) => { if (actor && loc) { actor.xform.x = loc.x; actor.xform.y = loc.y }}} );
+        Schema.apply(this, 'minDelta', { eventable: false, dflt: .001 });
+        Schema.apply(this, 'minSpeed', { eventable: false, dflt: .001 });
+    }
+
+    static dfltIterateTTL = 0;
+
+    cpost(spec) {
+        super.cpost(spec);
+        // bind event handlers 
+        this.onMoveStarted = this.onMoveStarted.bind(this);
+        console.log(`${this} gctx: ${this.gctx}`)
+        EvtSystem.listen(this.gctx, this, 'action.started', this.onMoveStarted, { filter: (evt) => evt.action && (evt.action instanceof MoveAction) });
+        //this.evt.listen(UxView.evtIntent, this.onEntityIntent);
+    }
+
+    onMoveStarted(evt) {
+        let action = evt.action;
+        if (!action) return;
+        if (!this.store.has(action.gid)) {
+            this.store.set(action.gid, action);
+            EvtSystem.listen(action, this, 'action.done', (evt) => {
+                this.store.delete(action.gid);
+            });
+        }
+    }
+
+    iterate(evt, e) {
+        Stats.count('move.iterate');
+
+        // adjust speed based on acceleration
+        if (e.accel) {
+            // handle acceleration
+            if (e.speed < e.targetSpeed) {
+                e.speed = Math.min(e.speed + e.accel * evt.deltaTime, e.targetSpeed);
+            // handle deceleration
+            } else if (e.speed > e.targetSpeed) {
+                e.speed = Math.max(e.speed - e.accel * evt.deltaTime, 0);
+                if (e.speed < this.minSpeed) e.speed = 0;
+            }
+        } else {
+            if (e.hasOwnProperty('targetSpeed')) e.speed = e.targetSpeed;
+        }
+
+        // move actor based on current speed and heading
+        //console.log(`e.speed: ${e.speed}`)
+        let espeed = e.speed * evt.deltaTime;
+        // determine desired position based on speed and heading
+        let dx = espeed * e.dx + e.overx;
+        let dy = espeed * e.dy + e.overy;
+        //console.log(`espeed: ${espeed} e.d ${e.dx},${e.dy} e.over: ${e.overx},${e.overy}`);
+        let actorLoc = this.actorLocator(e.actor);
+        //console.log(`actorLoc: ${actorLoc} delta: ${dx},${dy}`);
+        // handle rollover of partial pixels
+        if (Math.abs(dx)>this.minDelta) {
+            if (Math.abs(dx) >= 1) {
+                let rx = Math.round(dx);
+                actorLoc.x += rx;
+                e.overx = dx-rx;
+            } else {
+                e.overx = dx;
+            }
+        }
+        if (Math.abs(dy)>this.minDelta) {
+            if (Math.abs(dy) >= 1) {
+                let ry = Math.round(dy);
+                actorLoc.y += ry;
+                e.overy = dy-ry;
+            } else {
+                e.overy = dy;
+            }
+        }
+        this.actorMover(e.actor, actorLoc);
+
+        // if action has target ... handle movement tracking to target
+        let targetReached = false;
+        if (e.target) {
+            let targetLoc = this.targetLocator(e.target);
+            let distance = Mathf.distance(targetLoc.x, targetLoc.y, actorLoc.x, actorLoc.y);
+            // as we approach target, calculate distance required to slow down, start slowing down when we reach that distance
+            if (e.accel) {
+                let decelDistance = (e.speed * e.speed) / (2 * e.accel);
+                if (distance < decelDistance) e.targetSpeed = 0;
+            }
+            // calculate heading change to target
+            e.heading = Mathf.angle(actorLoc.x, actorLoc.y, targetLoc.x, targetLoc.y, true);
+            // if we are within range of target...
+            if (distance <= e.range) {
+                targetReached = true;
+                if (this.dbg) console.log(`${e.actor} arrived in range of target: ${targetLoc}`);
+                // if movement is chained, target speed is maintained and action is done... 
+                if (!e.chained) {
+                    e.targetSpeed = 0;
+                    e.speed = 0;
+                }
+                // snap to target if set
+                if (e.snap) this.actorMover(e.actor, targetLoc);
+            }
+        }
+
+        // complete action if target is reached or speed is zero'd
+        if (targetReached || (e.speed === 0 && e.targetSpeed === 0)) {
+            e.resolver(e.ok);
+        }
+    }
+
+    /*
+    matchPredicate(e) {
+        return e.speed;
+    }
+    */
+
+
+}

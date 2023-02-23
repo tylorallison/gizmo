@@ -31,7 +31,10 @@ class Action extends Gizmo {
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     destroy() {
         if (!this.done) this.ok = false;
-        if (this.resolver) this.resolver(this.ok);
+        if (this.resolver) {
+            this.resolver(this.ok);
+            this.resolve = null;
+        }
         super.destroy();
     }
 
@@ -72,9 +75,4 @@ class Action extends Gizmo {
         return Promise.resolve(this.ok);
     }
 
-    /*
-    toString() {
-        return Fmt.toString(this.constructor.name, this.done, this.update);
-    }
-    */
 }
