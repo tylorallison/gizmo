@@ -186,8 +186,4 @@ class UiView extends Gizmo {
         }
     }
 
-    toString() {
-        return Fmt.toString(this.constructor.name, this.gid, this.tag);
-    }
-
 }

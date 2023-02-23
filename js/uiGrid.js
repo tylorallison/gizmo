@@ -11,6 +11,8 @@ import { Vect } from "./vect.js";
 import { Util } from "./util.js";
 
 class UiGrid extends UiView {
+    // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
+    // This makes it possible to serialize data and still have customizable functions.
 
     static {
         Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds(gzo.xform.bounds.minx+gzo.xform.x, gzo.xform.bounds.miny+gzo.xform.y, gzo.xform.bounds.width, gzo.xform.bounds.height)) });

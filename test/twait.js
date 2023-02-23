@@ -1,6 +1,9 @@
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
+import { Fmt } from '../js/fmt.js';
+import { Generator } from '../js/generator.js';
 import { Gizmo } from '../js/gizmo.js';
 import { GizmoContext } from '../js/gizmoContext.js';
+import { SerialData, Serializer } from '../js/serializer.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { WaitAction } from '../js/wait.js';
 
@@ -22,6 +25,20 @@ describe('a wait action', () => {
         let w = new WaitAction({ gctx: gctx, ttl: 100, dbg: true });
         let p = w.perform(actor);
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        let ok = await p;
+        expect(ok).toBeTruthy();
+    });
+
+    it('can be serialized and restarted', async ()=>{
+        let w = new WaitAction({ gctx: gctx, ttl: 100, dbg: true });
+        let p = w.perform(actor);
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 50 });
+        let sdata = new SerialData();
+        let sw = Serializer.xifyGizmoData(sdata, w);
+        let generator = new Generator({gctx: gctx});
+        let w2 = generator.generate(sw);
+        p = w2.perform(actor);
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 50 });
         let ok = await p;
         expect(ok).toBeTruthy();
     });

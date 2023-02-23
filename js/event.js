@@ -14,6 +14,9 @@ class EvtLink {
         this.once = opts.hasOwnProperty('once') ? opts.once : false;
         this.filter = opts.filter;
     }
+    toString() {
+        return Fmt.toString(this.constructor.name, this.emitter, this.receiver);
+    }
 }
 
 class EvtSystem {

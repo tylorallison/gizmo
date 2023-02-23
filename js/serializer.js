@@ -13,7 +13,7 @@ class SerialData {
         return new this(spec);
     }
     constructor(spec={}) {
-        this.xgzos = spec.xgzos || [];
+        this.xgzos = spec.xgzos || {};
     }
 
     asString() {
@@ -71,7 +71,9 @@ class Serializer {
         // test for gizmo
         if (!(gzo instanceof Gizmo)) return null;
         // save new serialized gzo
-        sdata.xgzos.push(this.xifyGizmoData(sdata, gzo));
+        if (!sdata.xgzos[gzo.gid]) {
+            sdata.xgzos[gzo.gid] = this.xifyGizmoData(sdata, gzo);
+        }
         return {
             cls: 'GizmoRef',
             gid: gzo.gid,
@@ -81,7 +83,7 @@ class Serializer {
     static restore(sdata, generator) {
         let gzos = [];
         let refs = {};
-        for (const xgzo of sdata.xgzos) {
+        for (const xgzo of Object.values(sdata.xgzos)) {
             // resolve gizmo references
             let swaps = [];
             for (const [k,v,obj] of Util.kvWalk(xgzo)) {

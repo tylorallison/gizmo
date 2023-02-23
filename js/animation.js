@@ -15,7 +15,7 @@ class Animation extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
         Schema.apply(this, 'loop', { dflt: true });
-        Schema.apply(this, 'timer', { link: true, eventable: false });
+        Schema.apply(this, 'timer', { link: true, serializable: false, eventable: false });
         Schema.apply(this, 'sketchIdx', { eventable: false, dflt: 0 });
         Schema.apply(this, 'sketches', { dflt: [], readonly: true });
         Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) });

@@ -38,7 +38,7 @@ class Schema {
         this.atUpdate = spec.atUpdate;
         this.serializable = spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
-        this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => target[this.serializeKey] = JSON.parse(JSON.stringify(value)));
+        this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
 
 
     }

@@ -1,4 +1,5 @@
 import { Assets } from '../js/assets.js';
+import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
 import { Gizmo } from '../js/gizmo.js';
 import { GizmoContext } from '../js/gizmoContext.js';
@@ -39,8 +40,7 @@ describe('a serializer', () => {
         let g = new Gizmo({ gctx: gctx, tag: 'root' });
         let rslt = Serializer.xifyGizmo(sdata, g);
         expect(rslt).toEqual({ cls: 'GizmoRef', gid: g.gid });
-        expect(sdata.xgzos.length).toEqual(1);
-        expect(sdata.xgzos[0]).toEqual({
+        expect(sdata.xgzos[g.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
             gid: g.gid,
@@ -59,22 +59,21 @@ describe('a serializer', () => {
         let root = new Gizmo({ gctx: gctx, tag: 'root', children: [ sub1 ] });
         let rslt = Serializer.xifyGizmo(sdata, root);
         expect(rslt).toEqual({ cls: 'GizmoRef', gid: root.gid });
-        expect(sdata.xgzos.length).toEqual(3);
-        expect(sdata.xgzos[0]).toEqual({
+        expect(sdata.xgzos[sub2.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
             gid: sub2.gid,
             tag: sub2.tag,
             children: [],
         });
-        expect(sdata.xgzos[1]).toEqual({
+        expect(sdata.xgzos[sub1.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
             gid: sub1.gid,
             tag: sub1.tag,
             children: [ { cls: 'GizmoRef', gid: sub2.gid }],
         });
-        expect(sdata.xgzos[2]).toEqual({
+        expect(sdata.xgzos[root.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
             gid: root.gid,
@@ -101,8 +100,7 @@ describe('a serializer', () => {
         });
         let rslt = Serializer.xifyGizmo(sdata, root);
         expect(rslt).toEqual({ cls: 'GizmoRef', gid: root.gid });
-        expect(sdata.xgzos.length).toEqual(1);
-        expect(sdata.xgzos[0]).toEqual({
+        expect(sdata.xgzos[root.gid]).toEqual({
             $gzx: true,
             cls: 'TSerializerGizmo',
             gid: root.gid,
@@ -129,8 +127,7 @@ describe('a serializer', () => {
         let g = new TSerializerGizmo({ gctx: gctx, tag: 'root', asset: generator.generate(assets.get('test.rect')) });
         let rslt = Serializer.xifyGizmo(sdata, g);
         expect(rslt).toEqual({ cls: 'GizmoRef', gid: g.gid });
-        expect(sdata.xgzos.length).toEqual(1);
-        expect(sdata.xgzos[0]).toEqual({
+        expect(sdata.xgzos[g.gid]).toEqual({
             $gzx: true,
             cls: 'TSerializerGizmo',
             gid: g.gid,
