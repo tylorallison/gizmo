@@ -5,6 +5,7 @@ import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
 import { Schema } from './schema.js';
 import { Stats } from './stats.js';
+import { Vect } from './vect.js';
 
 class XForm extends GizmoData {
 
@@ -268,7 +269,7 @@ class XForm extends GizmoData {
         if (chain && this.parent) {
             localPos = this.parent.getLocal(worldPos);
         } else {
-            localPos = worldPos.copy();
+            localPos = new Vect(worldPos);
         }
         // apply local transforms
         let deltax = this.deltax;
@@ -284,7 +285,7 @@ class XForm extends GizmoData {
      * @param {*} localPos 
      */
     getWorld(localPos, chain=true) {
-        let worldPos = localPos.copy();
+        let worldPos = new Vect(localPos);
         // apply local transforms
         if (this.scalex !== 1|| this.scaley !== 1) worldPos.mult(this.scalex, this.scaley);
         if (this.angle) worldPos.rotate(this.angle, true);

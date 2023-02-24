@@ -42,13 +42,10 @@ class Action extends Gizmo {
     async perform(actor, ctx) {
         this.actor = actor;
         EvtSystem.trigger(actor, 'action.started', { action: this });
-        console.log(`action starting: ${this}`);
         if (this.startSfx) SfxSystem.playSfx(this, this.startSfx);
 
         // perform action-specific preparation
-        console.log(`before prepare: ${this}`);
         await this.prepare(ctx);
-        console.log(`after prepare: ${this}`);
         if (this.ok) {
             // perform action-specific finishing
             await this.finish(ctx);
@@ -62,7 +59,6 @@ class Action extends Gizmo {
         if (!this.ok && this.failSfx) SfxSystem.playSfx(this, this.failSfx);
         EvtSystem.trigger(actor, 'action.done', { action: this, ok: this.ok });
         // clean up all action state
-        console.log(`destroying: ${this}`);
         this.destroy();
         return Promise.resolve(this.ok);
     }

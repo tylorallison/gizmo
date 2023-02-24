@@ -46,8 +46,9 @@ class MoveToAction extends MoveAction {
     }
 
     static dfltRange = 5;
+
     toString() {
-        return Fmt.toString(this.constructor.name, this.target);
+        return Fmt.toString(this.constructor.name, this.speed, this.target);
     }
 }
 
@@ -106,8 +107,7 @@ class MoveSystem extends System {
         // handle rollover of partial pixels
         if (Math.abs(dx)>this.minDelta) {
             if (Math.abs(dx) >= 1) {
-                let rx = Math.round(dx);
-                console.log(`dx: ${dx} rx: ${rx}`);
+                let rx = (dx > 0) ? Math.floor(dx) : Math.floor(dx)+1;
                 actorLoc.x += rx;
                 e.overx = dx-rx;
             } else {
@@ -116,7 +116,7 @@ class MoveSystem extends System {
         }
         if (Math.abs(dy)>this.minDelta) {
             if (Math.abs(dy) >= 1) {
-                let ry = Math.round(dy);
+                let ry = (dy > 0) ? Math.floor(dy) : Math.floor(dy)+1;
                 actorLoc.y += ry;
                 e.overy = dy-ry;
             } else {

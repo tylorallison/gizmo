@@ -191,6 +191,12 @@ class UiGrid extends UiView {
         }
     }
 
+    getLocal(worldPos, chain=true) {
+        let localPos = this.xform.getLocal(worldPos, chain);
+        localPos.x -= this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
+        localPos.y -= this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        return localPos;
+    }
 
     getGridIdxs(gzo) {
         let loc = this.locator(gzo);
