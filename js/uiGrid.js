@@ -112,6 +112,13 @@ class UiGrid extends UiView {
         return miny + ((Math.floor(idx/cols) * rowSize) + ((center) ? rowSize*.5 : 0));
     }
 
+    static vfromidx(idx, cols, colSize, rowSize, minx=0, miny=0, center=false) {
+        return new Vect(
+            this.xfromidx(idx, cols, colSize, minx, center),
+            this.yfromidx(idx, cols, rowSize, miny, center)
+        );
+    }
+
     static getGridIdxs(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
         // check that object overlaps w/ grid
         // check if object has bounds...
@@ -209,6 +216,38 @@ class UiGrid extends UiView {
     }
     yfromidx(idx, center=false) {
         return ((Math.floor(idx/this.chunks.cols) * this.rowSize) + ((center) ? this.rowSize/2 : 0));
+    }
+
+    vfromidx(idx, center=false) {
+        return new Vect(this.xfromidx(idx, center), this.yfromidx(idx, center));
+    }
+
+    ifromidx(idx) {
+        return this.chunks.ifromidx(idx);
+    }
+
+    jfromidx(idx) {
+        return this.chunks.jfromidx(idx);
+    }
+
+    ijfromidx(idx) {
+        return this.chunks.ijfromidx(idx);
+    }
+
+    idxfromij(i,j) {
+        return this.chunks.idxfromij(i,j);
+    }
+
+    idxfromxy(x,y) {
+        return this.chunks.idxfromij(this.ifromx(x),this.jfromy(y));
+    }
+
+    idxfromdir(idx, dir) {
+        return this.chunks.idxfromdir(idx, dir);
+    }
+
+    *idxsBetween(idx1, idx2) {
+        yield *this.chunks.idxsBetween(idx1, idx2);
     }
 
     idxof(gzo) {

@@ -1,4 +1,4 @@
-export { MoveAction, MoveSystem };
+export { MoveAction, MoveToAction, MoveSystem };
 
 import { Action } from './action.js';
 import { Schema } from './schema.js';
@@ -7,6 +7,7 @@ import { Vect } from './vect.js';
 import { System } from './system.js';
 import { Stats } from './stats.js';
 import { Mathf } from './math.js';
+import { Fmt } from './fmt.js';
 
 class MoveAction extends Action {
 
@@ -22,11 +23,15 @@ class MoveAction extends Action {
         Schema.apply(this, 'dy', { eventable: false, autogen: (k) => k === 'heading', setter: (o, x) => Math.sin(o.heading) });
     }
 
-    prepare(ctx) {
+    async prepare(ctx) {
         let p = new Promise( resolve => {
             this.resolver = resolve;
         });
         return p;
+    }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.speed, this.heading);
     }
 
 }
@@ -34,147 +39,17 @@ class MoveAction extends Action {
 class MoveToAction extends MoveAction {
     static {
         Schema.apply(this, 'target', { });
-        Schema.apply(this, 'targetSpeed', { dflt: 0 });
         Schema.apply(this, 'snap', { dflt: false });
         Schema.apply(this, 'range', { parser: (o,x) => x.hasOwnProperty('range') ? x.range : o.constructor.dfltRange });
-        Schema.apply(this, 'pct', { dflt: 0 });
-        Schema.apply(this, 'accel', { dflt: 0 });
         Schema.apply(this, 'chained', { dflt: false });
-        Schema.apply(this, 'actorHeadingTag', { readonly: true, dflt: 'heading' });
-        Schema.apply(this, 'actorSpeedTag', { readonly: true, dflt: 'speed' });
-        Schema.apply(this, 'actorMaxSpeedTag', { readonly: true, dflt: 'maxSpeed' });
         // facing?
-    }
-}
-
-/*
-
-    static targetLocator(target, ctx) {
-        return new Vect(target.x, target.y);
-    }
-
-    static actorMover(actor, loc, ctx) {
-        actor.xform.x = loc.x;
-        actor.xform.y = loc.y;
     }
 
     static dfltRange = 5;
-
-    // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
-    cpre(spec) {
-        super.cpre(spec);
-        this.onTock = this.onTock.bind(this);
+    toString() {
+        return Fmt.toString(this.constructor.name, this.target);
     }
-
-    // EVENT HANDLERS ------------------------------------------------------
-    onTock(evt) {
-        this.updateVelocity(evt);
-    }
-
-    // METHODS -------------------------------------------------------------
-    async prepare(ctx) {
-        let p = new Promise( resolve => {
-            this.resolver = resolve;
-            if (!this.speed) this.speed = this.actor[this.actorMaxSpeedTag];
-            EvtSystem.listen(this.gctx, this, 'game.tock', this.onTock);
-        });
-        return p;
-    }
-
-    async finish(ctx) {
-        if (!this.ok) {
-            if (this.actor) this.actor[this.actorSpeedTag] = 0;
-        }
-    }
-
-    updateVelocity(evt) {
-        // calculate distance to target
-        let distance = Mathf.distance(this.x, this.y, this.actor.xform.x, this.actor.xform.y);
-        let factor = this.factor;
-        let heading = this.actor.heading;
-        // if not within range...
-        if (distance > this.range) {
-            if (this.accel) {
-                // compute acceleration/deceleration
-                let speed = factor * this.speed;
-                let decelDistance = (speed * speed) / (2 * this.accel);
-                //we are still far, continue accelerating (if possible)
-                if (distance > decelDistance) {
-                    factor = Math.min((speed + this.accel * evt.deltaTime)/this.speed, 1);
-                //we are about to reach the target, let's start decelerating.
-                } else {
-                    factor = Math.max((speed - this.accel * evt.deltaTime)/this.speed, 0);
-                }
-            } else {
-                factor = 1;
-            }
-            // calculate heading
-            heading = Mathf.angle(this.actor.xform.x, this.actor.xform.y, this.x, this.y, true);
-            // calculate heading/speed from actor to target
-            if (this.actor.heading !== heading || this.factor !== factor) {
-                let update = {
-                    heading: heading,
-                    speed: factor*this.speed,
-                };
-                if (this.dbg) console.log(`${this.actor} update heading: ${heading} speed: ${factor*this.speed}`);
-                if (this.facing && this.facing != this.actor.facing) {
-                    update.facing = this.facing;
-                }
-                UpdateSystem.eUpdate(this.actor, update);
-                this.factor = factor;
-            }
-        // within range of target
-        } else {
-            if (this.dbg) console.log(`${this.actor} arrived at target: ${this.x},${this.y}`);
-            let update = {};
-            this.done = true;
-            if (this.stopAtTarget) update.speed = 0;
-            if (this.snap) {
-                update.xform = { x: this.x, y: this.y };
-            }
-            //console.log(`-- move update: ${Fmt.ofmt(update)}`);
-            this.finish(update);
-        }
-    }
-
-    updateActorPosition() {
-        Stats.count('move.iterate');
-        // determine movement speed... skip if not moving...
-        let speed = e.speed;
-        if (!speed) return;
-        speed *= evt.elapsed;
-        // determine desired position based on speed and heading
-        let dx = speed * Math.cos(e.heading) + (this.xoverflows[e.gid] || 0);
-        let dy = speed * Math.sin(e.heading) + (this.yoverflows[e.gid] || 0);
-        let wanty = e.xform.y;
-        let wantx = e.xform.x;
-        if (Math.abs(dx)>.001) {
-            if (Math.abs(dx) > 1) {
-                let rx = Math.round(dx);
-                wantx += rx;
-                this.xoverflows[e.gid] = dx-rx;
-            } else {
-                this.xoverflows[e.gid] = dx;
-            }
-        }
-        if (Math.abs(dy)>.001) {
-            if (Math.abs(dy) > 1) {
-                let ry = Math.round(dy);
-                wanty += ry;
-                this.yoverflows[e.gid] = dy-ry;
-            } else {
-                this.yoverflows[e.gid] = dy;
-            }
-        }
-        if (wantx === e.xform.x && wanty === e.xform.y) return;
-        if (this.dbg) console.log(`move transform from: ${e.xform.x},${e.xform.y} to: ${wantx},${wanty}`);
-        // handle update
-        UpdateSystem.eUpdate(e, { xform: {x: wantx, y: wanty }});
-    }
-
 }
-
-*/
 
 class MoveSystem extends System {
 
@@ -192,9 +67,7 @@ class MoveSystem extends System {
         super.cpost(spec);
         // bind event handlers 
         this.onMoveStarted = this.onMoveStarted.bind(this);
-        console.log(`${this} gctx: ${this.gctx}`)
         EvtSystem.listen(this.gctx, this, 'action.started', this.onMoveStarted, { filter: (evt) => evt.action && (evt.action instanceof MoveAction) });
-        //this.evt.listen(UxView.evtIntent, this.onEntityIntent);
     }
 
     onMoveStarted(evt) {
@@ -210,7 +83,6 @@ class MoveSystem extends System {
 
     iterate(evt, e) {
         Stats.count('move.iterate');
-
         // adjust speed based on acceleration
         if (e.accel) {
             // handle acceleration
@@ -224,20 +96,18 @@ class MoveSystem extends System {
         } else {
             if (e.hasOwnProperty('targetSpeed')) e.speed = e.targetSpeed;
         }
-
         // move actor based on current speed and heading
-        //console.log(`e.speed: ${e.speed}`)
         let espeed = e.speed * evt.deltaTime;
         // determine desired position based on speed and heading
         let dx = espeed * e.dx + e.overx;
         let dy = espeed * e.dy + e.overy;
-        //console.log(`espeed: ${espeed} e.d ${e.dx},${e.dy} e.over: ${e.overx},${e.overy}`);
+        //console.log(`iterate speed: ${e.speed} heading: ${e.heading} e.d: ${e.dx}, ${e.dy} over: ${e.overx},${e.overy} d: ${dx},${dy}`);
         let actorLoc = this.actorLocator(e.actor);
-        //console.log(`actorLoc: ${actorLoc} delta: ${dx},${dy}`);
         // handle rollover of partial pixels
         if (Math.abs(dx)>this.minDelta) {
             if (Math.abs(dx) >= 1) {
                 let rx = Math.round(dx);
+                console.log(`dx: ${dx} rx: ${rx}`);
                 actorLoc.x += rx;
                 e.overx = dx-rx;
             } else {
@@ -254,7 +124,6 @@ class MoveSystem extends System {
             }
         }
         this.actorMover(e.actor, actorLoc);
-
         // if action has target ... handle movement tracking to target
         let targetReached = false;
         if (e.target) {
@@ -280,18 +149,10 @@ class MoveSystem extends System {
                 if (e.snap) this.actorMover(e.actor, targetLoc);
             }
         }
-
         // complete action if target is reached or speed is zero'd
         if (targetReached || (e.speed === 0 && e.targetSpeed === 0)) {
             e.resolver(e.ok);
         }
     }
-
-    /*
-    matchPredicate(e) {
-        return e.speed;
-    }
-    */
-
 
 }
