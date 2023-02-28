@@ -84,6 +84,8 @@ class MoveSystem extends System {
 
     iterate(evt, e) {
         Stats.count('move.iterate');
+        let actorLoc = this.actorLocator(e.actor);
+        let targetLoc;
         // adjust speed based on acceleration
         if (e.accel) {
             // handle acceleration
@@ -97,13 +99,25 @@ class MoveSystem extends System {
         } else {
             if (e.hasOwnProperty('targetSpeed')) e.speed = e.targetSpeed;
         }
+        // calculate heading change to target
+        // -- if drastic change of heading, reset overx/overy
+        if (e.target) {
+            targetLoc = this.targetLocator(e.target);
+            let newHeading = Mathf.angle(actorLoc.x, actorLoc.y, targetLoc.x, targetLoc.y, true);
+            if (newHeading) {
+                if (Mathf.angleBetween(newHeading, e.heading) > Math.PI*.25) {
+                    e.overx = 0;
+                    e.overy = 0;
+                }
+            }
+            e.heading = newHeading;
+        }
         // move actor based on current speed and heading
         let espeed = e.speed * evt.deltaTime;
         // determine desired position based on speed and heading
         let dx = espeed * e.dx + e.overx;
         let dy = espeed * e.dy + e.overy;
-        //console.log(`iterate speed: ${e.speed} heading: ${e.heading} e.d: ${e.dx}, ${e.dy} over: ${e.overx},${e.overy} d: ${dx},${dy}`);
-        let actorLoc = this.actorLocator(e.actor);
+        //console.log(`iterate speed: ${e.speed} heading: ${e.heading} e.d: ${e.dx},${e.dy} over: ${e.overx},${e.overy} d: ${dx},${dy}`);
         // handle rollover of partial pixels
         if (Math.abs(dx)>this.minDelta) {
             if (Math.abs(dx) >= 1) {
@@ -127,15 +141,12 @@ class MoveSystem extends System {
         // if action has target ... handle movement tracking to target
         let targetReached = false;
         if (e.target) {
-            let targetLoc = this.targetLocator(e.target);
             let distance = Mathf.distance(targetLoc.x, targetLoc.y, actorLoc.x, actorLoc.y);
             // as we approach target, calculate distance required to slow down, start slowing down when we reach that distance
             if (e.accel) {
                 let decelDistance = (e.speed * e.speed) / (2 * e.accel);
                 if (distance < decelDistance) e.targetSpeed = 0;
             }
-            // calculate heading change to target
-            e.heading = Mathf.angle(actorLoc.x, actorLoc.y, targetLoc.x, targetLoc.y, true);
             // if we are within range of target...
             if (distance <= e.range) {
                 targetReached = true;

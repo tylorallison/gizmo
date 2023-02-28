@@ -52,12 +52,29 @@ class GridGraph extends GizmoData {
     *getNeighbors(e, node) {
         if (!this.grid) return [];
         // look along each direction
-        for (const dir of Direction.all) {
+        let allowedDirs = 0;
+        for (const dir of Direction.cardinals) {
             let nidx = this.grid.idxfromdir(node, dir);
             if (nidx < 0) continue;
             // is path blocked to given neighbor index
             let blocked = this.blocker(this, e, nidx);
-            if (!blocked) yield nidx;
+            if (!blocked) {
+                allowedDirs |= dir;
+                yield nidx;
+            }
+        }
+        for (const dir of Direction.diagonals) {
+            let nidx = this.grid.idxfromdir(node, dir);
+            if (nidx < 0) continue;
+            // check adjacent cardinals to see if they are blocked
+            let cardinalsAllowed = Direction.adjacent(dir).reduce((pv, cv) => pv&((cv&allowedDirs) === cv), true);
+            if (!cardinalsAllowed) continue;
+            // is path blocked to given neighbor index
+            let blocked = this.blocker(this, e, nidx);
+            if (!blocked) {
+                allowedDirs |= dir;
+                yield nidx;
+            }
         }
     }
 

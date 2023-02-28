@@ -31,7 +31,7 @@ class UiGrid extends UiView {
         Schema.apply(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
         Schema.apply(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         Schema.apply(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
-        Schema.apply(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y+a.maxy-(b.xform.y+b.maxy) : a.z-b.z) });
+        Schema.apply(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z) });
         Schema.apply(this, 'alignx', { dflt: .5, renderable: true });
         Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
         Schema.apply(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
@@ -250,6 +250,10 @@ class UiGrid extends UiView {
 
     idxfromdir(idx, dir) {
         return this.chunks.idxfromdir(idx, dir);
+    }
+
+    idxsAdjacent(idx1, idx2) {
+        return this.chunks.idxsAdjacent(idx1, idx2);
     }
 
     *idxsBetween(idx1, idx2) {

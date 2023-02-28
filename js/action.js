@@ -59,6 +59,7 @@ class Action extends Gizmo {
         if (!this.ok && this.failSfx) SfxSystem.playSfx(this, this.failSfx);
         EvtSystem.trigger(actor, 'action.done', { action: this, ok: this.ok });
         // clean up all action state
+        console.log(`destroy ${this}`);
         this.destroy();
         return Promise.resolve(this.ok);
     }

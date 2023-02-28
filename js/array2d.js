@@ -125,6 +125,13 @@ class Array2D extends GizmoData {
         }
     }
 
+    idxsAdjacent(idx1, idx2) {
+        for (const dir of Direction.all) {
+            if (this.idxfromdir(idx1, dir) === idx2) return true;
+        }
+        return false;
+    }
+
     // -- accessor methods
     getij(i, j) {
         let idx = this.idxfromij(i, j);

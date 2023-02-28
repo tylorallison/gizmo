@@ -39,6 +39,16 @@ class Mathf {
         return theta;
     }
 
+    static angleBetween(a, b, rad=false) {
+        let d = a - b;
+        if (rad) {
+            d += (d > Math.PI) ? -Math.PI*2 : (d < -Math.PI) ? Math.PI*2 : 0;
+        } else {
+            d += (d > 180) ? -360 : (d < -180) ? 360 : 0;
+        }
+        return Math.abs(d);
+    }
+
     static distance(x1, y1, x2, y2) {
         let dx = x2-x1;
         let dy = y2-y1;
