@@ -36,6 +36,7 @@ class UiGrid extends UiView {
         Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
         Schema.apply(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
         Schema.apply(this, 'colSize', { renderable: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
+        Schema.apply(this, 'length', { readonly: true, getter: (o,x) => o.chunks.length });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
