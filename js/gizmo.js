@@ -20,11 +20,25 @@ class Gizmo extends GizmoData {
     static gid = 1;
 
     // STATIC PROPERTIES ---------------------------------------------------
+    /**
+     * @member {GizmoContext} - get singleton/global instance of GizmoContext
+     */
     static get gctx() {
         return GizmoContext.main;
     }
 
     // STATIC METHODS ------------------------------------------------------
+    /**
+     * listen sets a new event handler for an event, where the emitter is the global game context {@link GizmoContext} and
+     * the receiver is given along with the event tag and event handler function {@link EvtSystem~handler}.
+     * @param {ExtEvtReceiver} receiver - event receiver
+     * @param {string} tag - event tag to listen for
+     * @param {EvtSystem~handler} fcn - event handler function
+     * @param {Object} opts - options for event listen
+     * @param {int} opts.priority - priority associated with listener, event callbacks will be sorted based on ascending priority.
+     * @param {boolean} opts.once - indicates if event listener should only be triggered once (after which the listener will automatically be removed).
+     * @param {EvtSystem~filter} opts.filter - event filter for listener allowing for fine-grained event management.
+     */
     static listen(receiver, tag, fcn, opts={}) {
         EvtSystem.listen(this.gctx, receiver, tag, fcn, opts);
     }

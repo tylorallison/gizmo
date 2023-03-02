@@ -16,55 +16,50 @@ import { SfxSystem } from './sfxSystem.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
+ * @extends Gizmo
  */
 class Game extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
+    /**
+     * assetSpecs is an array of {@link GizmoSpec} specifications that define assets for the game.  These definitions
+     * will be parsed and loaded during game startup.  Override this static variable in subclasses to define assets for specific game logic.
+     * @static
+     */
     static assetSpecs = [];
-    /*
-    static startStateTag = 'play';
-    static config = {};
-    */
 
     // max allowed delta time (in ms)
     static dfltMaxDeltaTime = 50;
 
     // SCHEMA --------------------------------------------------------------
-    static {
-        Schema.apply(this, 'dbg', { eventable: false, dflt: false});
-        Schema.apply(this, 'name', { dflt: this.name, readonly: true});
-        Schema.apply(this, 'maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime});
-        Schema.apply(this, 'frame', { eventable: false, dflt: 0});
-        Schema.apply(this, 'lastUpdate', { eventable: false, dflt: 0});
-        Schema.apply(this, 'assets', { readonly: true, parser: (o,x) => new Assets()});
-        Schema.apply(this, 'systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })});
-        Schema.apply(this, 'states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })});
-        Schema.apply(this, 'generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })});
-    }
+    /** @member {*} Game#dbg - enables debugging for gizmo */
+    static { Schema.apply(this, 'dbg', { eventable: false, dflt: false}); }
+    /** @member {string} Game#name - name for game */
+    static { Schema.apply(this, 'name', { dflt: this.name, readonly: true}); }
+    /** @member {int} Game#maxDeltaTime - max value for a single frame delta time */
+    static { Schema.apply(this, 'maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
+    /** @member {int} Game#frame - frame counter */
+    static { Schema.apply(this, 'frame', { eventable: false, dflt: 0}); }
+    /** @member {float} Game#lastUpdate - time of last update */
+    static { Schema.apply(this, 'lastUpdate', { eventable: false, dflt: 0}); }
+    /** @member {Assets} Game#assets - game assets */
+    static { Schema.apply(this, 'assets', { readonly: true, parser: (o,x) => new Assets()}); }
+    /** @member {SystemMgr} Game#systems - game systems {@link System} */
+    static { Schema.apply(this, 'systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
+    /** @member {StateMgr} Game#states - game states {@link GameState} */
+    static { Schema.apply(this, 'states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
+    /** @member {Generator} Game#generator - generator for gizmos in game */
+    static { Schema.apply(this, 'generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
 
+    // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
         super.cpre(spec);
         this.loop = this.loop.bind(this);
     }
-
     cpost(spec) {
         super.cpost(spec);
-        //this.dbg = spec.hasOwnProperty('dbg') ? spec.dbg : true;
-        //this.name = spec.name || this.constructor.name;
-
-        //this.maxDeltaTime = spec.maxDeltaTime || this.constructor.dfltMaxDeltaTime;
-        //this.frame = 0;
-        //this.lastUpdate = Math.round(performance.now());
-
-
         // -- build out game state
         this.gctx.game = this;
         Generator.main = this.generator;
-        //GizmoProperty.define(this, 'assets', new Assets(), { readonly: true });
-        //GizmoProperty.define(this, 'systems', new SystemMgr({gctx: this.gctx}), { readonly: true });
-        //GizmoProperty.define(this, 'states', new StateMgr({gctx: this.gctx}), { readonly: true });
-        //let generator = new Generator({gctx: this.gctx, assets: this.assets});
-        //GizmoProperty.define(this, 'generator', generator, { readonly: true });
-
     }
 
     // METHODS -------------------------------------------------------------
@@ -85,6 +80,12 @@ class Game extends Gizmo {
         EvtSystem.trigger(this, 'game.inited');
         return Promise.resolve();
     }
+
+    /**
+     * init is called during game startup to perform any initialization that is required before assets are loaded.  
+     * Override to perform game specific initialization.
+     * @returns {Promise}
+     */
     async init() {
         return Promise.resolve();
     }
@@ -97,6 +98,11 @@ class Game extends Gizmo {
         EvtSystem.trigger(this, 'game.loaded');
         return Promise.resolve();
     }
+
+    /**
+     * load is called during game startup to perform game loading functions.  
+     * @returns {Promise}
+     */
     async load() {
         return Promise.resolve();
     }
@@ -119,10 +125,21 @@ class Game extends Gizmo {
         EvtSystem.trigger(this, 'game.prepared');
         return Promise.resolve();
     }
+
+    /**
+     * prepare is the final stage of game startup.  This method should be overwritten to provide game-specific
+     * logic to start your game.
+     * @returns {Promise}
+     */
     async prepare() {
         return Promise.resolve();
     }
 
+    /**
+     * start is called to start the game.  It will call init, load, and prepare in order and wait for each stage to complete.  Then the main
+     * game loop is started.
+     * @returns {Promise}
+     */
     async start() {
         // initialization
         await this.doinit();

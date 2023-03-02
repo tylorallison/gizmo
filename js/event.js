@@ -4,6 +4,15 @@ import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
 import { Schema } from './schema.js';
 
+/**
+ * EvtHandler defines an specification argument for the GizmoData constructor that can be passed to a {@link Generator} instance.
+ * The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
+ * for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.
+ * @typedef {Object} GizmoSpec
+ * @property {boolean} $gzx=true - Indicates this is a GizmoData specification 
+ * @property {string} cls - Name of class associated with specification
+ */
+
 class EvtLink {
     constructor(tag, emitter, receiver, fcn, opts={}) {
         this.tag = tag;
@@ -19,7 +28,23 @@ class EvtLink {
     }
 }
 
+/**
+ * EvtSystem defines static methods for handling of events.
+ */
 class EvtSystem {
+
+    /**
+     * An event handler is registered as an event listener and executed whenever a matching event has been triggered.
+     * @callback EvtSystem~handler
+     * @param {Evt} evt - Event data that has been triggered
+     */
+
+    /**
+     * An event filter is used to determine if a given event matches and is used for event predicate functions.
+     * @callback EvtSystem~filter
+     * @param {Evt} evt - Event to be evaluated
+     * @returns {boolean} - indicates if given event matches
+     */
 
     static isEmitter(obj) {
         return obj.hasOwnProperty('evtEmitterLinks') && obj.hasOwnProperty('evtCounts');
@@ -159,8 +184,14 @@ class Evt {
     }
 }
 
+/**
+ * ExtEvtEmitter acts as an mixin for other classes and defines schema attributes appropriate for an event emitter.
+ * @mixin
+ */
 class ExtEvtEmitter {
 
+    /** @member {Map} ExtEvtEmitter#evtCounts - a map of event to integer count of event triggers for that event */
+    /** @member {Map} ExtEvtEmitter#evtEmitterLinks - a map of event to emitter links for that event */
     static apply(cls, spec={}) {
         // data
         Schema.apply(cls, 'evtCounts', { eventable: false, serializable: false, parser: () =>  new Map() });

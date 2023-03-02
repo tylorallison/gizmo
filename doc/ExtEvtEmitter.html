@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Global - Documentation</title>
+    <title>ExtEvtEmitter - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Global</h1>
+    <h1 class="page-title">ExtEvtEmitter</h1>
     
 
     
@@ -49,9 +49,11 @@
     
         <h2>
         
-            
+            ExtEvtEmitter
         
         </h2>
+        
+            <div class="class-description usertext"><p>ExtEvtEmitter acts as an mixin for other classes and defines schema attributes appropriate for an event emitter.</p></div>
         
     
 </header>
@@ -65,6 +67,11 @@
 <dl class="details">
     
 
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line191">line 191</a>
+    </li></ul></dd>
     
 
     
@@ -121,15 +128,11 @@
     
 
     
-
-    
-
-    
-        <h3 class="subsection-title">Type Definitions</h3>
+        <h3 class="subsection-title">Members</h3>
 
         
-                
-<h4 class="name" id="GizmoSpec">GizmoSpec</h4>
+            
+<h4 class="name" id="evtCounts"><span class="type-signature"></span>evtCounts<span class="type-signature"> :Map</span></h4>
 
 
 
@@ -138,15 +141,13 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>EvtHandler defines an specification argument for the GizmoData constructor that can be passed to a <a href="Generator.html">Generator</a> instance.
-The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
-for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>a map of event to integer count of event triggers for that event</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line7">line 7</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -183,101 +184,10 @@ for each GizmoData class defines other properties for that class and how they ar
 
 
 
-    <h5 class="subsection-title">Properties:</h5>
-
-    
-
-<table class="props">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>$gzx</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    <code>true</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Indicates this is a GizmoData specification</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>cls</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of class associated with specification</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
 
 
 <div class="description usertext">
-    <p>EvtHandler defines an specification argument for the GizmoData constructor that can be passed to a <a href="Generator.html">Generator</a> instance.
-The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
-for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.</p>
+    <p>a map of event to integer count of event triggers for that event</p>
 </div>
 
 
@@ -286,7 +196,7 @@ for each GizmoData class defines other properties for that class and how they ar
     <ul>
         <li>
             
-<span class="param-type">Object</span>
+<span class="param-type">Map</span>
 
 
 
@@ -298,9 +208,9 @@ for each GizmoData class defines other properties for that class and how they ar
 
 
 
+        
             
-                
-<h4 class="name" id="GizmoSpec">GizmoSpec</h4>
+<h4 class="name" id="evtEmitterLinks"><span class="type-signature"></span>evtEmitterLinks<span class="type-signature"> :Map</span></h4>
 
 
 
@@ -309,15 +219,13 @@ for each GizmoData class defines other properties for that class and how they ar
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>GizmoSpec defines an specification argument for the GizmoData constructor that can be passed to a <a href="Generator.html">Generator</a> instance.
-The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
-for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>a map of event to emitter links for that event</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="gizmoData.js.html">gizmoData.js</a>, <a href="gizmoData.js.html#line36">line 36</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line194">line 194</a>
     </li></ul></dd>
     
 
@@ -354,101 +262,10 @@ for each GizmoData class defines other properties for that class and how they ar
 
 
 
-    <h5 class="subsection-title">Properties:</h5>
-
-    
-
-<table class="props">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>$gzx</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    <code>true</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Indicates this is a GizmoData specification</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>cls</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of class associated with specification</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
 
 
 <div class="description usertext">
-    <p>GizmoSpec defines an specification argument for the GizmoData constructor that can be passed to a <a href="Generator.html">Generator</a> instance.
-The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
-for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.</p>
+    <p>a map of event to emitter links for that event</p>
 </div>
 
 
@@ -457,7 +274,7 @@ for each GizmoData class defines other properties for that class and how they ar
     <ul>
         <li>
             
-<span class="param-type">Object</span>
+<span class="param-type">Map</span>
 
 
 
@@ -469,7 +286,11 @@ for each GizmoData class defines other properties for that class and how they ar
 
 
 
-            
+        
+    
+
+    
+
     
 
     
