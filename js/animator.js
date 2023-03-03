@@ -1,83 +1,90 @@
 export { Animator };
 
-//import { EvtStream, Events } from './event.js';
-import { Fmt } from './fmt.js';
 import { EvtSystem, ExtEvtReceiver } from './event.js';
 import { Schema } from './schema.js';
 import { Sketch } from './sketch.js';
 import { GizmoData } from './gizmoData.js';
 
-
-/** ========================================================================
- * An animator is responsible for driving animations based on state passed through event updates
+// =========================================================================
+/**
+ * An animator is responsible for driving animations based on state of a parent object passed through event updates
+ * @extends Sketch
  */
 class Animator extends Sketch {
 
-    static {
-        // -- sketch state mapping
-        Schema.apply(this, 'trunkKey', { dflt: 'state', readonly: true });
-        Schema.apply(this, 'sketches', { dflt: {}, readonly: true });
-        // map of transitions
-        // { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]}
-        Schema.apply(this, 'transitions', { dflt: {}, readonly: true });
-        // -- state tracking
-        Schema.apply(this, 'state', { dflt: 'idle', renderable: true, setter: (o,x,v) => {
-            if (o.sketches.hasOwnProperty(v)) {
-                if (o.sketch) o.sketch.disable();
-                let targetSketch = o.sketches[v];
-                let transition = false;
-                // check for transition
-                if (o.sketch && o.transitions.hasOwnProperty(v)) {
-                    // find best
-                    let possibles = o.transitions[v];
-                    let match;
-                    for (const possible of possibles) {
-                        if (!possible.sketch) return;
-                        if (possible.from === o.state) {
-                            match = possible.sketch;
-                            break;
-                        } else if ( !possible.from ) {
-                            match = possible.sketch;
-                        }
-                    }
-                    if (match) {
-                        match.reset();
-                        if (!match.done) {
-                            transition = true;
-                            targetSketch = match;
-                        }
+    // SCHEMA --------------------------------------------------------------
+    /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
+    static { Schema.apply(this, 'trunkKey', { dflt: 'state', readonly: true }); }
+    /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */
+    static { Schema.apply(this, 'sketches', { dflt: {}, readonly: true }); }
+    /** @member {Object} Animator#transitions - map of transitions  { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]} */
+    static { Schema.apply(this, 'transitions', { dflt: {}, readonly: true }); }
+    /** @member {Object} Animator#state - current animator state, tracks to target state */
+    static { Schema.apply(this, 'state', { dflt: 'idle', renderable: true, setter: (o,x,v) => {
+        if (o.sketches.hasOwnProperty(v)) {
+            if (o.sketch) o.sketch.disable();
+            let targetSketch = o.sketches[v];
+            let transition = false;
+            // check for transition
+            if (o.sketch && o.transitions.hasOwnProperty(v)) {
+                // find best
+                let possibles = o.transitions[v];
+                let match;
+                for (const possible of possibles) {
+                    if (!possible.sketch) return;
+                    if (possible.from === o.state) {
+                        match = possible.sketch;
+                        break;
+                    } else if ( !possible.from ) {
+                        match = possible.sketch;
                     }
                 }
-                o.sketch = targetSketch;
-                if (transition) {
-                    let root = GizmoData.root(o);
-                    let path = `${GizmoData.path(o.sketch)}.done`;
-                    if (EvtSystem.isEmitter(root)) {
-                        EvtSystem.listen(root, o, 'gizmo.updated', (evt) => {
-                            if (o.state === v) {
-                                o.sketch.disable();
-                                o.sketch = o.sketches[v];
-                                o.sketch.reset();
-                                o.sketch.enable();
-                            }
-                        }, { once: true, filter: (evt) => evt.update.hasOwnProperty(path) });
+                if (match) {
+                    match.reset();
+                    if (!match.done) {
+                        transition = true;
+                        targetSketch = match;
                     }
                 }
-                o.sketch.reset();
-                o.sketch.enable();
-                return v;
             }
-            return o.state;
-        } });
-        Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) });
-        Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) });
-        Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) });
-        Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )});
-        Schema.apply(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )});
-        ExtEvtReceiver.apply(this);
-    }
+            o.sketch = targetSketch;
+            if (transition) {
+                let root = GizmoData.root(o);
+                let path = `${GizmoData.path(o.sketch)}.done`;
+                if (EvtSystem.isEmitter(root)) {
+                    EvtSystem.listen(root, o, 'gizmo.updated', (evt) => {
+                        if (o.state === v) {
+                            o.sketch.disable();
+                            o.sketch = o.sketches[v];
+                            o.sketch.reset();
+                            o.sketch.enable();
+                        }
+                    }, { once: true, filter: (evt) => evt.update.hasOwnProperty(path) });
+                }
+            }
+            o.sketch.reset();
+            o.sketch.enable();
+            return v;
+        }
+        return o.state;
+    } }); }
+    /** @member {Object} Animator#state - current animator sketch */
+    static { Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
+    /** @member {Object} Animator#width - width of current animator sketch*/
+    static { Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    /** @member {Object} Animator#height - height of current animator sketch*/
+    static { Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    /** @member {integer} Sketch#ttl - time to live for current animator sketch */
+    static { Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
+    /** @member {integer} Sketch#done - is current animator sketch marked as done */
+    static { Schema.apply(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
+    static { ExtEvtReceiver.apply(this); }
 
     // DATA CHANGE HANDLERS ------------------------------------------------
+    /**
+     * link animator to trunk object
+     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     */
     atLink(trunk) {
         // if linked to gizmo
         let self = this;
@@ -86,6 +93,11 @@ class Animator extends Sketch {
         }
         if (this.state !== trunk[this.trunkKey]) this.state = trunk[this.trunkKey];
     }
+
+    /**
+     * unlink animator from trunk object
+     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     */
     atUnlink(trunk) {
         if (EvtSystem.isEmitter(trunk)) {
             EvtSystem.ignore(trunk, this, 'gizmo.updated');
@@ -93,6 +105,9 @@ class Animator extends Sketch {
     }
 
     // METHODS -------------------------------------------------------------
+    /**
+     * enable the animator and current animator sketch
+     */
     enable() {
         if (!this.active) {
             if (this.sketch) this.sketch.enable();
@@ -100,12 +115,23 @@ class Animator extends Sketch {
         super.enable();
     }
 
+    /**
+     * disable the animator and current animator sketch
+     */
     disable() {
         // disable current sketch
         if (this.sketch) this.sketch.disable();
         super.disable();
     }
 
+    /**
+     * render the animator
+     * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
+     */
     subrender(ctx, x=0, y=0, width=0, height=0) {
         if (this.sketch) this.sketch.render(ctx, x, y, width, height);
     }

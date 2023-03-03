@@ -14,14 +14,16 @@ import { Stats } from './stats.js';
  */
 class Sketch extends GizmoData {
 
-
     // STATIC VARIABLES ----------------------------------------------------
-    /** @const {string} Sketch.renderable=true - indicates if instance of class is renderable by render system */
+    /** @const {boolean} Sketch.renderable=true - indicates if instance of class is renderable by render system */
     static renderable = true;
 
     static dfltTTL = 100;
 
     // STATIC PROPERTIES ---------------------------------------------------
+    /**
+     * @member {Sketch} - get a new instance of a default sketch, useful for null rendering.
+     */
     static get zero() {
         return new Sketch();
     }
@@ -50,16 +52,17 @@ class Sketch extends GizmoData {
         super.destroy();
     }
 
-    // PROPERTIES ----------------------------------------------------------
-    get duration() {
-        return this.ttl;
-    }
-
     // METHODS -------------------------------------------------------------
+    /**
+     * enable is called when a sketch is first rendered to perform any actions necessary to allow for rendering and state management for the sketch.
+     */
     enable() {
         this.active = true;
     }
 
+    /**
+     * disable is called to stop any state management for the sketch.
+     */
     disable() {
         this.active = false;
     }
@@ -71,8 +74,12 @@ class Sketch extends GizmoData {
     }
 
     /**
-     * A sketch can be rendered...
+     * Any sketch can be rendered...
      * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
      */
     render(ctx, x=0, y=0, width=0, height=0) {
         Stats.count('sketch.render');
@@ -93,11 +100,38 @@ class Sketch extends GizmoData {
         ctx.imageSmoothingEnabled = savedSmoothing;
     }
 
-    prerender(ctx) {
+    /**
+     * prerender is an overrideable method that allows for subclasses to define specific actions to take prior to rendering.
+     * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
+     * @abstract
+     */
+    prerender(ctx, x=0, y=0, width=0, height=0) {
     }
-    subrender(ctx) {
+    /**
+     * subrender is an overrideable method that should be used for subclasses to define how their specific implementation of a sketch should be rendered.
+     * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
+     * @abstract
+     */
+    subrender(ctx, x=0, y=0, width=0, height=0) {
     }
-    postrender(ctx) {
+    /**
+     * postrender is an overrideable method that allows for subclasses to define specific actions to take after rendering.
+     * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
+     * @abstract
+     */
+    postrender(ctx, x=0, y=0, width=0, height=0) {
     }
 
     /**

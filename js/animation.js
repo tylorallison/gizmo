@@ -9,22 +9,31 @@ import { Schema } from './schema.js';
 /** 
  * An animation is a sketch used to render a series of animation cels (sketches).
  * @extends Sketch
- * @property {boolean} [loop=true] - indicates if the animation should loop
  */
 class Animation extends Sketch {
     // SCHEMA --------------------------------------------------------------
-    static {
-        Schema.apply(this, 'loop', { dflt: true });
-        Schema.apply(this, 'timer', { link: true, serializable: false, eventable: false });
-        Schema.apply(this, 'sketchIdx', { eventable: false, dflt: 0 });
-        Schema.apply(this, 'sketches', { dflt: [], readonly: true });
-        Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) });
-        Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) });
-        Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) });
-        Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) });
-    }
+    /** @member {boolean} Animation#loop - should the animation be looped */
+    static { Schema.apply(this, 'loop', { dflt: true }); }
+    /** @member {boolean} Animation#timer - timer for this animation */
+    static { Schema.apply(this, 'timer', { link: true, serializable: false, eventable: false }); }
+    /** @member {boolean} Animation#sketchIdx - index of current animation frame */
+    static { Schema.apply(this, 'sketchIdx', { eventable: false, dflt: 0 }); }
+    /** @member {Sketch[]} Animation#sketches - array of cels/sketches to animate */
+    static { Schema.apply(this, 'sketches', { dflt: [], readonly: true }); }
+    /** @member {boolean} Animation#sketch - the current animation frame/sketch */
+    static { Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
+    /** @member {boolean} Animation#width - width of current animation frame */
+    static { Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    /** @member {boolean} Animation#height - height of current animation frame */
+    static { Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    /** @member {integer} Sketch#ttl - time to live for current animation frame */
+    static { Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
+    /**
+     * Animation constructor
+     * @param {Object} spec - object with key/value pairs used to pass properties to the constructor
+     */
     constructor(spec) {
         let sketches = spec.sketches || [];
         if (spec.jitter) spec.sketchIdx = Random.rangeInt(0, sketches.length-1);
@@ -33,8 +42,11 @@ class Animation extends Sketch {
     }
 
     // EVENT HANDLERS ------------------------------------------------------
+    /**
+     * onTimer is an event callback executed when the animation loop timer is done with each animation frame
+     * @param {Evt} evt 
+     */
     onTimer(evt) {
-        console.log(`animation timer`);
         this.timer = null;
         // advance frame accounting for timer overflow
         let overflow = evt.overflow || 0;
@@ -56,6 +68,9 @@ class Animation extends Sketch {
     }
 
     // METHODS -------------------------------------------------------------
+    /**
+     * enable the animation by creating/starting the animation timer
+     */
     enable() {
         if (!this.active) {
             if (this.sketch) this.sketch.enable();
@@ -67,6 +82,9 @@ class Animation extends Sketch {
         super.enable();
     }
 
+    /**
+     * disable the animation by stopping the animation timer
+     */
     disable() {
         // disable current sketch
         if (this.sketch) this.sketch.disable();
@@ -78,6 +96,9 @@ class Animation extends Sketch {
         super.disable();
     }
 
+    /**
+     * reset the animation
+     */
     reset() {
         this.sketchIdx = 0;
         this.done = false;
@@ -115,6 +136,14 @@ class Animation extends Sketch {
         return true;
     }
 
+    /**
+     * subrender renders the current animation frame
+     * @param {canvasContext} ctx - canvas context on which to draw
+     * @param {number} [x=0] - x position to render sketch at
+     * @param {number} [y=0] - y position to render sketch at
+     * @param {number} [width=0] - desired width to render, if unspecified, sketch will render at internal width
+     * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
+     */
     subrender(ctx, x=0, y=0, width=0, height=0) {
         if (this.sketch) this.sketch.render(ctx, x, y, width, height);
     }

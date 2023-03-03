@@ -4,15 +4,6 @@ import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
 import { Schema } from './schema.js';
 
-/**
- * EvtHandler defines an specification argument for the GizmoData constructor that can be passed to a {@link Generator} instance.
- * The properties defined here are the minimum required for the generator to identify the class properly.  The schema defined
- * for each GizmoData class defines other properties for that class and how they are parsed from the GizmoSpec.
- * @typedef {Object} GizmoSpec
- * @property {boolean} $gzx=true - Indicates this is a GizmoData specification 
- * @property {string} cls - Name of class associated with specification
- */
-
 class EvtLink {
     constructor(tag, emitter, receiver, fcn, opts={}) {
         this.tag = tag;
