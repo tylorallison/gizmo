@@ -41,12 +41,12 @@ describe('gizmo data', () => {
         };
         class TSubUpdate extends GizmoData {
             static { 
-                Schema.apply(this, 'leaf', { atUpdate: (o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); 
+                Schema.apply(this, 'leaf', { atUpdate: (r,o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); 
             };
         };
         class TRoot extends GizmoData {
             static { 
-                Schema.apply(this, 'sub', { atUpdate: (o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); 
+                Schema.apply(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); 
             };
         };
         let leaf = new TLeaf({el: 'hello'});

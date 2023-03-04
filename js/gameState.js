@@ -95,12 +95,13 @@ class GameState extends Gizmo {
         // initialization
         if (this.state === 'none') {
             await this.doinit(data);
-            // load
-            await this.doload(data);
             this.state = 'initialized';
         }
         // prepare
         if (this.state === 'initialized') {
+            // load
+            await this.doload(data);
+            // prepare
             await this.doprepare(data);
             this.state = 'started';
         }

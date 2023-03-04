@@ -12,7 +12,7 @@ class UiButton extends UiPanel {
         Schema.apply(this, 'unpressed', { parser: (o,x) => (x.hasOwnProperty('unpressed')) ? x.unpressed : o.constructor.dfltUnpressed, link: true, renderable: true });
         Schema.apply(this, 'highlight', { parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight, link: true, renderable: true });
         Schema.apply(this, 'pressed', { parser: (o,x) => (x.hasOwnProperty('pressed')) ? x.pressed : o.constructor.dfltPressed, link: true, renderable: true });
-        Schema.apply(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', renderable: true, atUpdate: (o,k,ov,nv) => o._text.text = nv });
+        Schema.apply(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o._text.text = nv });
         Schema.apply(this, 'hltext', { parser: (o,x) => (x.hasOwnProperty('hltext')) ? x.hltext : null, renderable: true });
         Schema.apply(this, 'textSpec', {eventable: false, renderable: false, parser: (o,x) => (x.textSpec || {}), onset: (o,k,v) => Object.assign(o._text, v)});
         Schema.apply(this, 'hlTextSpec', {eventable: false, renderable: false, parser: (o,x) => (x.hlTextSpec || {})});

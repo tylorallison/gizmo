@@ -51,7 +51,7 @@ describe('a UI grid', () => {
         for (const [idx, rslt] of [
             [0, [g1,g4]],
             [1, [g2,g4]],
-            [2, [g3,g4]],
+            [2, [g4,g3]],
             [3, [g4]],
         ]) {
             let gzos = Array.from(grid.findAtIdx(idx, (v) => true));
@@ -64,7 +64,7 @@ describe('a UI grid', () => {
         for (const [idx, rslt] of [
             [0, g1],
             [1, g2],
-            [2, g3],
+            [2, g4],
             [3, g4],
         ]) {
             let gzo = grid.firstAtIdx(idx, (v) => true);

@@ -31,7 +31,7 @@ describe('a game state', () => {
         let state = new GameState( { gctx: gctx, assetSpecs: [
             { cls: 'test', tag: 'test' },
         ] });
-        expect(state.state).toEqual('created');
+        expect(state.state).toEqual('none');
         await state.start();
         expect(state.state).toEqual('started');
         await state.stop();

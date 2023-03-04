@@ -14,7 +14,7 @@ describe('a state manager', () => {
     it('can watch for new states', ()=>{
         let state = new GameState({ gctx: gctx, tag: 'test'});
         expect(mgr.get('test')).toBe(state);
-        expect(state.state).toEqual('created');
+        expect(state.state).toEqual('none');
     });
 
     it('can watch for destroyed states', ()=>{

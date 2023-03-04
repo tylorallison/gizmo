@@ -211,12 +211,12 @@ class GizmoData {
                     }
                     // handle atUpdate updates
                     // -- per attribute settings are controlled by attribute schema
-                    if (schema.atUpdate) schema.atUpdate(gzd, schema.key, oldValue, newValue);
+                    if (schema.atUpdate) schema.atUpdate(gzd.$trunk, gzd, schema.key, oldValue, newValue);
                     // -- path updates are controlled by GizmoData.$pathUpdatable
                     if (gzd.$pathUpdatable) {
                         //console.log(`schema.$pathUpdatable for: ${gzd}`);
                         for (const gzt of gzd.constructor.eachInPath(gzd, (gzn) => (gzn.$schema && gzn.$schema.atUpdate))) {
-                            gzt.$schema.atUpdate(gzt.$trunk, schema.key, oldValue, newValue);
+                            gzt.$schema.atUpdate(gzt.$trunk, gzd, schema.key, oldValue, newValue);
                         }
                     }
 

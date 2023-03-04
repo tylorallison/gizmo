@@ -16,7 +16,7 @@ class UiGrid extends UiView {
 
     static {
         Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds(gzo.xform.bounds.minx+gzo.xform.x, gzo.xform.bounds.miny+gzo.xform.y, gzo.xform.bounds.width, gzo.xform.bounds.height)) });
-        Schema.apply(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (o, k, ov, nv) => { console.log(`o: ${o}`); o.resize(); }});
+        Schema.apply(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
         Schema.apply(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
         Schema.apply(this, 'renderFilter', { dflt: ((idx, view) => true) });
         Schema.apply(this, 'optimizeRender', { dflt: true });

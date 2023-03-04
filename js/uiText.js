@@ -35,18 +35,18 @@ class UiText extends UiView {
     static get dfltFmt() { return new TextFormat() };
 
     static {
-        Schema.apply(this, 'text', { dflt: 'default text', renderable: true, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'text', { dflt: 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
         // none, stretch, wrap, autowrap
-        Schema.apply(this, 'fitter', { dflt: 'stretch', renderable: true, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'alignx', { dflt: .5, renderable: true, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'aligny', { dflt: .5, renderable: true, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'fitter', { dflt: 'stretch', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'alignx', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'aligny', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
         Schema.apply(this, 'tokens', { link: 'array', parser: (() => ([])) });
         Schema.apply(this, 'needsLayout', { eventable: false, dflt: true });
         Schema.apply(this, 'lastHeight', { eventable: false, dflt: 0 });
         Schema.apply(this, 'lastWidth', { eventable: false, dflt: 0 });
         // -- leading is the space between lines, expressed as percent of line height
-        Schema.apply(this, 'leadingPct', { renderable: true, dflt: .25, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        Schema.apply(this, 'leadingPct', { renderable: true, dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
     }
 
     // STATIC METHODS ------------------------------------------------------
