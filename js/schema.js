@@ -4,7 +4,25 @@ class Schema {
 
     static apply(cls, key, spec={}) {
         if (cls.schema.hasOwnProperty(key)) delete cls.schema[key];
-        cls.schema[key] = new this(key, spec);
+        let newSchema = new this(key, spec);
+        cls.schema[key] = newSchema;
+        for (const otherSchema of Object.values(cls.schema)) {
+            if (otherSchema.key === key) continue;
+            // handle existing schema which might have an autogen dependency
+            if (otherSchema.autogen) {
+                if (typeof otherSchema.autogen !== 'function' || otherSchema.autogen(key)) {
+                    //console.log(`${newSchema.key} add autogen dep: ${otherSchema.key}`);
+                    newSchema.autogendeps.add(otherSchema.key);
+                }
+            }
+            // handle if this new schema has an autogen dependency
+            if (newSchema.autogen && !newSchema.autogendeps.has(otherSchema.key)) {
+                if (typeof newSchema.autogen !== 'function' || newSchema.autogen(otherSchema.key)) {
+                    //console.log(`${otherSchema.key} add autogen dep: ${key}`);
+                    otherSchema.autogendeps.add(key);
+                }
+            }
+        }
         if (spec.autogen && !cls.$autogenKeys.includes(key)) {
             cls.$autogenKeys.push(key);
         }
@@ -22,6 +40,7 @@ class Schema {
         // setter function of format (object, specification, value) => { <function returning final value> };
         this.setter = spec.setter;
         this.autogen = spec.autogen;
+        this.autogendeps = new Set();
         //this.parser = spec.parser || ((obj, x) => x.hasOwnProperty(this.specKey) ? x[this.specKey] : (x.autogen) ? x.autogen() : this.dflt);
         this.parser = spec.parser || ((o, x) => {
             if (x.hasOwnProperty(this.specKey)) return x[this.specKey];
@@ -39,8 +58,6 @@ class Schema {
         this.serializable = spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
         this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
-
-
     }
 
 }
