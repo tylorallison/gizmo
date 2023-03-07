@@ -161,12 +161,10 @@ describe('gizmo data', () => {
         expect(gzd.adata).toEqual(2);
         gzd.sub.sdata = 4;
         expect(gzd.adata).toEqual(8);
-        //expect(gzd.sdata1).toEqual(4);
-        //expect(gzd.sdata2).toEqual(2);
-        //gzd.sdata2 = 3;
-        //expect(gzd.sdata1).toEqual(4);
-        //expect(gzd.sdata2).toEqual(3);
-        //expect(gzd.adata).toEqual(8);
+        gzd.other = 3;
+        expect(gzd.adata).toEqual(8);
+        gzd.sub.sdata = 5;
+        expect(gzd.adata).toEqual(15);
     });
 
 });
