@@ -22,13 +22,10 @@ class WaitAction extends Action {
         if (this.dbg) console.log(`starting ${this} action w ttl: ${this.ttl}`);
         let p = new Promise( resolve => {
             this.resolver = resolve;
-            //console.log(`inside promise gctx: ${this.gctx}`);
             EvtSystem.listen(this.gctx, this, 'game.tock', (evt) => {
-                //console.log(`wait ticker`);
                 this.ttl -= evt.deltaTime;
                 if (this.ttl <= 0) this.resolver(this.ok);
             });
-            //console.log(`after listen: ${this.gctx} emitter links: ${Fmt.ofmt(this.gctx.evtEmitterLinks)}`);
         });
         return p;
     }

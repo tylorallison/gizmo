@@ -1,5 +1,6 @@
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
-import { GizmoData } from '../js/gizmoData.js';
+import { Fmt } from '../js/fmt.js';
+import { GizmoData, GizmoMap } from '../js/gizmoData.js';
 import { Schema } from '../js/schema.js';
 
 describe('gizmo data', () => {
@@ -165,6 +166,94 @@ describe('gizmo data', () => {
         expect(gzd.adata).toEqual(8);
         gzd.sub.sdata = 5;
         expect(gzd.adata).toEqual(15);
+    });
+
+});
+
+describe('a gizmo array', () => {
+    class TRef extends GizmoData {
+        static { 
+            Schema.apply(this, 'items', { link: 'array' }); 
+            Schema.apply(this, 'auto', { autogen: (k) => k === 'items', setter: (o,x,v) => {
+                return (o.items.length) ? `hello:there` : 'wait';
+            }}); 
+            ExtEvtEmitter.apply(this)
+        };
+    };
+    let gzd, receiver, tevt;
+    beforeEach(() => {
+        gzd = new TRef();
+        receiver = ExtEvtReceiver.gen();
+        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+    });
+
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.items.push('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items[0]']).toEqual('foo');
+    });
+
+    it('causes gizmo events when k/v deleted', ()=>{
+        gzd.items.push('foo');
+        expect(tevt.set['items[0]']).toEqual('foo');
+        expect(gzd.items.length).toEqual(1)
+        gzd.items.pop();
+        expect(tevt.set['items[0]']).toEqual(null);
+        expect(gzd.items.length).toEqual(0)
+    });
+
+    it('triggers autogen', ()=>{
+        expect(gzd.auto).toEqual('wait');
+        gzd.items.push('foo');
+        expect(gzd.auto).toEqual('hello:there');
+        gzd.items.pop();
+        expect(gzd.auto).toEqual('wait');
+    });
+
+});
+
+describe('a gizmo map', () => {
+    class TRef extends GizmoData {
+        static { 
+            Schema.apply(this, 'atts', { link: 'map' }); 
+            Schema.apply(this, 'auto', { autogen: (k) => k === 'atts', setter: (o,x,v) => {
+                return (o.atts.has('seeker')) ? `hello:${o.atts.get('seeker')}` : 'wait';
+            }}); 
+            ExtEvtEmitter.apply(this)
+        };
+    };
+    let gzd, receiver, tevt;
+    beforeEach(() => {
+        gzd = new TRef();
+        receiver = ExtEvtReceiver.gen();
+        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+    });
+
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.atts.set('foo', 'bar');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['atts.foo']).toEqual('bar');
+        gzd.atts.set('foo', 'baz');
+        expect(tevt.set['atts.foo']).toEqual('baz');
+    });
+
+    it('causes gizmo events when k/v deleted', ()=>{
+        gzd.atts.set('foo', 'bar');
+        expect(tevt.set['atts.foo']).toEqual('bar');
+        expect(gzd.atts.has('foo')).toBeTruthy()
+        gzd.atts.delete('foo');
+        expect(tevt.set['atts.foo']).toEqual(null);
+        expect(gzd.atts.has('foo')).toBeFalsy()
+    });
+
+    it('triggers autogen', ()=>{
+        expect(gzd.auto).toEqual('wait');
+        gzd.atts.set('seeker', 'there');
+        expect(gzd.auto).toEqual('hello:there');
+        gzd.atts.delete('seeker');
+        expect(gzd.auto).toEqual('wait');
     });
 
 });
