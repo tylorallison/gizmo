@@ -39,6 +39,8 @@ class Schema {
         this.getter = spec.getter;
         // setter function of format (object, specification, value) => { <function returning final value> };
         this.setter = spec.setter;
+        // nopathgen disables path updates (atUpdate and autogen)
+        this.nopathgen = spec.nopathgen;
         this.autogen = spec.autogen;
         this.autogendeps = new Set();
         //this.parser = spec.parser || ((obj, x) => x.hasOwnProperty(this.specKey) ? x[this.specKey] : (x.autogen) ? x.autogen() : this.dflt);
