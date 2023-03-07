@@ -54,6 +54,7 @@ class Serializer {
             } else if (schema.link) {
                 if (Array.isArray(value)) {
                     sobj[schema.serializeKey] = [];
+                    let sarray = sobj[schema.serializeKey];
                     for (const item of value) sarray.push(this.xifyGizmoData(sdata, item));
                 } else {
                     sobj[schema.serializeKey] = this.xifyGizmoData(sdata, value);

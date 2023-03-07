@@ -55,7 +55,8 @@ class Schema {
         this.eventable = (this.readonly) ? false : spec.hasOwnProperty('eventable') ? spec.eventable : true;
         this.gizmo = spec.hasOwnProperty('gizmo') ? spec.gizmo : false;
         this.atUpdate = spec.atUpdate;
-        this.serializable = spec.hasOwnProperty('serializable') ? spec.serializable : true;
+        // autogen fields are not serializable
+        this.serializable = (this.autogen) ? false : spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
         this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
     }
