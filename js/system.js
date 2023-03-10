@@ -58,8 +58,10 @@ class System extends Gizmo {
     }
 
     onGizmoDestroyed(evt) {
-        if (this.dbg) console.log(`${this} onGizmoDestroyed: ${Fmt.ofmt(evt)}`);
-        this.store.delete(evt.actor.gid);
+        if (this.store.has(evt.actor.gid)) {
+            if (this.dbg) console.log(`${this} onGizmoDestroyed: ${Fmt.ofmt(evt)}`);
+            this.store.delete(evt.actor.gid);
+        }
     }
 
     // METHODS -------------------------------------------------------------

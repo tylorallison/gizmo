@@ -7,6 +7,9 @@ import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 import { SfxSystem } from './sfxSystem.js';
 
+// FIXME: remove all async/promise code from actions... actions need to be able to be serialized, can't serialize the resolver
+// can still add a static "wait" function that wraps an action with a promise
+
 class Action extends Gizmo {
 
     static {
@@ -58,6 +61,7 @@ class Action extends Gizmo {
         if (this.ok && this.okSfx) SfxSystem.playSfx(this, this.okSfx);
         if (!this.ok && this.failSfx) SfxSystem.playSfx(this, this.failSfx);
         EvtSystem.trigger(actor, 'action.done', { action: this, ok: this.ok });
+        EvtSystem.trigger(this, 'action.done', { action: this, ok: this.ok });
         // clean up all action state
         console.log(`destroy ${this}`);
         this.destroy();
