@@ -18,16 +18,11 @@ class WaitAction extends Action {
     static dfltTTL = 500;
 
     // METHODS -------------------------------------------------------------
-    async prepare(ctx) {
-        if (this.dbg) console.log(`starting ${this} action w ttl: ${this.ttl}`);
-        let p = new Promise( resolve => {
-            this.resolver = resolve;
-            EvtSystem.listen(this.gctx, this, 'game.tock', (evt) => {
-                this.ttl -= evt.deltaTime;
-                if (this.ttl <= 0) this.resolver(this.ok);
-            });
+    doperform(ctx) {
+        EvtSystem.listen(this.gctx, this, 'game.tock', (evt) => {
+            this.ttl -= evt.deltaTime;
+            if (this.ttl <= 0) this.finish(this.ok);
         });
-        return p;
     }
 
 }

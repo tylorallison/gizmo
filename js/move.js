@@ -23,12 +23,7 @@ class MoveAction extends Action {
         Schema.apply(this, 'dy', { eventable: false, autogen: (k) => k === 'heading', setter: (o, x) => Math.sin(o.heading) });
     }
 
-    async prepare(ctx) {
-        let p = new Promise( resolve => {
-            this.resolver = resolve;
-        });
-        return p;
-    }
+    doperform(ctx) {}
 
     toString() {
         return Fmt.toString(this.constructor.name, this.speed, this.heading);
@@ -53,6 +48,7 @@ class MoveToAction extends MoveAction {
 }
 
 class MoveSystem extends System {
+    static dfltMatchFcn = ((gzo) => (gzo instanceof MoveAction && gzo.actor) );
 
     static {
         Schema.apply(this, 'actorLocator', { eventable: false, dflt: (actor) => (actor) ? new Vect(actor.xform.x, actor.xform.y) : Vect.zero });
@@ -68,7 +64,7 @@ class MoveSystem extends System {
         super.cpost(spec);
         // bind event handlers 
         this.onMoveStarted = this.onMoveStarted.bind(this);
-        EvtSystem.listen(this.gctx, this, 'action.started', this.onMoveStarted, { filter: (evt) => evt.action && (evt.action instanceof MoveAction) });
+        EvtSystem.listen(this.gctx, this, 'action.started', this.onMoveStarted, { filter: (evt) => (evt.action instanceof MoveAction) });
     }
 
     onMoveStarted(evt) {
@@ -162,7 +158,7 @@ class MoveSystem extends System {
         }
         // complete action if target is reached or speed is zero'd
         if (targetReached || (e.speed === 0 && e.targetSpeed === 0)) {
-            e.resolver(e.ok);
+            e.finish(e.ok);
         }
     }
 
