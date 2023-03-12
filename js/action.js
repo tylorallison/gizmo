@@ -10,7 +10,8 @@ import { SfxSystem } from './sfxSystem.js';
 class Action extends Gizmo {
 
     static {
-        Schema.apply(this, 'dbg', {dflt: false});
+        // FIXME
+        Schema.apply(this, 'dbg', {dflt: true});
         Schema.apply(this, 'done', { dflt: false });
         Schema.apply(this, 'ok', { dflt: true });
         Schema.apply(this, 'atts', { readonly: true });
@@ -44,7 +45,7 @@ class Action extends Gizmo {
         EvtSystem.trigger(actor, 'action.started', { action: this });
         if (this.startSfx) SfxSystem.playSfx(this.actor, this.startSfx);
         this.doperform(ctx);
-        if (this.done) this.finish(this.ok);
+        //if (this.done) this.finish(this.ok);
         return this.done;
     }
 
