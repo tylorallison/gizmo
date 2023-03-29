@@ -1,88 +1,105 @@
-import { Vect } from '../js/vect.js';
+import { Vect } from "../js/vect.js";
+import { Vect3 } from "../js/vect3.js";
 
-describe('a vector', () => {
+describe("a vector3", () => {
     let v;
     beforeEach(() => {
-        v = new Vect(1,2);
+        v = new Vect3(1,2,3);
     });
 
     // set
     let setTests = [
-        {args: [1], xX: 1, xY: 1},
-        {args: [2,1], xX: 2, xY: 1},
-        {args: [new Vect(2,1)], xX: 2, xY: 1},
+        {args: [1], xX: 1, xY: 1, xZ: 1},
+        {args: [2,1,0], xX: 2, xY: 1, xZ: 0},
+        {args: [new Vect(2,1)], xX: 2, xY: 1, xZ: 0},
+        {args: [new Vect3(2,1,0)], xX: 2, xY: 1, xZ: 0},
     ]
     for (const test of setTests) {
-        it('can set ' + test.args, ()=>{
+        it("can set " + test.args, ()=>{
             const rslt = v.set(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
     // add
     let addTests = [
-        {args: [1], xX: 2, xY: 3},
-        {args: [1,2], xX: 2, xY: 4},
-        {args: [new Vect(1,2)], xX: 2, xY: 4},
+        {args: [1], xX: 2, xY: 3, xZ: 4},
+        {args: [1,2], xX: 2, xY: 4, xZ: 4},
+        {args: [1,2,3], xX: 2, xY: 4, xZ: 6},
+        {args: [new Vect(1,2)], xX: 2, xY: 4, xZ: 3},
+        {args: [new Vect3(1,2,3)], xX: 2, xY: 4, xZ: 6},
     ]
     for (const test of addTests) {
-        it('can add ' + test.args, ()=>{
+        it("can add " + test.args, ()=>{
             const rslt = v.add(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
     // sub
     let subTests = [
-        {args: [1], xX: 0, xY: 1},
-        {args: [2,1], xX: -1, xY: 1},
-        {args: [new Vect(2,1)], xX: -1, xY: 1},
+        {args: [1], xX: 0, xY: 1, xZ: 2},
+        {args: [2,1], xX: -1, xY: 1, xZ: 1},
+        {args: [2,1,-1], xX: -1, xY: 1, xZ: 4},
+        {args: [new Vect(2,1)], xX: -1, xY: 1, xZ: 3},
+        {args: [new Vect3(2,1,-1)], xX: -1, xY: 1, xZ: 4},
     ]
     for (const test of subTests) {
-        it('can subtract ' + test.args, ()=>{
+        it("can subtract " + test.args, ()=>{
             const rslt = v.sub(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
     // mult
     let multTests = [
-        {args: [2], xX: 2, xY: 4},
-        {args: [2,3], xX: 2, xY: 6},
-        {args: [new Vect(2,3)], xX: 2, xY: 6},
+        {args: [2], xX: 2, xY: 4, xZ: 6},
+        {args: [2,3], xX: 2, xY: 6, xZ: 6},
+        {args: [2,3,4], xX: 2, xY: 6, xZ: 12},
+        {args: [new Vect(2,3)], xX: 2, xY: 6, xZ: 3},
+        {args: [new Vect3(2,3,4)], xX: 2, xY: 6, xZ: 12},
     ]
     for (const test of multTests) {
-        it('can multiply ' + test.args, ()=>{
+        it("can multiply " + test.args, ()=>{
             const rslt = v.mult(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
     // div
     let divTests = [
-        {args: [2], xX: .5, xY: 1},
-        {args: [2,8], xX: .5, xY: .25},
-        {args: [new Vect(2,8)], xX: .5, xY: .25},
+        {args: [2], xX: .5, xY: 1, xZ: 1.5},
+        {args: [2,8], xX: .5, xY: .25, xZ: 1.5},
+        {args: [2,8,6], xX: .5, xY: .25, xZ: .5},
+        {args: [new Vect(2,8)], xX: .5, xY: .25, xZ: 3},
+        {args: [new Vect3(2,8,6)], xX: .5, xY: .25, xZ: .5},
     ]
     for (const test of divTests) {
-        it('can divide ' + test.args, ()=>{
+        it("can divide " + test.args, ()=>{
             const rslt = v.div(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
     // dot
     let dotTests = [
         {args: [2,3], xRslt: 8},
+        {args: [2,3,4], xRslt: 20},
         {args: [new Vect(2,3)], xRslt: 8},
+        {args: [new Vect3(2,3,4)], xRslt: 20},
     ]
     for (const test of dotTests) {
-        it('can dot product ' + test.args, ()=>{
+        it("can dot product " + test.args, ()=>{
             const rslt = v.dot(...test.args);
             expect(rslt).toBe(test.xRslt);
         })
@@ -90,11 +107,11 @@ describe('a vector', () => {
 
     // dist
     let distTests = [
-        {args: [4,6], xRslt: 5},
-        {args: [new Vect(4,6)], xRslt: 5},
+        {args: [4,6,3], xRslt: 5},
+        {args: [new Vect3(4,6,3)], xRslt: 5},
     ]
     for (const test of distTests) {
-        it('can compute distance to ' + test.args, ()=>{
+        it("can compute distance to " + test.args, ()=>{
             const rslt = v.dist(...test.args);
             expect(rslt).toBe(test.xRslt);
         })
@@ -102,18 +119,21 @@ describe('a vector', () => {
 
     // normalize
     let normalizeTests = [
-        {args: [new Vect(2,0)], xX: 1, xY: 0},
-        {args: [new Vect(0,2)], xX: 0, xY: 1},
+        {args: [new Vect3(2,0,0)], xX: 1, xY: 0, xZ: 0},
+        {args: [new Vect3(0,2,0)], xX: 0, xY: 1, xZ: 0},
+        {args: [new Vect3(0,0,2)], xX: 0, xY: 0, xZ: 1},
     ]
     for (const test of normalizeTests) {
-        it('can normalize ' + test.args, ()=>{
+        it("can normalize " + test.args, ()=>{
             v.set(...test.args);
             const rslt = v.normalize();
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
+            expect(rslt.z).toBe(test.xZ);
         })
     }
 
+    /*
     // heading
     let headingTests = [
         {args: [new Vect(1,0)], xRslt: 0},
@@ -126,7 +146,7 @@ describe('a vector', () => {
         {args: [new Vect(1,-1)], xRslt: -45},
     ]
     for (const test of headingTests) {
-        it('can determine heading of ' + test.args, ()=>{
+        it("can determine heading of " + test.args, ()=>{
             v.set(...test.args);
             const rslt = v.heading();
             expect(rslt).toBe(test.xRslt);
@@ -140,7 +160,7 @@ describe('a vector', () => {
         {v: new Vect(1,1), a: 90, xX: -1, xY: 1},
     ]
     for (const test of rotateTests) {
-        it('can rotate ' + test.v + ' by: ' + test.a, ()=>{
+        it("can rotate " + test.v + " by: " + test.a, ()=>{
             v.set(test.v);
             const rslt = v.rotate(test.a);
             expect(rslt.x).toBeCloseTo(test.xX);
@@ -157,20 +177,23 @@ describe('a vector', () => {
         {v1: new Vect(-1,-1), v2: new Vect(-1,1), xRslt: -90},
     ]
     for (const test of angleTests) {
-        it('can compute angle between ' + test.v1 + ' and: ' + test.v2, ()=>{
+        it("can compute angle between " + test.v1 + " and: " + test.v2, ()=>{
             v.set(test.v1);
             const rslt = v.angle(test.v2);
             expect(rslt).toBeCloseTo(test.xRslt);
         })
     }
+    */
 
     // equals
     let equalsTests = [
-        {args: [new Vect(1,2)], xRslt: true},
-        {args: [1,2], xRslt: true},
+        {args: [new Vect(1,2)], xRslt: false},
+        {args: [new Vect3(1,2,3)], xRslt: true},
+        {args: [1,2], xRslt: false},
+        {args: [1,2,3], xRslt: true},
     ]
     for (const test of equalsTests) {
-        it('can test equality to ' + test.args, ()=>{
+        it("can test equality to " + test.args, ()=>{
             const rslt = v.equals(...test.args);
             expect(rslt).toBe(test.xRslt);
         })
@@ -178,19 +201,23 @@ describe('a vector', () => {
 
     // static reflect
     for (const test of [
-        {args: [new Vect(1,1), new Vect(0,1)], xRslt: new Vect(-1,1)},
-        {args: [new Vect(-1,1), new Vect(0,1)], xRslt: new Vect(1,1)},
+        {args: [new Vect3(1,0,1), new Vect3(0,0,1)], xRslt: new Vect3(-1,0,1)},
+        {args: [new Vect3(0,1,1), new Vect3(0,0,1)], xRslt: new Vect3(0,-1,1)},
+        {args: [new Vect3(1,0,1), new Vect3(0,0,-1)], xRslt: new Vect3(-1,0,1)},
+        {args: [new Vect3(-1,0,1), new Vect3(0,0,1)], xRslt: new Vect3(1,0,1)},
     ]) {
         it("can test static reflection of " + test.args, ()=>{
-            const rslt = Vect.reflect(...test.args);
+            const rslt = Vect3.reflect(...test.args);
             expect(rslt).toEqual(test.xRslt);
         });
     }
 
     // reflect
     for (const test of [
-        {v: new Vect(1,1), args: [new Vect(0,1)], xRslt: new Vect(-1,1)},
-        {v: new Vect(-1,1), args: [new Vect(0,1)], xRslt: new Vect(1,1)},
+        {v: new Vect3(1,0,1), args: [new Vect3(0,0,1)], xRslt: new Vect3(-1,0,1)},
+        {v: new Vect3(0,1,1), args: [new Vect3(0,0,1)], xRslt: new Vect3(0,-1,1)},
+        {v: new Vect3(1,0,1), args: [new Vect3(0,0,-1)], xRslt: new Vect3(-1,0,1)},
+        {v: new Vect3(-1,0,1), args: [new Vect3(0,0,1)], xRslt: new Vect3(1,0,1)},
     ]) {
         it(`can test reflection of ${test.v} with ${test.args}`, ()=>{
             const rslt = test.v.reflect(...test.args);

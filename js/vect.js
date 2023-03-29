@@ -91,6 +91,16 @@ class Vect extends GizmoData {
         return r.round();
     }
 
+    static reflect(v, n) {
+        //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
+        let dot = this.dot(v,n);
+        return this.sub(this.mult(n, 2*dot), v);
+    }
+
+    static neg(v1) {
+        return new Vect(-v1.x, -v1.y);
+    }
+
     static equals(v1, v2) {
         if (!v1 && !v2) return true;
         if (v1 && !v1 || !v1 && v2) return false;
@@ -187,6 +197,18 @@ class Vect extends GizmoData {
     round() {
         this.x = Math.round(this.x);
         this.y = Math.round(this.y);
+        return this;
+    }
+
+    reflect(n) {
+        //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
+        let dot = this.dot(n);
+        return this.neg().add(Vect.mult(n, 2*dot));
+    }
+
+    neg() {
+        this.x = -this.x;
+        this.y = -this.y;
         return this;
     }
 
