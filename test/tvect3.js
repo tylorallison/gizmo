@@ -221,7 +221,6 @@ describe("a vector3", () => {
     ]) {
         it(`can test reflection of ${test.v} with ${test.args}`, ()=>{
             const rslt = test.v.reflect(...test.args);
-            console.log(`rslt: ${rslt}`);
             expect(rslt).toEqual(test.xRslt);
         });
     }

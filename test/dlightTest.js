@@ -60,8 +60,6 @@ class NSprite extends Sprite {
         // precalculate the normals
         for (let i=0; i<data.length; i+=4) {
             var nx = data[i]-127;
-            // flip the y value
-            //var ny = 255 - data[i + 1];
             var ny = data[i+1]-127;
             var nz = data[i+2]-127;
             // normalize

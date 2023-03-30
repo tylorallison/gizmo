@@ -1,6 +1,6 @@
 import { Vect } from '../js/vect.js';
 
-describe('a vector', () => {
+describe('a 2d vector', () => {
     let v;
     beforeEach(() => {
         v = new Vect(1,2);
@@ -194,7 +194,6 @@ describe('a vector', () => {
     ]) {
         it(`can test reflection of ${test.v} with ${test.args}`, ()=>{
             const rslt = test.v.reflect(...test.args);
-            console.log(`rslt: ${rslt}`);
             expect(rslt).toEqual(test.xRslt);
         });
     }
