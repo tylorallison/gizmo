@@ -1,7 +1,8 @@
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
+import { GizmoData } from '../js/gizmoData.js';
 import { Schema } from '../js/schema.js';
-import { Vect } from '../js/vect.js';
+//import { Vect } from '../js/vect.js';
 
 class tdata {
     static registry = {};
@@ -59,8 +60,8 @@ class handler {
         this.proxy = null;
         this.schema = null;
         this.keyer = () => (this.schema) ? this.schema.key : '';
-        this.get = this.iget;
-        this.set = this.iset;
+        this.get = this.pget;
+        this.set = this.pset;
         this.pathEventable = EvtSystem.isEmitter(pclass.schema);
         this.pathUpdatable = false;
         this.pathAutogen = false;
@@ -264,6 +265,7 @@ class tproxy {
         if (!this.hasOwnProperty('_schemas')) this._schemas = Object.values(this.schema);
         return this._schemas;
     }
+
     constructor(spec={}) {
         let cls = this.constructor;
         //cls.registry.set(cls.name, cls);
@@ -289,9 +291,18 @@ class tproxy {
     toString() {
         return Fmt.toString(this.constructor.name);
     }
+
 }
 
-class tVect1 extends Vect { }
+class tVect1 extends GizmoData { 
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+    }
+    constructor(x,y) {
+        super({x:x, y:y});
+    }
+}
 
 class tVect2 {
     constructor(x,y) {
@@ -330,8 +341,45 @@ class tVect4 extends tdata {
     }
 }
 
+class tVect5 {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+        let proxy = new Proxy(this, {
+            get(target, key, receiver) {
+                const value = target[key];
+                if (value instanceof Function) {
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                return value;
+            },
+            set(target, key, value) {
+                target[key] = value;
+                return true;
+            }
+        });
+        return proxy;
+    }
+}
+
+/*
+class tVect5 extends tproxy {
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+    }
+    constructor(x=0,y=0) {
+        return super({x:x, y:y});
+    }
+}
+*/
+
 class tVect6 {
     constructor(x,y) {
+        this.x = x;
+        this.y = y;
         let proxy = new Proxy(this, {
             get(target, prop, receiver) {
                 return Reflect.get(...arguments);
@@ -342,16 +390,6 @@ class tVect6 {
             }
         });
         return proxy;
-    }
-}
-
-class tVect5 extends tproxy {
-    static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
-    }
-    constructor(x=0,y=0) {
-        return super({x:x, y:y});
     }
 }
 
@@ -366,6 +404,7 @@ const clss = [
 
 //const iterations = 250000;
 const iterations = 1000000;
+//const iterations = 1;
 //const iterations = 2500000;
 
 describe('perf tests', () => {
@@ -401,10 +440,10 @@ describe('perf tests', () => {
             let v = new cls(1,2);
             console.time(tag);
             for (var i = 0; i < iterations; i++) {
-                v.x = 5;
+                v.x = i;
             };
             console.timeEnd(tag)
-            expect(v.x).toEqual(5);
+            expect(v.x).toEqual(iterations-1);
         }
     });
 

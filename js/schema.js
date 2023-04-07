@@ -1,36 +1,6 @@
 export { Schema };
 
-class Schema {
-
-    static apply(cls, key, spec={}) {
-        if (cls.schema.hasOwnProperty(key)) delete cls.schema[key];
-        let newSchema = new this(key, spec);
-        cls.schema[key] = newSchema;
-        for (const otherSchema of Object.values(cls.schema)) {
-            if (otherSchema.key === key) continue;
-            // handle existing schema which might have an autogen dependency
-            if (otherSchema.autogen) {
-                if (typeof otherSchema.autogen !== 'function' || otherSchema.autogen(key)) {
-                    //console.log(`${newSchema.key} add autogen dep: ${otherSchema.key}`);
-                    newSchema.autogendeps.add(otherSchema.key);
-                }
-            }
-            // handle if this new schema has an autogen dependency
-            if (newSchema.autogen && !newSchema.autogendeps.has(otherSchema.key)) {
-                if (typeof newSchema.autogen !== 'function' || newSchema.autogen(otherSchema.key)) {
-                    //console.log(`${otherSchema.key} add autogen dep: ${key}`);
-                    otherSchema.autogendeps.add(key);
-                }
-            }
-        }
-        if (spec.autogen && !cls.$autogenKeys.includes(key)) {
-            cls.$autogenKeys.push(key);
-        }
-    }
-    static clear(cls, key) {
-        if (cls.schema.hasOwnProperty(key)) delete cls.schema[key];
-    }
-
+class SchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
         this.dflt = spec.dflt;
@@ -62,6 +32,96 @@ class Schema {
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
         this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
     }
+}
+
+class Schema {
+
+    static apply(cls, key, spec={}) {
+        let schema;
+
+        if (!cls.hasOwnProperty('$schema')) {
+            schema = new Schema({base: Object.getPrototypeOf(cls).$schema});
+            cls.$schema = schema;
+            //Object.assign({}, Object.getPrototypeOf(this)._schema);
+            //console.log(`cls: ${cls} schema: ${schema}`)
+        } else {
+            schema = cls.$schema;
+        }
+
+        let oldSchema = schema.map[key];
+        let idx = -1;
+        if (oldSchema) {
+            idx = schema.entries.indexOf(oldSchema);
+            clearAutogenDep(key);
+        }
+        let entry = new SchemaEntry(key, spec);
+        schema.map[key] = entry;
+        // FIXME: remove
+        /*
+        let sparser = schema.parser;
+        schema.parser = (o,x) => {
+            if (sparser) sparser(o,x);
+            o[key] = entry.parser(o,x);
+        }
+        */
+        if (idx !== -1) {
+            schema.entries[idx] = entry;
+        } else {
+            schema.entries.push(entry);
+        }
+
+        for (const oentry of Object.values(schema.map)) {
+            if (oentry.key === key) continue;
+            // handle existing schema which might have an autogen dependency
+            if (oentry.autogen && (typeof oentry.autogen !== 'function' || oentry.autogen(key))) {
+                schema.setAutogenDep(key, oentry.key);
+            }
+            // handle if this new schema has an autogen dependency
+            if (entry.autogen && (typeof entry.autogen !== 'function' || entry.autogen(oentry.key))) {
+                schema.setAutogenDep(oentry.key, key);
+            }
+        }
+    }
+    static clear(cls, key) {
+        if (cls.hasOwnProperty('$schema')) {
+            let oldSchema = cls.$schema.map[key];
+            let idx = cls.$schema.entries.indexOf(oldSchema);
+            if (idx !== -1) {
+                cls.$schema.entries.splice(idx, 1);
+            }
+            delete cls.$schema.map[key];
+            cls.$schema.clearAutogenDep(key);
+        }
+    }
+
+    constructor(spec={}) {
+        this.map = {};
+        this.entries = [];
+        // track auto generation mapping
+        // -- key: key of attribute that is being set
+        // -- value: set of attribute keys that need to be generated when the keyed attribute changes
+        this.autogendeps = {};
+        this.parser = null;
+    }
+
+    setAutogenDep(skey, dkey) {
+        if (!skey in this.autogendeps) {
+            this.autogendeps[skey] = new Set();
+        }
+        this.autogendeps[skey].set(dkey);
+    }
+
+    clearAutogenDep(key) {
+        delete this.autogendeps[key];
+        for (const akey of Object.keys(this.autogendeps)) {
+            let set = this.autogendeps[akey];
+            set.delete(key);
+            if (!set.size) {
+                delete this.autogendeps[akey];
+            }
+        }
+    }
+
 
 }
 
