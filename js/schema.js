@@ -56,14 +56,6 @@ class Schema {
         }
         let entry = new SchemaEntry(key, spec);
         schema.map[key] = entry;
-        // FIXME: remove
-        /*
-        let sparser = schema.parser;
-        schema.parser = (o,x) => {
-            if (sparser) sparser(o,x);
-            o[key] = entry.parser(o,x);
-        }
-        */
         if (idx !== -1) {
             schema.entries[idx] = entry;
         } else {

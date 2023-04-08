@@ -4,39 +4,45 @@ import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 
 class GizmoHandle {
-    static root(node) {
-        while (node) {
-            if (node.trunk) {
-                node = node.trunk;
+    static root(hdl) {
+        while (hdl) {
+            if (hdl.trunk) {
+                hdl = hdl.trunk;
             } else {
-                return node;
+                return hdl;
             }
         }
         return null;
     }
 
-    static findInTrunk(node, filter) {
-        for (let trunk=node.trunk; trunk; trunk=trunk.trunk) {
+    static findInTrunk(hdl, filter) {
+        for (let trunk=hdl.trunk; trunk; trunk=trunk.trunk) {
             if (filter(trunk)) return trunk;
         }
         return null;
     }
 
-    static findInPath(node, filter) {
-        for (let trunk=node; trunk; trunk=trunk.trunk) {
+    static findInPath(hdl, filter) {
+        for (let trunk=hdl; trunk; trunk=trunk.trunk) {
             if (filter(trunk)) return trunk;
         }
         return null;
     }
 
-    static path(node) {
+    static path(hdl) {
         let path = null;
-        while (node.trunk) {
-            let key = node.keyer();
+        while (hdl.trunk) {
+            let key = hdl.keyer();
             path = (path) ? `${key}.${path}` : key;
-            node = node.trunk;
+            hdl = hdl.trunk;
         }
         return path;
+    }
+
+    static *eachInPath(hdl, filter) {
+        for (; hdl; hdl=hdl.trunk) {
+            if (filter(hdl)) yield hdl;
+        }
     }
 
     constructor(node) {
@@ -52,6 +58,7 @@ class GizmoHandle {
         this.pathAutogen = false;
         this.pathReadonly = false;
         this.pathRenderable = false;
+        this.finalized = false;
     }
 
     linkUpdate() {
@@ -69,22 +76,25 @@ class GizmoHandle {
             this.pathReadonly = false;
             this.pathRenderable = false;
         }
-        for (const aschema of Object.values(this.node.constructor.schema)) {
-            let att = this[aschema.key];
-            if (att && att instanceof tproxy) {
-                att.$linker.linkUpdate();
+        let schemas = this.node.constructor.$schema;
+        if (schemas) {
+            for (const aschema of schemas.entries) {
+                let att = this.get(aschema.key, this);
+                if (att && att instanceof GizmoData) {
+                    att.$handle.linkUpdate();
+                }
             }
         }
     }
 
     // -- defines method to set new trunk link
     /**
-     * @param {linker} trunk 
+     * @param {handle} trunk 
      * @param {schema} schema 
      * @param {*} keyer 
      */
     link(trunk, schema, keyer) {
-        if (tproxy.findInPath(trunk.proxy, (gzd) => gzd === this.proxy)) {
+        if (this.constructor.findInPath(trunk.proxy, (gzd) => gzd === this.proxy)) {
             console.error(`hierarchy loop detected ${this.node} already in trunk: ${trunk}`);
             return;
         }
@@ -147,10 +157,11 @@ class GizmoHandle {
     }
     iget(target, key, receiver) {
         //let schema = this.pclass.schema[key];
-        let schema = this.node.constructor.$schema.map[key];
+        let schemas = this.node.constructor.$schema;
+        let schema = (schemas) ? schemas.map[key] : null;
         if (schema && schema.getter) return schema.getter(target);
         //console.log(`key: ${key.toString()} this: ${this}`);
-        if (key === '$linker') return this;
+        if (key === '$handle') return this;
         if (key === '$target') return target;
         const value = target[key];
         if (value instanceof Function) {
@@ -160,22 +171,40 @@ class GizmoHandle {
         }
         return target[key];
     };
-    iset(target, key, value) {
+    iset(target, key, value, force=false) {
         let storedValue = target[key];
-        if (Object.is(storedValue, value)) return true;
         let schemas = this.node.constructor.$schema;
         let schema = (schemas) ? schemas.map[key] : null;
         //let schema = this.node.constructor.$schema.map[key];
         if (schema) {
+            if (this.finalized && (schema.readonly || this.pathReadonly)) {
+                console.error(`can't set ${key} -- readonly ${schema.readonly} pathRO: ${this.pathReadonly}`);
+                return true;
+            }
             if (schema.setter) {
                 value = schema.setter(target, value);
             }
+        }
+        if (Object.is(storedValue, value)) return true;
+        if (schema) {
             if (schema.link) {
-                if (storedValue) storedValue.$linker.unlink();
+                console.log(`storedValue: ${storedValue} value: ${value}`);
+                if (storedValue) storedValue.$handle.unlink();
                 target[key] = value;
-                if (value) value.$linker.link(this, schema);
+                if (value) value.$handle.link(this, schema);
             } else {
                 target[key] = value;
+            }
+
+            if (schema.atUpdate) schema.atUpdate((this.trunk) ? this.trunk.proxy : null, this.proxy, schema.key, storedValue, value);
+
+            // -- path updates are controlled by GizmoData.$pathUpdatable
+            console.log(`pathUpdatable: ${this.pathUpdatable}`);
+            if (this.pathUpdatable) {
+                for (const hdl of this.constructor.eachInPath(this, (ohdl) => (ohdl.schema && ohdl.schema.atUpdate))) {
+                    if (hdl.schema.atUpdate) console.log(`-- set path calling ${(hdl.trunk) ? hdl.trunk.proxy : null}:${this.proxy} ${schema.key} atUpdate ${storedValue} => ${value}`);
+                    hdl.schema.atUpdate((hdl.trunk) ? hdl.trunk.proxy : null, this.proxy, schema.key, storedValue, value);
+                }
             }
 
             // trigger update if attribute is eventable
@@ -203,6 +232,45 @@ class GizmoData {
     static init() {
         if (!this.registry.has(this.name)) this.registry.set(this.name, this);
     }
+    
+    /**
+     * root returns the root of the given GizmoData structure (if any)
+     * @param {GizmoData} gzd - The object to find the root for
+     * @returns {GizmoData} - The root of the GizmoData chain (if any)
+     */
+    static root(gzd) {
+        if (gzd && gzd instanceof GizmoData) {
+            let node = gzd.$handle.constructor.root(gzd.$handle);
+            if (node) return node.proxy;
+        }
+        return null;
+    }
+
+    /**
+     * findinTrunk attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
+     * @param {GizmoData} gzd - The object to start the search at.
+     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
+     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
+     */
+    static findInTrunk(gzd, filter) {
+        if (gzd && gzd instanceof GizmoData) {
+            let node = gzd.$handle.constructor.findInTrunk(gzd.$handle);
+            if (node) return node.proxy;
+        }
+        return null;
+    }
+
+    /**
+     * findinPath attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
+     * @param {GizmoData} gzd - The object to start the search at.
+     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
+     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
+     */
+    static findInPath(gzd, filter) {
+        if (filter(gzd)) return gzd;
+        return this.findInTrunk(gzd);
+    }
+
     constructor(spec={}) {
         let cls = this.constructor;
         this.constructor.init();
@@ -210,16 +278,33 @@ class GizmoData {
         let proxy = new Proxy(this, handle);
         handle.proxy = proxy;
         //console.log(`-- constructor: ${cls}`);
-        //if (cls.$schema.parser) cls.$schema.parser(this, spec);
         for (const schema of cls.$schema.entries) {
             //console.log(`-- schema: ${schema}`);
             //proxy[schema.key] = schema.parser(this, spec);
             //this[schema.key] = schema.parser(this, spec);
             handle.set(this, schema.key, schema.parser(this, spec));
         }
+        handle.finalized = true;
         return proxy;
     }
     toString() {
         return Fmt.toString(this.constructor.name);
     }
+
+    /**
+     * atLink is a method called whenever a GizmoData object is linked to a trunk (parent) data object.  By default, no action is taken.
+     * Override this method in a subclass to perform actions when the instance of the data object is linked.
+     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     */
+    atLink(trunk) {
+    }
+    
+    /**
+     * atUnlink is a method called whenver a GizmoData object is unlinked from a trunk (parent) data object.  By default, no action is taken.
+     * Override this method in a subclass to perform class specific logic when an object is unlinked.
+     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     */
+    atUnlink(trunk) {
+    }
+
 }
