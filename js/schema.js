@@ -97,10 +97,10 @@ class Schema {
     }
 
     setAutogenDep(skey, dkey) {
-        if (!skey in this.autogendeps) {
+        if (!(skey in this.autogendeps)) {
             this.autogendeps[skey] = new Set();
         }
-        this.autogendeps[skey].set(dkey);
+        this.autogendeps[skey].add(dkey);
     }
 
     clearAutogenDep(key) {

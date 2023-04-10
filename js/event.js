@@ -38,10 +38,16 @@ class EvtSystem {
      */
 
     static isEmitter(obj) {
-        return obj.hasOwnProperty('evtEmitterLinks') && obj.hasOwnProperty('evtCounts');
+        return obj && obj.hasOwnProperty('evtEmitterLinks') && obj.hasOwnProperty('evtCounts');
+    }
+    static isEmitterCls(cls) {
+        return cls && cls.$schema && cls.$schema.map.hasOwnProperty('evtEmitterLinks') && cls.$schema.map.hasOwnProperty('evtCounts');
     }
     static isReceiver(obj) {
-        return obj.hasOwnProperty('evtReceiverLinks');
+        return obj && obj.hasOwnProperty('evtReceiverLinks');
+    }
+    static isReceiverCls(cls) {
+        return cls && cls.$schema && cls.$schema.map.hasOwnProperty('evtReceiverLinks');
     }
 
     static addCount(emitter, tag) {
@@ -191,9 +197,9 @@ class ExtEvtEmitter {
 
     static gen(spec={}) {
         let cls = class {
-            static schema = {};
             constructor() {
-                for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
+                GizmoData.parser(this, {});
+                //for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
             }
         }
         this.apply(cls);
@@ -211,9 +217,9 @@ class ExtEvtReceiver {
 
     static gen(spec={}) {
         let cls = class {
-            static schema = {};
             constructor() {
-                for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
+                GizmoData.parser(this, {});
+                //for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
             }
         }
         this.apply(cls);
