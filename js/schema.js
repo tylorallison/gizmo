@@ -32,6 +32,17 @@ class SchemaEntry {
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
         this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
     }
+
+    get customized() {
+        if (this.getter) return true;
+        if (this.setter) return true;
+        if (this.autogen) return true;
+        if (this.atUpdate) return true;
+        if (this.readonly) return true;
+        if (this.link) return true;
+        if (this.gizmo) return true;
+        return false;
+    }
 }
 
 class Schema {
@@ -57,6 +68,9 @@ class Schema {
             schema.trunkGenDeps.delete(key);
         }
         let entry = new SchemaEntry(key, spec);
+        // -- customized schema indicates it must have full get/set proxy
+        if (entry.customized) schema.customized = true;
+        //console.log(`${key} customized: ${entry.customized}`)
         schema.map[key] = entry;
         if (idx !== -1) {
             schema.entries[idx] = entry;
@@ -80,6 +94,7 @@ class Schema {
                 //schema.setAutogenDep(oentry.key, key);
             }
         }
+
     }
     static clear(cls, key) {
         if (cls.hasOwnProperty('$schema')) {
@@ -105,21 +120,9 @@ class Schema {
         // -- value: set of attribute keys that need to be generated when the keyed attribute changes
         this.trunkGenDeps = new Set();
         this.parser = null;
+        // a schema is customized if any schema entries require special get/set processing
+        this.customized = false;
     }
-
-    setAutogenDep(skey, dkey) {
-        if (!(skey in this.autogendeps)) {
-            this.autogendeps[skey] = new Set();
-        }
-        this.autogendeps[skey].add(dkey);
-    }
-
-    clearAutogenDep(key) {
-        for (const entry of this.entries) {
-            entry.autogendeps.delete(key);
-        }
-    }
-
 
 }
 
