@@ -48,11 +48,13 @@ class Schema {
             schema = cls.$schema;
         }
 
-        let oldSchema = schema.map[key];
+        let oldEntry = schema.map[key];
         let idx = -1;
-        if (oldSchema) {
-            idx = schema.entries.indexOf(oldSchema);
-            clearAutogenDep(key);
+        if (oldEntry) {
+            idx = schema.entries.indexOf(oldEntry);
+            //clearAutogenDep(key);
+            for (const entry of this.entries) entry.autogendeps.delete(key);
+            schema.trunkGenDeps.delete(key);
         }
         let entry = new SchemaEntry(key, spec);
         schema.map[key] = entry;
@@ -61,16 +63,21 @@ class Schema {
         } else {
             schema.entries.push(entry);
         }
+        if (entry.autogen && (typeof entry.autogen !== 'function' || entry.autogen('$trunk'))) {
+            schema.trunkGenDeps.add(key);
+        }
 
         for (const oentry of Object.values(schema.map)) {
             if (oentry.key === key) continue;
             // handle existing schema which might have an autogen dependency
             if (oentry.autogen && (typeof oentry.autogen !== 'function' || oentry.autogen(key))) {
-                schema.setAutogenDep(key, oentry.key);
+                entry.autogendeps.add(oentry.key);
+                //schema.setAutogenDep(key, oentry.key);
             }
             // handle if this new schema has an autogen dependency
             if (entry.autogen && (typeof entry.autogen !== 'function' || entry.autogen(oentry.key))) {
-                schema.setAutogenDep(oentry.key, key);
+                oentry.autogendeps.add(key);
+                //schema.setAutogenDep(oentry.key, key);
             }
         }
     }
@@ -82,7 +89,11 @@ class Schema {
                 cls.$schema.entries.splice(idx, 1);
             }
             delete cls.$schema.map[key];
-            cls.$schema.clearAutogenDep(key);
+            for (const entry of this.entries) {
+                entry.autogendeps.delete(key);
+            }
+            cls.$schema.trunkGenDeps.delete(key);
+            //cls.$schema.clearAutogenDep(key);
         }
     }
 
@@ -92,7 +103,7 @@ class Schema {
         // track auto generation mapping
         // -- key: key of attribute that is being set
         // -- value: set of attribute keys that need to be generated when the keyed attribute changes
-        this.autogendeps = {};
+        this.trunkGenDeps = new Set();
         this.parser = null;
     }
 
@@ -104,13 +115,8 @@ class Schema {
     }
 
     clearAutogenDep(key) {
-        delete this.autogendeps[key];
-        for (const akey of Object.keys(this.autogendeps)) {
-            let set = this.autogendeps[akey];
-            set.delete(key);
-            if (!set.size) {
-                delete this.autogendeps[akey];
-            }
+        for (const entry of this.entries) {
+            entry.autogendeps.delete(key);
         }
     }
 
