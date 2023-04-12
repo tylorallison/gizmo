@@ -59,7 +59,6 @@ class GizmoHandle {
         this.pathRenderable = false;
         this.finalized = false;
         //console.log(`${node} pathEventable: ${this.pathEventable} schema.customized: ${(this.schema) ? this.schema.customized : null}`);
-        //if (true) {
         if (this.pathEventable || (this.schema && this.schema.customized)) {
             this.get = this.iget;
             this.set = this.iset;

@@ -364,18 +364,6 @@ class tVect5 {
     }
 }
 
-/*
-class tVect5 extends tproxy {
-    static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
-    }
-    constructor(x=0,y=0) {
-        return super({x:x, y:y});
-    }
-}
-*/
-
 class tVect6 {
     constructor(x,y) {
         this.x = x;
@@ -393,6 +381,40 @@ class tVect6 {
     }
 }
 
+class tVect7 {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+
+        let handler = {
+            getters: [
+            ],
+            setters: [
+                (t,k,v) => t[k] = v,
+            ],
+            get(target, key, receiver) {
+                const value = target[key];
+                if (value instanceof Function) {
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                return value;
+            },
+            set(target, key, value) {
+                for (const setter of this.setters) {
+                    setter(target, key, value);
+                }
+                //target[key] = value;
+                return true;
+            }
+        };
+
+        let proxy = new Proxy(this, handler);
+        return proxy;
+    }
+}
+
 const clss = [
     tVect1,
     tVect2,
@@ -400,10 +422,11 @@ const clss = [
     tVect4,
     tVect5,
     tVect6,
+    tVect7,
 ]
 
 //const iterations = 250000;
-const iterations = 1000000;
+const iterations = 5000000;
 //const iterations = 1;
 //const iterations = 2500000;
 
