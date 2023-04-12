@@ -13,15 +13,12 @@ class SchemaEntry {
         this.nopathgen = spec.nopathgen;
         this.autogen = spec.autogen;
         this.autogendeps = new Set();
-        //this.parser = spec.parser || ((obj, x) => x.hasOwnProperty(this.specKey) ? x[this.specKey] : (x.autogen) ? x.autogen() : this.dflt);
         this.parser = spec.parser || ((o, x) => {
             if (x.hasOwnProperty(this.specKey)) return x[this.specKey];
             if (this.setter) return this.setter(o,x,this.dflt);
             return this.dflt;
         });
         this.link = spec.hasOwnProperty('link') ? spec.link : false;
-        this.callable = spec.hasOwnProperty('callable') ? spec.callable : false;
-        this.enumerable = (this.callable) ? false : spec.hasOwnProperty('enumerable') ? spec.enumerable : true;
         this.readonly = spec.hasOwnProperty('readonly') ? spec.readonly : false;
         this.renderable = spec.hasOwnProperty('renderable') ? spec.renderable : false;
         this.eventable = (this.readonly) ? false : spec.hasOwnProperty('eventable') ? spec.eventable : true;
@@ -30,7 +27,7 @@ class SchemaEntry {
         // autogen fields are not serializable
         this.serializable = (this.autogen) ? false : spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
-        this.serializeFcn = spec.serializeFcn || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
+        this.serializer = spec.serializer || ((sdata, target, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
     }
 
     get customized() {

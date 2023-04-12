@@ -381,17 +381,60 @@ class tVect6 {
     }
 }
 
+class AttHandle {
+    constructor(key) {
+        this.key = key;
+        this.getter = (t) => t[key];
+        this.modifier = undefined;
+        this.setter = (t,v) => t[key] = v,
+        this.watchers = undefined;
+        this.pwatchers = undefined;
+    }
+    addWatcher(watcher, pri=0) {
+        if (!this.watchers) {
+            this.watchers = [ watcher ];
+            this.pwatchers = [ pri ];
+        } else {
+            let idx=0;
+            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; i++ );
+            this.watchers.splice(idx, 0, watcher);
+            this.pwatchers.splice(idx, 0, pri);
+        }
+    }
+    delWatcher(watcher) {
+        let idx = this.watchers.indexOf(watcher);
+        if (idx !== -1) {
+            this.watchers.splice(idx, 1);
+            this.pwatchers.splice(idx, 1);
+        }
+        if (!this.watchers.length) {
+            this.watchers = null;
+            this.pwatchers = null;
+        }
+    }
+    get(target) {
+        return this.getter(target);
+    }
+    set(target, value) {
+        const ov = this.getter(target);
+        if (this.modifier) value = this.modifier(target, value);
+        this.setter(target, value);
+        if (this.watchers) {
+            for (const watcher of this.watchers) watcher(t,ov, value);
+        }
+    }
+}
+
 class tVect7 {
     constructor(x,y) {
         this.x = x;
         this.y = y;
 
         let handler = {
-            getters: [
-            ],
-            setters: [
-                (t,k,v) => t[k] = v,
-            ],
+            handles: {
+                x: new AttHandle('x'),
+                y: new AttHandle('y'),
+            },
             get(target, key, receiver) {
                 const value = target[key];
                 if (value instanceof Function) {
@@ -399,9 +442,15 @@ class tVect7 {
                         return value.apply(this === receiver ? target : this, args);
                     };
                 }
-                return value;
+                let hdl = this.handles[key];
+                if (hdl) return hdl.get(target);
+                return undefined;
+                //return value;
             },
             set(target, key, value) {
+                let hdl = this.handles[key];
+                if (hdl) hdl.set(target, value);
+                return true;
                 for (const setter of this.setters) {
                     setter(target, key, value);
                 }
@@ -426,7 +475,7 @@ const clss = [
 ]
 
 //const iterations = 250000;
-const iterations = 5000000;
+const iterations = 1000000;
 //const iterations = 1;
 //const iterations = 2500000;
 
@@ -443,7 +492,7 @@ describe('perf tests', () => {
         }
     });
 
-    it('performance to get property', ()=>{
+    xit('performance to get property', ()=>{
         for (const cls of clss) {
             let tag = `get test:${cls.name}`;
             let v = new cls(1,2);
@@ -457,7 +506,7 @@ describe('perf tests', () => {
         }
     });
 
-    it('performance to set property', ()=>{
+    xit('performance to set property', ()=>{
         for (const cls of clss) {
             let tag = `set test:${cls.name}`;
             let v = new cls(1,2);

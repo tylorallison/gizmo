@@ -3,6 +3,50 @@ export { GizmoData };
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 
+class AttHandle {
+    constructor(sentry) {
+        this.key = sentry.key;
+        this.getter = sentry.getter || ((t) => t[key]);
+        this.modifier = sentry.setter;
+        this.setter = (t,v) => t[key] = v,
+        this.watchers = undefined;
+        this.pwatchers = undefined;
+    }
+    addWatcher(watcher, pri=0) {
+        if (!this.watchers) {
+            this.watchers = [ watcher ];
+            this.pwatchers = [ pri ];
+        } else {
+            let idx=0;
+            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; i++ );
+            this.watchers.splice(idx, 0, watcher);
+            this.pwatchers.splice(idx, 0, pri);
+        }
+    }
+    delWatcher(watcher) {
+        let idx = this.watchers.indexOf(watcher);
+        if (idx !== -1) {
+            this.watchers.splice(idx, 1);
+            this.pwatchers.splice(idx, 1);
+        }
+        if (!this.watchers.length) {
+            this.watchers = null;
+            this.pwatchers = null;
+        }
+    }
+    get(target) {
+        return this.getter(target);
+    }
+    set(target, value) {
+        const ov = this.getter(target);
+        if (this.modifier) value = this.modifier(target, value);
+        this.setter(target, value);
+        if (this.watchers) {
+            for (const watcher of this.watchers) watcher(t,ov, value);
+        }
+    }
+}
+
 class GizmoHandle {
     static root(hdl) {
         while (hdl) {
@@ -48,6 +92,10 @@ class GizmoHandle {
     constructor(node) {
         this.node = node;
         this.schema = node.constructor.$schema;
+        this.ahandles = {};
+        //for (const sentry in this.schema.entries) {
+            //this.ahandles[sentry.key] = new AttHandle(sentry);
+        //}
         this.trunk = null;
         this.proxy = null;
         this.sentry = null;
@@ -286,10 +334,11 @@ class GizmoData {
         return this.findInTrunk(gzd);
     }
 
-    static parser(o, spec, setter) {
+    static parser(o, spec, setter, hdl) {
         let cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
+                if (hdl) hdl.ahandles[sentry.key] = new AttHandle(sentry);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
@@ -305,12 +354,7 @@ class GizmoData {
         let handle = new GizmoHandle(this);
         let proxy = new Proxy(this, handle);
         handle.proxy = proxy;
-        //console.log(`-- constructor: ${cls}`);
-        if (cls.$schema) {
-            for (const sentry of cls.$schema.entries) {
-                handle.set(this, sentry.key, sentry.parser(this, spec));
-            }
-        }
+        cls.parser(this, spec, handle.set.bind(handle), handle);
         handle.finalized = true;
         return proxy;
     }
