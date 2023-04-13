@@ -60,8 +60,8 @@ class handler {
         this.proxy = null;
         this.schema = null;
         this.keyer = () => (this.schema) ? this.schema.key : '';
-        this.get = this.pget;
-        this.set = this.pset;
+        this.get = this.iget;
+        this.set = this.iset;
         this.pathEventable = EvtSystem.isEmitter(pclass.schema);
         this.pathUpdatable = false;
         this.pathAutogen = false;
@@ -492,7 +492,7 @@ describe('perf tests', () => {
         }
     });
 
-    xit('performance to get property', ()=>{
+    it('performance to get property', ()=>{
         for (const cls of clss) {
             let tag = `get test:${cls.name}`;
             let v = new cls(1,2);
@@ -506,7 +506,7 @@ describe('perf tests', () => {
         }
     });
 
-    xit('performance to set property', ()=>{
+    it('performance to set property', ()=>{
         for (const cls of clss) {
             let tag = `set test:${cls.name}`;
             let v = new cls(1,2);

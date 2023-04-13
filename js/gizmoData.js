@@ -4,13 +4,17 @@ import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 
 class AttHandle {
-    constructor(sentry) {
-        this.key = sentry.key;
+    constructor(nhdl, sentry) {
+        this.nhdl = nhdl;
+        let key = sentry.key;
+        this.readonly = sentry.readonly;
+        this.key = key;
         this.getter = sentry.getter || ((t) => t[key]);
         this.modifier = sentry.setter;
         this.setter = (t,v) => t[key] = v,
         this.watchers = undefined;
         this.pwatchers = undefined;
+        for (const agk of sentry.autogendeps) this.addWatcher((t,ov,nv) => nhdl.proxy[agk] = '#autogen');
     }
     addWatcher(watcher, pri=0) {
         if (!this.watchers) {
@@ -37,13 +41,15 @@ class AttHandle {
     get(target) {
         return this.getter(target);
     }
-    set(target, value) {
+    set(target, value, force=false) {
+        if (!force && this.readonly) return true;
         const ov = this.getter(target);
         if (this.modifier) value = this.modifier(target, value);
         this.setter(target, value);
         if (this.watchers) {
-            for (const watcher of this.watchers) watcher(t,ov, value);
+            for (const watcher of this.watchers) watcher(target, ov, value);
         }
+        return true;
     }
 }
 
@@ -93,9 +99,6 @@ class GizmoHandle {
         this.node = node;
         this.schema = node.constructor.$schema;
         this.ahandles = {};
-        //for (const sentry in this.schema.entries) {
-            //this.ahandles[sentry.key] = new AttHandle(sentry);
-        //}
         this.trunk = null;
         this.proxy = null;
         this.sentry = null;
@@ -107,13 +110,8 @@ class GizmoHandle {
         this.pathRenderable = false;
         this.finalized = false;
         //console.log(`${node} pathEventable: ${this.pathEventable} schema.customized: ${(this.schema) ? this.schema.customized : null}`);
-        if (this.pathEventable || (this.schema && this.schema.customized)) {
-            this.get = this.iget;
-            this.set = this.iset;
-        } else {
-            this.get = this.pget;
-            this.set = this.pset;
-        }
+        this.get = this.hget;
+        this.set = this.hset;
     }
 
     linkUpdate() {
@@ -194,6 +192,27 @@ class GizmoHandle {
             }
         }
 
+    }
+
+    hget(target, key, receiver) {
+        const value = target[key];
+        if (key === '$handle') return this;
+        if (key === '$target') return target;
+        if (value instanceof Function) {
+            return function (...args) {
+                return value.apply(this === receiver ? target : this, args);
+            };
+        }
+        let hdl = this.ahandles[key];
+        if (hdl) return hdl.get(target);
+        return value;
+    }
+
+    hset(target, key, value) {
+        let hdl = this.ahandles[key];
+        if (hdl) return hdl.set(target, value, !this.finalized);
+        target[key] = value;
+        return true;
     }
         
     pget(target, key, receiver) {
@@ -338,7 +357,7 @@ class GizmoData {
         let cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
-                if (hdl) hdl.ahandles[sentry.key] = new AttHandle(sentry);
+                if (hdl) hdl.ahandles[sentry.key] = new AttHandle(hdl, sentry);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
