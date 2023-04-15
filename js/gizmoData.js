@@ -245,15 +245,16 @@ class GizmoHandle {
         return target[key];
     };
     iset(target, key, value, force=false) {
-        let storedValue = target[key];
         let sentry = (this.schema) ? this.schema.map[key] : null;
+        if (sentry.getter) return false;
+        let storedValue = target[key];
         if (sentry) {
             if (this.finalized && (sentry.readonly || this.pathReadonly)) {
                 console.error(`can't set ${key} -- readonly ${sentry.readonly} pathRO: ${this.pathReadonly}`);
                 return true;
             }
-            if (sentry.setter) {
-                value = sentry.setter(target, value);
+            if (sentry.generator) {
+                value = sentry.generator(target, value);
             }
         }
         if (Object.is(storedValue, value)) return true;

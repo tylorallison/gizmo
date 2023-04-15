@@ -6,16 +6,18 @@ class SchemaEntry {
         this.dflt = spec.dflt;
         this.specKey = spec.specKey || this.key;
         // getter function of format (object, specification) => { <function returning value> };
+        // -- is treated as a dynamic value
+        // -- setting getter will disable all set functions and notifications for this key
         this.getter = spec.getter;
-        // setter function of format (object, specification, value) => { <function returning final value> };
-        this.setter = spec.setter;
+        // generator function of format (object, specification, value) => { <function returning final value> };
+        this.generator = spec.generator;
         // nopathgen disables path updates (atUpdate and autogen)
         this.nopathgen = spec.nopathgen;
         this.autogen = spec.autogen;
         this.autogendeps = new Set();
         this.parser = spec.parser || ((o, x) => {
             if (x.hasOwnProperty(this.specKey)) return x[this.specKey];
-            if (this.setter) return this.setter(o,x,this.dflt);
+            if (this.generator) return this.generator(o,x,this.dflt);
             return this.dflt;
         });
         this.link = spec.hasOwnProperty('link') ? spec.link : false;
