@@ -13,9 +13,18 @@ describe('gizmo data', () => {
         leaf.el = 'there';
         expect(leaf.el).toEqual('hello');
     });
-    /*
 
-    it('attributes become readonly when attached to readonly GizmoData', ()=>{
+    it('atUpdate atts trigger when updated', ()=>{
+        let update = {};
+        class TLeaf extends GizmoData {
+            static { Schema.apply(this, 'el', { atUpdate: (r,o,k,ov,nv) => update = { r:r, o:o, k:k, ov:ov, nv:nv } }); }
+        };
+        let leaf = new TLeaf({el: 'hello'});
+        leaf.el = 'there';
+        expect(update).toEqual({ r:null, o:leaf, k:'el', ov:'hello', nv:'there'});
+    });
+
+    it('attributes become readonly when attached to readonly trunk', ()=>{
         class TLeaf extends GizmoData {
             static { 
                 Schema.apply(this, 'el'); 
@@ -41,24 +50,16 @@ describe('gizmo data', () => {
         let subUpdate = {};
         let rootUpdate = {};
         class TLeaf extends GizmoData {
-            static { 
-                Schema.apply(this, 'el'); 
-            };
+            static { Schema.apply(this, 'el'); }
         };
         class TSub extends GizmoData {
-            static { 
-                Schema.apply(this, 'leaf', { link: true }); 
-            };
+            static { Schema.apply(this, 'leaf', { link: true }); }
         };
         class TSubUpdate extends GizmoData {
-            static { 
-                Schema.apply(this, 'leaf', { atUpdate: (r,o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); 
-            };
+            static { Schema.apply(this, 'leaf', { atUpdate: (r,o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         class TRoot extends GizmoData {
-            static { 
-                Schema.apply(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); 
-            };
+            static { Schema.apply(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         let leaf = new TLeaf({el: 'hello'});
         let sub = new TSub();
@@ -104,6 +105,7 @@ describe('gizmo data', () => {
         expect(o.sub.data).toEqual('foo');
     });
 
+    /*
     it('data changes trigger events', ()=>{
         class TGizmoDataSub extends GizmoData {
             static { Schema.apply(this, 'data'); };

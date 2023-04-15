@@ -14,6 +14,18 @@ class AttHandle {
         this.setter = (t,v) => t[key] = v,
         this.watchers = undefined;
         this.pwatchers = undefined;
+        if (sentry.atUpdate) this.addWatcher((t,ov,nv) => {
+            if (nhdl.finalized) sentry.atUpdate( (nhdl.trunk) ? nhdl.trunk.proxy : null, nhdl.proxy, key, ov, nv );
+        });
+        if (sentry.link) this.addWatcher((t,ov,nv) => {
+            if (ov && ov instanceof GizmoData) ov.$handle.unlink();
+            if (nv && nv instanceof GizmoData) nv.$handle.link(nhdl, sentry);
+            if (nhdl.pathUpdatable) {
+                for (const hdl of nhdl.constructor.eachInPath(nhdl.trunk, (ohdl) => (ohdl.sentry && ohdl.sentry.atUpdate))) {
+                    hdl.sentry.atUpdate((hdl.trunk) ? hdl.trunk.proxy : null, nhdl.proxy, sentry.key, storedValue, value);
+                }
+            }
+        });
         for (const agk of sentry.autogendeps) this.addWatcher((t,ov,nv) => nhdl.proxy[agk] = '#autogen');
     }
     addWatcher(watcher, pri=0) {
@@ -22,7 +34,7 @@ class AttHandle {
             this.pwatchers = [ pri ];
         } else {
             let idx=0;
-            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; i++ );
+            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; idx++ );
             this.watchers.splice(idx, 0, watcher);
             this.pwatchers.splice(idx, 0, pri);
         }
@@ -41,8 +53,8 @@ class AttHandle {
     get(target) {
         return this.getter(target);
     }
-    set(target, value, force=false) {
-        if (!force && this.readonly) return true;
+    set(target, value) {
+        if (this.nhdl.finalized && (this.readonly || this.nhdl.pathReadonly)) return true;
         const ov = this.getter(target);
         if (this.modifier) value = this.modifier(target, value);
         this.setter(target, value);
@@ -110,8 +122,8 @@ class GizmoHandle {
         this.pathRenderable = false;
         this.finalized = false;
         //console.log(`${node} pathEventable: ${this.pathEventable} schema.customized: ${(this.schema) ? this.schema.customized : null}`);
-        this.get = this.hget;
-        this.set = this.hset;
+        this.get = this.iget;
+        this.set = this.iset;
     }
 
     linkUpdate() {
@@ -157,8 +169,8 @@ class GizmoHandle {
         this.sentry = sentry;
         if (keyer) this.keyer = keyer;
         // update getter/setter for handle
-        this.get = this.iget;
-        this.set = this.iset;
+        //this.get = this.iget;
+        //this.set = this.iset;
         // update path variables for this node and all dependent branch nodes
         this.linkUpdate()
         this.node.atLink(trunk.proxy);
@@ -231,7 +243,7 @@ class GizmoHandle {
         return true;
     }
     iget(target, key, receiver) {
-        let sentry = (this.schemas) ? this.schemas.map[key] : null;
+        let sentry = (this.schema) ? this.schema.map[key] : null;
         if (sentry && sentry.getter) return sentry.getter(target);
         //console.log(`key: ${key.toString()} this: ${this}`);
         if (key === '$handle') return this;
@@ -357,7 +369,7 @@ class GizmoData {
         let cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
-                if (hdl) hdl.ahandles[sentry.key] = new AttHandle(hdl, sentry);
+                //if (hdl) hdl.ahandles[sentry.key] = new AttHandle(hdl, sentry);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
