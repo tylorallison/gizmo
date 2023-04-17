@@ -312,6 +312,10 @@ class tVect2 {
 }
 
 class tVect3 {
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+    }
     static registry = {};
     static init() {
         if (!this.name in this.registry) {
@@ -320,8 +324,9 @@ class tVect3 {
     }
     constructor(x,y) {
         this.constructor.init();
-        this.x = x;
-        this.y = y;
+        GizmoData.parser(this, {x:x, y:y});
+        //this.x = x;
+        //this.y = y;
     }
 }
 
@@ -342,9 +347,21 @@ class tVect4 extends tdata {
 }
 
 class tVect5 {
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+    }
+    static registry = {};
+    static init() {
+        if (!this.name in this.registry) {
+            this.registry[this.name] = this;
+        }
+    }
     constructor(x,y) {
-        this.x = x;
-        this.y = y;
+        //this.x = x;
+        //this.y = y;
+        this.constructor.init();
+        GizmoData.parser(this, {x:x, y:y});
         let proxy = new Proxy(this, {
             get(target, key, receiver) {
                 const value = target[key];
@@ -468,10 +485,10 @@ const clss = [
     tVect1,
     tVect2,
     tVect3,
-    tVect4,
+    //tVect4,
     tVect5,
-    tVect6,
-    tVect7,
+    //tVect6,
+    //tVect7,
 ]
 
 //const iterations = 250000;
@@ -492,17 +509,17 @@ describe('perf tests', () => {
         }
     });
 
-    it('performance to get property', ()=>{
+    it(`performance to get property`, ()=>{
         for (const cls of clss) {
-            let tag = `get test:${cls.name}`;
-            let v = new cls(1,2);
-            console.time(tag);
-            let x;
-            for (var i = 0; i < iterations; i++) {
-                x = v.x;
-            };
-            console.timeEnd(tag)
-            expect(x).toEqual(1);
+                let tag = `get test:${cls.name}`;
+                let v = new cls(1,2);
+                console.time(tag);
+                let x;
+                for (var i = 0; i < iterations; i++) {
+                    x = v.x;
+                };
+                console.timeEnd(tag)
+                expect(x).toEqual(1);
         }
     });
 

@@ -12,7 +12,7 @@ class SchemaEntry {
         // generator function of format (object, specification, value) => { <function returning final value> };
         this.generator = spec.generator;
         // nopathgen disables path updates (atUpdate and autogen)
-        this.nopathgen = spec.nopathgen;
+        //this.nopathgen = spec.nopathgen;
         this.autogen = spec.autogen;
         this.autogendeps = new Set();
         this.parser = spec.parser || ((o, x) => {

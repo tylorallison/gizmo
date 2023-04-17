@@ -14,7 +14,7 @@ describe('gizmo data', () => {
         expect(leaf.el).toEqual('hello');
     });
 
-    it('atUpdate atts trigger when updated', ()=>{
+    it('atUpdate atts trigger for root object', ()=>{
         let update = {};
         class TLeaf extends GizmoData {
             static { Schema.apply(this, 'el', { atUpdate: (r,o,k,ov,nv) => update = { r:r, o:o, k:k, ov:ov, nv:nv } }); }
@@ -24,29 +24,7 @@ describe('gizmo data', () => {
         expect(update).toEqual({ r:null, o:leaf, k:'el', ov:'hello', nv:'there'});
     });
 
-    it('attributes become readonly when attached to readonly trunk', ()=>{
-        class TLeaf extends GizmoData {
-            static { 
-                Schema.apply(this, 'el'); 
-            };
-        };
-        class TRO extends GizmoData {
-            static { 
-                Schema.apply(this, 'leaf', { link: true, readonly: true }); 
-            };
-        };
-        let leaf = new TLeaf({el: 'hello'});
-        leaf.el = 'there';
-        expect(leaf.el).toEqual('there');
-        let ro = new TRO({ leaf: leaf });
-        leaf.el = 'again';
-        expect(leaf.el).toEqual('there');
-        leaf.$handle.unlink();
-        leaf.el = 'once more';
-        expect(leaf.el).toEqual('once more');
-    });
-
-    it('can trigger trunk update on child update', ()=>{
+    it('atUpdate atts trigger for leaf', ()=>{
         let subUpdate = {};
         let rootUpdate = {};
         class TLeaf extends GizmoData {
@@ -76,6 +54,7 @@ describe('gizmo data', () => {
         leaf.el = 'sub1';
         expect(subUpdate).toEqual({});
         expect(rootUpdate).toEqual({ov: 'leaf1', nv: 'sub1'});
+        console.log(`-- setting subu.leaf`);
         rootUpdate = {};
         subu.leaf = leaf;
         leaf.el = 'leaf2';
@@ -86,6 +65,24 @@ describe('gizmo data', () => {
         leaf.el = 'sub2';
         expect(subUpdate).toEqual({ov: 'leaf2', nv: 'sub2'});
         expect(rootUpdate).toEqual({ov: 'leaf2', nv: 'sub2'});
+    });
+
+    it('attributes become readonly when attached to readonly trunk', ()=>{
+        class TLeaf extends GizmoData {
+            static { Schema.apply(this, 'el'); }
+        };
+        class TRO extends GizmoData {
+            static { Schema.apply(this, 'leaf', { link: true, readonly: true }); }
+        };
+        let leaf = new TLeaf({el: 'hello'});
+        leaf.el = 'there';
+        expect(leaf.el).toEqual('there');
+        let ro = new TRO({ leaf: leaf });
+        leaf.el = 'again';
+        expect(leaf.el).toEqual('there');
+        leaf.$handle.unlink();
+        leaf.el = 'once more';
+        expect(leaf.el).toEqual('once more');
     });
 
     it('can be registered', ()=>{
@@ -105,29 +102,79 @@ describe('gizmo data', () => {
         expect(o.sub.data).toEqual('foo');
     });
 
-    /*
-    it('data changes trigger events', ()=>{
-        class TGizmoDataSub extends GizmoData {
+    it('links cannot loop', ()=>{
+        class TLeaf extends GizmoData {
             static { Schema.apply(this, 'data'); };
         };
-        class TGizmoData extends GizmoData {
-            static { 
-                Schema.apply(this, 'sub', { link: true });
-                ExtEvtEmitter.apply(this)
-            };
+        class TRoot extends GizmoData {
+            static { Schema.apply(this, 'sub', { link: true }); };
         };
-        let o = new TGizmoData({sub: new TGizmoDataSub({data: 'foo'})});
+        let n1 = new TRoot();
+        let n2 = new TRoot();
+        let n3 = new TRoot();
+        let l = new TLeaf({data: 'leaf'});
+        n3.sub = l;
+        expect(n3.sub.data).toEqual('leaf');
+        expect(() => n1.sub = n1).toThrow();
+        expect(n1.sub).toEqual(undefined);
+        n2.sub = n3;
+        expect(n2.sub.sub.data).toEqual('leaf');
+        expect(() => n3.sub = n2).toThrow();
+        expect(n2.sub.sub.data).toEqual('leaf');
+        n1.sub = n2;
+        expect(n1.sub.sub.sub.data).toEqual('leaf');
+        expect(() => n3.sub = n1).toThrow();
+        expect(n1.sub.sub.sub.data).toEqual('leaf');
+    });
+
+    it('root changes trigger events', ()=>{
+        class TLeaf extends GizmoData {
+            static { Schema.apply(this, 'data'); }
+            static { Schema.apply(this, 'ndata', { eventable: false }); }
+            static { ExtEvtEmitter.apply(this) }
+        };
+        let o = new TLeaf({data: 'foo', ndata: 'ok'});
+        expect(o.data).toEqual('foo');
+        let receiver = ExtEvtReceiver.gen();
+        let tevt;
+        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
+        o.data = 'bar';
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(o);
+        expect(tevt.set['data']).toEqual('bar');
+        tevt = undefined;
+        o.ndata = 'bar';
+        expect(tevt).toBeFalsy();
+        expect(o.ndata).toEqual('bar');
+    });
+
+    it('leaf changes trigger events', ()=>{
+        class TLeaf extends GizmoData {
+            static { Schema.apply(this, 'data'); };
+            static { Schema.apply(this, 'ndata', { eventable: false }); };
+        };
+        class TRoot extends GizmoData {
+            static { Schema.apply(this, 'sub', { link: true }); }
+            static { Schema.apply(this, 'nsub', { link: true, eventable: false }); }
+            static { ExtEvtEmitter.apply(this); }
+        };
+        let o = new TRoot({sub: new TLeaf({data: 'foo', ndata: 'nfoo'})});
         expect(o.sub.data).toEqual('foo');
+        expect(o.sub.ndata).toEqual('nfoo');
         let receiver = ExtEvtReceiver.gen();
         let tevt;
         EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
         o.sub.data = 'bar';
-        //EvtSystem.trigger(emitter, 'test');
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(o);
         expect(tevt.set['sub.data']).toEqual('bar');
+        let l = o.sub;
+        o.sub = null;
+        tevt = null;
+        l.data = 'v2';
+        expect(tevt).toBeFalsy();
+        expect(l.data).toEqual('v2');
     });
-    */
 
     it('autogenerated fields can be specified for all changes to data', ()=>{
         class TAuto extends GizmoData {
@@ -141,6 +188,8 @@ describe('gizmo data', () => {
         expect(gzd.sdata).toEqual(4);
         expect(gzd.adata).toEqual(8);
     });
+
+    /*
 
     it('autogenerated fields can be specified for all a specific field', ()=>{
         class TAuto extends GizmoData {
@@ -161,6 +210,7 @@ describe('gizmo data', () => {
         expect(gzd.sdata2).toEqual(3);
         expect(gzd.adata).toEqual(8);
     });
+    */
 
     /*
     it('autogenerated fields can be specified for sub data', ()=>{

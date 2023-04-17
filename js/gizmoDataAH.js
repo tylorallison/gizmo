@@ -1,7 +1,69 @@
-export { GizmoData };
 
-import { EvtSystem } from './event.js';
-import { Fmt } from './fmt.js';
+class AttHandle {
+    constructor(nhdl, sentry) {
+        this.nhdl = nhdl;
+        let key = sentry.key;
+        this.readonly = sentry.readonly;
+        this.key = key;
+        this.getter = sentry.getter || ((t) => t[key]);
+        this.modifier = sentry.setter;
+        this.setter = (t,v) => t[key] = v,
+        this.watchers = undefined;
+        this.pwatchers = undefined;
+
+        if (sentry.atUpdate) this.addWatcher((t,ov,nv) => {
+            if (nhdl.finalized) sentry.atUpdate( (nhdl.trunk) ? nhdl.trunk.proxy : null, nhdl.proxy, key, ov, nv );
+        });
+        if (sentry.link) this.addWatcher((t,ov,nv) => {
+            if (ov && ov instanceof GizmoData) ov.$handle.unlink();
+            if (nv && nv instanceof GizmoData) nv.$handle.link(nhdl, sentry);
+            if (nhdl.pathUpdatable) {
+                for (const hdl of nhdl.constructor.eachInPath(nhdl.trunk, (ohdl) => (ohdl.sentry && ohdl.sentry.atUpdate))) {
+                    hdl.sentry.atUpdate((hdl.trunk) ? hdl.trunk.proxy : null, nhdl.proxy, sentry.key, storedValue, value);
+                }
+            }
+        });
+
+        for (const agk of sentry.autogendeps) this.addWatcher((t,ov,nv) => nhdl.proxy[agk] = '#autogen');
+    }
+
+    addWatcher(watcher, pri=0) {
+        if (!this.watchers) {
+            this.watchers = [ watcher ];
+            this.pwatchers = [ pri ];
+        } else {
+            let idx=0;
+            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; idx++ );
+            this.watchers.splice(idx, 0, watcher);
+            this.pwatchers.splice(idx, 0, pri);
+        }
+    }
+    delWatcher(watcher) {
+        let idx = this.watchers.indexOf(watcher);
+        if (idx !== -1) {
+            this.watchers.splice(idx, 1);
+            this.pwatchers.splice(idx, 1);
+        }
+        if (!this.watchers.length) {
+            this.watchers = null;
+            this.pwatchers = null;
+        }
+    }
+
+    get(target) {
+        return this.getter(target);
+    }
+    set(target, value) {
+        if (this.nhdl.finalized && (this.readonly || this.nhdl.pathReadonly)) return true;
+        const ov = this.getter(target);
+        if (this.modifier) value = this.modifier(target, value);
+        this.setter(target, value);
+        if (this.watchers) {
+            for (const watcher of this.watchers) watcher(target, ov, value);
+        }
+        return true;
+    }
+}
 
 class GizmoHandle {
     static root(hdl) {
@@ -48,10 +110,12 @@ class GizmoHandle {
     constructor(node) {
         this.node = node;
         this.schema = node.constructor.$schema;
+        this.ahandles = {};
         this.trunk = null;
         this.proxy = null;
         this.sentry = null;
         this.watchers = [];
+        this.pwatchers = [];
         this.keyer = () => (this.sentry) ? this.sentry.key : '';
         this.pathEventable = EvtSystem.isEmitterCls(node.constructor);
         this.pathUpdatable = false;
@@ -64,64 +128,50 @@ class GizmoHandle {
         this.set = this.iset;
     }
 
-    finalize() {
-        this.finalized = true;
-        if (EvtSystem.isEmitter(this.node)) this.addWatcher(this, (h,k,ov,nv) => {
-            let sentry = (this.schema) ? this.schema.map[k] : null;
-            let renderable = (sentry) ? sentry.renderable : false;
-            let eventable = (sentry) ? sentry.eventable : false;
-            if (eventable) EvtSystem.trigger(h.proxy, 'gizmo.set', { set: { [k]: nv }, render: renderable });
-        });
+    addWatcher(watcher, pri=0) {
+        if (!this.watchers) {
+            this.watchers = [ watcher ];
+            this.pwatchers = [ pri ];
+        } else {
+            let idx=0;
+            for ( ; idx <= this.watchers.length && this.pwatchers[idx] <= pri; idx++ );
+            this.watchers.splice(idx, 0, watcher);
+            this.pwatchers.splice(idx, 0, pri);
+        }
+    }
+    delWatcher(watcher) {
+        let idx = this.watchers.indexOf(watcher);
+        if (idx !== -1) {
+            this.watchers.splice(idx, 1);
+            this.pwatchers.splice(idx, 1);
+        }
+        if (!this.watchers.length) {
+            this.watchers = null;
+            this.pwatchers = null;
+        }
     }
 
-
-    addWatcher(link, watcher, pri=0) {
-        this.watchers.push({ link: link, watcher: watcher, pri: pri});
-        this.watchers.sort((a,b) => a.pri-b.pri);
-    }
-    delWatcher(link) {
-        for (let i=this.watchers.length-1; i>=0; i--) if (this.watchers[i].link === link) this.watchers.splice(i, 1);
-    }
-
-    linkUpdate() {
-        for (let i=this.watchers.length-1; i>=0; i--) if (!this.constructor.findInPath(this.trunk, (h) => h===this.watchers[i].link)) this.watchers.splice(i, 1);
+    linkUpdate(eventer, watchers) {
         // FIXME: add watchers
         let trunk = this.trunk;
         if (trunk) {
+            // setup eventer
+            if (!eventer && !trunk.trunk && EvtSystem.isEmitter(trunk.node)) {
+                eventer = { link: trunk, watcher: (t,k,ov,nv) => {
+                    let path = this.constructor.path(this);
+                    let key = (path) ? `${path}.${sentry.key}` : sentry.key;
+                    let renderable = sentry.renderable || this.pathRenderable;
+                    EvtSystem.trigger(root, 'gizmo.set', { set: { [key]: value }, render: renderable });
+
+                }}
+            }
+            this.pathEventable = 
             //console.log(`linkUpdate: ${this.constructor.path(this)} schema.eventable: ${this.schema.eventable} trunk.pathEventable: ${trunk.pathEventable}`);
             this.pathEventable = this.sentry.eventable && trunk.pathEventable;
-            this.pathUpdatable = this.sentry.atUpdate || trunk.pathUpdatable;
+            this.pathUpdatable = !this.sentry.nopathgen && (this.sentry.atUpdate || trunk.pathUpdatable);
             this.pathAutogen = (this.sentry.autogendeps.size || trunk.pathAutogen);
             this.pathReadonly = this.sentry.readonly || trunk.pathReadonly;
             this.pathRenderable = this.sentry.renderable || trunk.pathRenderable;
-
-            if (this.pathEventable) {
-                let root = this.constructor.root(trunk);
-                let path = this.constructor.path(this);
-                this.addWatcher(root, (h,k,ov,nv) => {
-                    let sentry = (this.schema) ? this.schema.map[k] : null;
-                    let renderable = (sentry) ? sentry.renderable|this.pathRenderable : this.pathRenderable;
-                    let eventable = (sentry) ? sentry.eventable : false;
-                    if (eventable) EvtSystem.trigger(root.proxy, 'gizmo.set', { set: { [`${path}.${k}`]: nv }, render: renderable });
-                });
-            }
-
-            if (this.pathUpdatable) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => h.sentry && h.sentry.atUpdate)) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => hdl.sentry.atUpdate( hdl.trunk.proxy, h.proxy, k, ov, nv ));
-                }
-            }
-
-            if (this.pathAutogen) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => (h.sentry && h.sentry.autogendeps.size))) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => {
-                        for (const agk of hdl.sentry.autogendeps) {
-                            if (agk in hdl.node) hdl.set(hdl.node, agk, '#autogen#');
-                        }
-                    });
-                }
-            }
-
         } else {
             this.pathEventable = EvtSystem.isEmitter(this.node);
             this.pathUpdatable = false;
@@ -172,7 +222,6 @@ class GizmoHandle {
     }
 
     unlink() {
-        console.log(`unlink: ${this.node} from trunk: ${(this.trunk) ? this.trunk.node: 'null'}`);
         let trunk = this.trunk;
         this.trunk = null;
         this.sentry = null;
@@ -205,25 +254,46 @@ class GizmoHandle {
                 target[key] = value;
             }
 
-            if (sentry.atUpdate) this.addWatcher(this, (h,k,ov,nv) => {
-                if (k === key) sentry.atUpdate( (h.trunk) ? h.trunk.proxy : null, h.proxy, key, ov, nv );
+            if (sentry.atUpdate) this.addWatcher((n,k,ov,nv) => {
+                if (k === key) sentry.atUpdate( (n.trunk) ? n.trunk.proxy : null, n.proxy, key, ov, nv );
             });
-            if (sentry.link) this.addWatcher(this, (h,k,ov,nv) => {
+            if (sentry.link) this.addWatcher((n,k,ov,nv) => {
                 if (k !== key) return;
                 if (ov && ov instanceof GizmoData) ov.$handle.unlink();
-                if (nv && nv instanceof GizmoData) nv.$handle.link(h, sentry);
-            });
-            if (sentry.autogendeps.size) {
-                this.addWatcher(this, (h,k,ov,nv) => {
-                    for (const agk of sentry.autogendeps) {
-                        if (agk in this.node) this.set(this.node, agk, '#autogen#');
+                if (nv && nv instanceof GizmoData) nv.$handle.link(n, sentry);
+                /*
+                if (this.pathUpdatable) {
+                    for (const hdl of nhdl.constructor.eachInPath(nhdl.trunk, (ohdl) => (ohdl.sentry && ohdl.sentry.atUpdate))) {
+                        hdl.sentry.atUpdate((hdl.trunk) ? hdl.trunk.proxy : null, nhdl.proxy, sentry.key, storedValue, value);
                     }
-                });
-            }
+                }
+                */
+            });
 
         } else {
             target[key] = value;
         }
+        return true;
+    }
+
+    hget(target, key, receiver) {
+        const value = target[key];
+        if (key === '$handle') return this;
+        if (key === '$target') return target;
+        if (value instanceof Function) {
+            return function (...args) {
+                return value.apply(this === receiver ? target : this, args);
+            };
+        }
+        let hdl = this.ahandles[key];
+        if (hdl) return hdl.get(target);
+        return value;
+    }
+
+    hset(target, key, value) {
+        let hdl = this.ahandles[key];
+        if (hdl) return hdl.set(target, value, !this.finalized);
+        target[key] = value;
         return true;
     }
         
@@ -270,13 +340,13 @@ class GizmoHandle {
         if (Object.is(storedValue, value)) return true;
         if (sentry) {
             if (sentry.link) {
-                if (value && this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
+                if (this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
                     console.error(`hierarchy loop detected ${value} already in path: ${this.node}`);
                     return false;
                 }
-                //if (storedValue) storedValue.$handle.unlink();
+                if (storedValue) storedValue.$handle.unlink();
                 target[key] = value;
-                //if (value) value.$handle.link(this, sentry);
+                if (value) value.$handle.link(this, sentry);
             } else {
                 target[key] = value;
             }
@@ -285,7 +355,7 @@ class GizmoHandle {
         }
 
         if (this.watchers) {
-            for (const watcher of this.watchers) watcher.watcher(this, key, storedValue, value);
+            for (const watcher of this.watchers) watcher(target, key, storedValue, value);
         }
 
         /*
@@ -331,6 +401,7 @@ class GizmoHandle {
         return true;
     }
 }
+@@@
 
 class GizmoData {
     static registry = new Map();
@@ -380,6 +451,7 @@ class GizmoData {
         let cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
+                //if (hdl) hdl.ahandles[sentry.key] = new AttHandle(hdl, sentry);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
@@ -396,7 +468,7 @@ class GizmoData {
         let proxy = new Proxy(this, handle);
         handle.proxy = proxy;
         cls.parser(this, spec, handle.cset.bind(handle), handle);
-        handle.finalize();
+        handle.finalized = true;
         return proxy;
     }
     toString() {
@@ -419,4 +491,7 @@ class GizmoData {
     atUnlink(trunk) {
     }
 
+}
+
+class GizmoDataAH {
 }
