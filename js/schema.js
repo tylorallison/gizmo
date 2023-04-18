@@ -1,4 +1,4 @@
-export { Schema };
+export { Schema, SchemaEntry };
 
 class SchemaEntry {
     constructor(key, spec={}) {
