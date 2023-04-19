@@ -1,6 +1,7 @@
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { GizmoData } from '../js/gizmoData.js';
+import { GizmoDataW } from '../js/gizmoDataW.js';
 import { Schema } from '../js/schema.js';
 //import { Vect } from '../js/vect.js';
 
@@ -481,6 +482,16 @@ class tVect7 {
     }
 }
 
+class tVect8 extends GizmoDataW {
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+    }
+    constructor(x,y) {
+        super({x:x, y:y});
+    }
+}
+
 const clss = [
     tVect1,
     tVect2,
@@ -489,6 +500,7 @@ const clss = [
     tVect5,
     //tVect6,
     //tVect7,
+    tVect8,
 ]
 
 //const iterations = 250000;
