@@ -220,41 +220,65 @@ class GizmoDataW {
 
 class GizmoArray {
 
-    /*
-    static attach(trunk, sentry, node) {
-        console.log(`-- attaching to ${trunk.node}->${node}`);
-        let handle = new GizmoArrayHandle(node);
-        let proxy = new Proxy(node, handle);
-        handle.link(trunk, sentry);
-        handle.addWatcher(handle, (h,k,ov,nv) => {
-            console.log(`link watcher triggered: k:${k} ov: ${ov} nv: ${nv}`);
-            if (ov && ov instanceof GizmoData) ov.$handle.unlink();
-            if (nv && nv instanceof GizmoData) nv.$handle.link(h, handle.esentry);
-        });
-        handle.finalize();
-        // FIXME
-        for (let i=0; i<node.length; i++) handle.cset(node, i, node[i]);
-        return proxy;
-    }
-    */
-
-    constructor() {
-        let array = Array.from(arguments);
-        //super(node);
-        //this.esentry = new SchemaEntry();
-        let proxy = new Proxy(array, {
+    static wrap(array) {
+        const proxy = new Proxy(array, {
             get(target, key, receiver) {
                 if (target.$link) {
                     switch (key) {
                         case 'push':
                             return (...v) => {
                                 let i=target.length;
-                                console.log(`target: ${target} target.length: ${target.length}`);
                                 for (const el of v) {
                                     GizmoDataW.set(target, i++, el);
                                 }
                                 return target.length;
                             }
+                        case 'unshift':
+                            return (...v) => {
+                                let i=0;
+                                for (const el of v) {
+                                    target.splice(i, 0, undefined);
+                                    GizmoDataW.set(target, i++, el);
+                                }
+                                return target.length;
+                            }
+                        case 'pop': return () => {
+                            let idx = target.length-1;
+                            if (idx < 0) return undefined;
+                            const v = target[idx];
+                            GizmoDataW.set(target, idx, undefined);
+                            target.pop();
+                            return v;
+                        }
+                        case 'shift': return () => {
+                            if (target.length < 0) return undefined;
+                            const v = target[0];
+                            GizmoDataW.set(target, 0, undefined);
+                            target.shift();
+                            return v;
+                        }
+                        case 'splice': return (start, deleteCount=0, ...avs) => {
+                            let tidx = start;
+                            let aidx = 0;
+                            let dvs = [];
+                            // splice out values to delete, replace w/ items to add (if any)
+                            for (let i=0; i<deleteCount; i++ ) {
+                                dvs.push(target[tidx])
+                                if (aidx < avs.length) {
+                                    GizmoDataW.set(target, tidx++, avs[aidx++]);
+                                } else {
+                                    GizmoDataW.set(target, tidx, undefined);
+                                    target.splice(tidx++, 1);
+                                }
+                            }
+                            // splice in any remainder of items to add
+                            for ( ; aidx<avs.length; aidx++ ) {
+                                target.splice(tidx, 0, undefined);
+                                GizmoDataW.set(target, tidx++, avs[aidx]);
+                            }
+                            return dvs;
+                        }
+
                     }
                 }
                 const value = target[key];
@@ -272,6 +296,14 @@ class GizmoArray {
         });
         return proxy;
     }
+
+    constructor() {
+        let array = Array.from(arguments);
+        return this.constructor.wrap(array);
+        //super(node);
+        //this.esentry = new SchemaEntry();
+    }
+
 }
 
     /*
@@ -289,38 +321,9 @@ class GizmoArray {
                     clear();
                 }
                 */
+
             /*
-            case 'push':
-                return (...v) => {
-                    let i=target.length;
-                    //let rv = target.push(...v);
-                    for (const el of v) {
-                        this.set(target, i++, v);
-                        console.log(`want to link: ${i++} to ${el}`);
-                    }
-                    return target.length;
-                }
-                */
-            /*
-            case 'unshift':
-                return (...v) => {
-                    let i=0;
-                    let rv = obj.unshift(...v);
-                    for (const el of v) link(i++, el);
-                    return rv;
-                }
-            case 'pop': return () => {
-                let idx = obj.length-1;
-                let v = obj.pop();
-                unlink(idx, v, (idx>=0));
-                return v;
-            }
-            case 'shift': return () => {
-                let idx = (obj.length) ? 0 : -1;
-                let v = obj.shift();
-                unlink(idx, v, (idx>=0));
-                return v;
-            }
+
             case 'splice': return (start, deleteCount=0, ...v) => {
                 let i = start;
                 let rv = obj.splice(start, deleteCount, ...v);
@@ -328,6 +331,7 @@ class GizmoArray {
                 for (let i=0; i<deleteCount; i++) unlink(start+i, obj[start+i], i==v.length);
                 return rv;
             }
+
             */
         /*
         }

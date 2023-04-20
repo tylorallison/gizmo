@@ -271,13 +271,90 @@ describe('a gizmo array', () => {
         EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
     });
 
-    it('causes gizmo events when k/v set', ()=>{
-        //gSetter(gzd.items, 0, 'foo');
+    it('causes gizmo events when items pushed', ()=>{
         gzd.items.push('foo');
-        console.log(`tevt: ${Fmt.ofmt(tevt)}`);
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+        gzd.items.push('bar', 'baz');
+        expect(tevt.set['items.2']).toEqual('baz');
+    });
+
+    it('causes gizmo events when items unshifted', ()=>{
+        gzd.items.unshift('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+        gzd.items.unshift('bar', 'baz');
+        expect(tevt.set['items.1']).toEqual('baz');
+        expect(gzd.items[0]).toEqual('bar');
+        expect(gzd.items[1]).toEqual('baz');
+        expect(gzd.items[2]).toEqual('foo');
+        expect(gzd.items.length).toEqual(3);
+    });
+
+    it('causes gizmo events when items popped', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.pop();
+        expect(v).toEqual('baz');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.2']).toEqual(undefined);
+        expect(gzd.items.length).toEqual(2);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('bar');
+        v = gzd.items.pop();
+        expect(v).toEqual('bar');
+        expect(gzd.items.length).toEqual(1);
+    });
+
+    it('causes gizmo events when items shifted', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.shift();
+        expect(v).toEqual('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual(undefined);
+        expect(gzd.items.length).toEqual(2);
+        expect(gzd.items[0]).toEqual('bar');
+        expect(gzd.items[1]).toEqual('baz');
+        v = gzd.items.shift();
+        expect(v).toEqual('bar');
+        expect(gzd.items.length).toEqual(1);
+    });
+
+    it('causes gizmo events when items spliced', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.splice(1, 1);
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.1']).toEqual(undefined);
+        expect(v).toEqual(['bar']);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('baz');
+        expect(gzd.items.length).toEqual(2);
+        v = gzd.items.splice(1, 0, 'hello', 'there');
+        expect(v).toEqual([]);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('hello');
+        expect(gzd.items[2]).toEqual('there');
+        expect(gzd.items[3]).toEqual('baz');
+        expect(tevt.set['items.2']).toEqual('there');
+        expect(gzd.items.length).toEqual(4);
+        v = gzd.items.splice(1, 1, 'nihao');
+        expect(v).toEqual(['hello']);
+        expect(gzd.items.length).toEqual(4);
+        expect(gzd.items[1]).toEqual('nihao');
+        expect(tevt.set['items.1']).toEqual('nihao');
+        v = gzd.items.splice(1, 2, 'hola');
+        expect(v).toEqual(['nihao', 'there']);
+        expect(gzd.items.length).toEqual(3);
+        expect(tevt.set['items.2']).toEqual(undefined);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('hola');
+        expect(gzd.items[2]).toEqual('baz');
     });
 
     /*
