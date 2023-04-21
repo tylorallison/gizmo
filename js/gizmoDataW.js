@@ -1,4 +1,4 @@
-export { GizmoDataW, GizmoArray };
+export { GizmoDataW, GizmoArray, GizmoObject };
 
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
@@ -126,6 +126,19 @@ class GizmoDataLink {
         for (let i=this.watchers.length-1; i>=0; i--) if (this.watchers[i].node === node) this.watchers.splice(i, 1);
     }
 
+    destroy() {
+        if (this.trunk) {
+            this.constructor.unlink(this.trunk.node, this.node);
+        }
+        if (this.leafs) {
+            let leafs = this.leafs;
+            this.leafs = null;
+            for (const llink of leafs) {
+                this.constructor.unlink(this.node, llink.node);
+            }
+        }
+    }
+
     toString() {
         return Fmt.toString(this.constructor.name, 
             this.node, 
@@ -225,6 +238,12 @@ class GizmoArray {
             get(target, key, receiver) {
                 if (target.$link) {
                     switch (key) {
+                        case 'destroy': 
+                            return () => {
+                                if (target.$link) target.$link.destroy();
+                                delete target['$link'];
+                                if (target.destroy) target.destroy();
+                            }
                         case 'push':
                             return (...v) => {
                                 let i=target.length;
@@ -278,7 +297,6 @@ class GizmoArray {
                             }
                             return dvs;
                         }
-
                     }
                 }
                 const value = target[key];
@@ -290,7 +308,14 @@ class GizmoArray {
                 return value;
             },
             set(target, key, value) {
-                target[key] = value;
+                GizmoDataW.set(target, key, value);
+                return true;
+            },
+            deleteProperty(target, key) {
+                if (key in target) {
+                    GizmoDataW.set(target, key, undefined);
+                    delete target[key];
+                }
                 return true;
             }
         });
@@ -300,42 +325,50 @@ class GizmoArray {
     constructor() {
         let array = Array.from(arguments);
         return this.constructor.wrap(array);
-        //super(node);
-        //this.esentry = new SchemaEntry();
     }
 
 }
 
-    /*
-    get(target, key, receiver) {
-        switch (key) {
-            */
+class GizmoObject {
 
-            /*
-            case 'destroy': 
-                return () => {
-                    destroy();
+    static wrap(array) {
+        const proxy = new Proxy(array, {
+            get(target, key, receiver) {
+                if (target.$link) {
+                    switch (key) {
+                        case 'destroy': 
+                            return () => {
+                                if (target.$link) target.$link.destroy();
+                                delete target['$link'];
+                                if (target.destroy) target.destroy();
+                            }
+                    }
                 }
-            case 'clear': 
-                return () => {
-                    clear();
+                const value = target[key];
+                if (value instanceof Function) {
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
                 }
-                */
-
-            /*
-
-            case 'splice': return (start, deleteCount=0, ...v) => {
-                let i = start;
-                let rv = obj.splice(start, deleteCount, ...v);
-                for (const el of v) link(i++, el);
-                for (let i=0; i<deleteCount; i++) unlink(start+i, obj[start+i], i==v.length);
-                return rv;
+                return value;
+            },
+            set(target, key, value) {
+                GizmoDataW.set(target, key, value);
+                return true;
+            },
+            deleteProperty(target, key) {
+                if (key in target) {
+                    GizmoDataW.set(target, key, undefined);
+                    delete target[key];
+                }
+                return true;
             }
+        });
+        return proxy;
+    }
 
-            */
-        /*
-        }
-        return target[key];
+    constructor(obj) {
+        if (!obj) obj = {};
+        return this.constructor.wrap(obj);
     }
 }
-*/

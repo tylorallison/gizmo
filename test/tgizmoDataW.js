@@ -1,6 +1,6 @@
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
-import { GizmoArray, GizmoDataW } from '../js/gizmoDataW.js';
+import { GizmoArray, GizmoDataW, GizmoObject } from '../js/gizmoDataW.js';
 import { Schema } from '../js/schema.js';
 
 const gClass = GizmoDataW;
@@ -271,6 +271,14 @@ describe('a gizmo array', () => {
         EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
     });
 
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.items[0] = 'foo';
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+    });
+
     it('causes gizmo events when items pushed', ()=>{
         gzd.items.push('foo');
         expect(tevt.tag).toEqual('gizmo.set');
@@ -357,39 +365,12 @@ describe('a gizmo array', () => {
         expect(gzd.items[2]).toEqual('baz');
     });
 
-    /*
-    it('causes gizmo events when k/v deleted', ()=>{
-        gzd.items.push('foo');
-        expect(tevt.set['items[0]']).toEqual('foo');
-        expect(gzd.items.length).toEqual(1)
-        gzd.items.pop();
-        expect(tevt.set['items[0]']).toEqual(null);
-        expect(gzd.items.length).toEqual(0)
-    });
-    */
-
-        /*
-    it('triggers autogen', ()=>{
-        expect(gzd.auto).toEqual('wait');
-        gSetter(gzd.items, 0, 'foo');
-        //gzd.items.push('foo');
-        expect(gzd.auto).toEqual('hello:there');
-        gzd.items.pop();
-        expect(gzd.auto).toEqual('wait');
-    });
-        */
-
 });
 
 describe('a gizmo map', () => {
     class TRef extends gClass {
         static { 
-            Schema.apply(this, 'atts', { link: 'map', parser: () => { return {} }}); 
-            /*
-            Schema.apply(this, 'auto', { autogen: (k) => k === 'atts', setter: (o,x,v) => {
-                return (o.atts.has('seeker')) ? `hello:${o.atts.get('seeker')}` : 'wait';
-            }}); 
-            */
+            Schema.apply(this, 'atts', { link: 'map', parser: () => { return new GizmoObject() }}); 
             ExtEvtEmitter.apply(this)
         };
     };
@@ -401,13 +382,18 @@ describe('a gizmo map', () => {
     });
 
     it('causes gizmo events when k/v set', ()=>{
-        gSetter(gzd.atts, 'foo', 'bar');
-        //gzd.atts.set('foo', 'bar');
+        gzd.atts['foo'] = 'bar';
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
-        //gzd.atts.set('foo', 'baz');
-        //expect(tevt.set['atts.foo']).toEqual('baz');
+    });
+
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.atts['foo'] = 'bar';
+        delete gzd.atts['foo'];
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['atts.foo']).toEqual(undefined);
     });
 
 /*
