@@ -130,7 +130,7 @@ class UiGrid extends UiView {
             maxx = Math.max(loc.minx,loc.maxx-1);
             maxy = Math.max(loc.miny,loc.maxy-1);
         // if object only has position...
-        } else if (Vect.hasVect(loc)) {
+        } else if (Vect.iVect(loc)) {
             minx = loc.x;
             miny = loc.y;
             maxx = loc.x;

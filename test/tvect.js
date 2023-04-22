@@ -1,52 +1,125 @@
 import { Vect } from '../js/vect.js';
 
 describe('a 2d vector', () => {
-    let v;
-    beforeEach(() => {
-        v = new Vect(1,2);
-    });
 
     // set
-    let setTests = [
-        {args: [1], xX: 1, xY: 1},
-        {args: [2,1], xX: 2, xY: 1},
-        {args: [new Vect(2,1)], xX: 2, xY: 1},
-    ]
-    for (const test of setTests) {
+    for (const test of [
+        {v: new Vect({x:1,y:2}), args: [{y:1}], xX: 1, xY: 1},
+        {v: new Vect({x:1,y:2}), args: [{x:2,y:1}], xX: 2, xY: 1},
+        {v: new Vect({x:1,y:2}), args: [new Vect({x:2,y:1})], xX: 2, xY: 1},
+    ]) {
         it('can set ' + test.args, ()=>{
-            const rslt = v.set(...test.args);
+            const rslt = test.v.set(...test.args);
             expect(rslt.x).toBe(test.xX);
             expect(rslt.y).toBe(test.xY);
         })
     }
 
-    // add
-    let addTests = [
-        {args: [1], xX: 2, xY: 3},
-        {args: [1,2], xX: 2, xY: 4},
-        {args: [new Vect(1,2)], xX: 2, xY: 4},
-    ]
-    for (const test of addTests) {
-        it('can add ' + test.args, ()=>{
-            const rslt = v.add(...test.args);
-            expect(rslt.x).toBe(test.xX);
-            expect(rslt.y).toBe(test.xY);
+    // static add
+    for (const test of [
+        {args: [], xv: new Vect({x:0,y:0})},
+        {args: [{x:5,y:10}], xv: new Vect({x:5,y:10})},
+        {args: [{x:5,y:10}, {x:7,y:8}], xv: new Vect({x:12,y:18})},
+        {args: [{x:5,y:10}, {x:7,y:8}, {x:1,y:1}], xv: new Vect({x:13,y:19})},
+    ]) {
+        it('can static add ' + test.args, ()=>{
+            const rslt = Vect.add(...test.args);
+            expect(rslt).toEqual(test.xv);
         })
     }
 
-    // sub
-    let subTests = [
-        {args: [1], xX: 0, xY: 1},
-        {args: [2,1], xX: -1, xY: 1},
-        {args: [new Vect(2,1)], xX: -1, xY: 1},
-    ]
-    for (const test of subTests) {
-        it('can subtract ' + test.args, ()=>{
-            const rslt = v.sub(...test.args);
-            expect(rslt.x).toBe(test.xX);
-            expect(rslt.y).toBe(test.xY);
+    // method add
+    for (const test of [
+        {v: new Vect({x:1,y:2}), args: [], xv: new Vect({x:1,y:2})},
+        {v: new Vect({x:1,y:2}), args: [{x:1,y:2}], xv: new Vect({x:2,y:4})},
+        {v: new Vect({x:1,y:2}), args: [{x:1,y:2}, {x:2,y:1}], xv: new Vect({x:4,y:5})},
+    ]) {
+        it(`can add ${test.v} and ${test.args}`, ()=>{
+            const rslt = test.v.add(...test.args);
+            expect(rslt).toEqual(test.xv);
+            expect(test.v).toEqual(test.xv);
         })
     }
+
+    // static scalar add
+    for (const test of [
+        {args: [], xv: new Vect({x:0, y:0})},
+        {args: [{x: 1, y: 2}], xv: new Vect({x:1, y:2})},
+        {args: [{x: 1, y: 2}, 5], xv: new Vect({x:6, y:7})},
+        {args: [{x: 1, y: 2}, 5, 7], xv: new Vect({x:13, y:14})},
+    ]) {
+        it('can statically scalar add ' + test.args, ()=>{
+            const rslt = Vect.sadd(...test.args);
+            expect(rslt).toEqual(test.xv);
+        })
+    }
+
+    // scalar add
+    for (const test of [
+        {v: new Vect({x:1,y:2}), args: [], xv: new Vect({x:1, y:2})},
+        {v: new Vect({x:1,y:2}), args: [5], xv: new Vect({x:6, y:7})},
+        {v: new Vect({x:1,y:2}), args: [5, 7], xv: new Vect({x:13, y:14})},
+    ]) {
+        it('can scalar add ' + test.args, ()=>{
+            const rslt = test.v.sadd(...test.args);
+            expect(rslt).toEqual(test.xv);
+            expect(test.v).toEqual(test.xv);
+        })
+    }
+
+    // static sub
+    for (const test of [
+        {args: [], xv: new Vect({x:0,y:0})},
+        {args: [{x:5,y:10}], xv: new Vect({x:5,y:10})},
+        {args: [{x:5,y:10}, {x:7,y:8}], xv: new Vect({x:-2,y:2})},
+        {args: [{x:5,y:10}, {x:7,y:8}, {x:1,y:1}], xv: new Vect({x:-3,y:1})},
+    ]) {
+        it('can static sub ' + test.args, ()=>{
+            const rslt = Vect.sub(...test.args);
+            expect(rslt).toEqual(test.xv);
+        })
+    }
+
+    // method sub
+    for (const test of [
+        {v: new Vect({x:1,y:2}), args: [], xv: new Vect({x:1,y:2})},
+        {v: new Vect({x:1,y:2}), args: [{x:1,y:2}], xv: new Vect({x:0,y:0})},
+        {v: new Vect({x:1,y:2}), args: [{x:1,y:2}, {x:2,y:1}], xv: new Vect({x:-2,y:-1})},
+    ]) {
+        it(`can sub ${test.v} and ${test.args}`, ()=>{
+            const rslt = test.v.sub(...test.args);
+            expect(rslt).toEqual(test.xv);
+            expect(test.v).toEqual(test.xv);
+        })
+    }
+
+    // static scalar sub
+    for (const test of [
+        {args: [], xv: new Vect({x:0, y:0})},
+        {args: [{x: 1, y: 2}], xv: new Vect({x:1, y:2})},
+        {args: [{x: 1, y: 2}, 5], xv: new Vect({x:-4, y:-3})},
+        {args: [{x: 1, y: 2}, 5, 7], xv: new Vect({x:-11, y:-10})},
+    ]) {
+        it('can statically scalar sub ' + test.args, ()=>{
+            const rslt = Vect.ssub(...test.args);
+            expect(rslt).toEqual(test.xv);
+        })
+    }
+
+    // scalar sub
+    for (const test of [
+        {v: new Vect({x:1,y:2}), args: [], xv: new Vect({x:1, y:2})},
+        {v: new Vect({x:1,y:2}), args: [5], xv: new Vect({x:-4, y:-3})},
+        {v: new Vect({x:1,y:2}), args: [5, 7], xv: new Vect({x:-11, y:-10})},
+    ]) {
+        it('can scalar sub ' + test.args, ()=>{
+            const rslt = test.v.ssub(...test.args);
+            expect(rslt).toEqual(test.xv);
+            expect(test.v).toEqual(test.xv);
+        })
+    }
+
+    /*
 
     // mult
     let multTests = [
@@ -197,5 +270,6 @@ describe('a 2d vector', () => {
             expect(rslt).toEqual(test.xRslt);
         });
     }
+    */
 
 })

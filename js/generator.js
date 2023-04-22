@@ -56,11 +56,11 @@ class Generator {
     generate(spec) {
         if (!spec) return undefined;
         // resolve sub references within spec...
-        // -- sub references all start with 'x_' and are replaced with the generated object under a new key where the 'x_' has been stripped
+        // -- sub references are tagged w/ the '$gzx' property and are replaced with the generated object
         spec = this.resolve(spec);
         if (!spec.gctx) spec.gctx = this.gctx;
         // look up class definition
-        let cls = this.registry[spec.cls];
+        let cls = this.registry.get(spec.cls);
         if (!cls) return undefined;
         if (cls) return new cls(spec);
         return undefined;

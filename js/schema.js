@@ -20,12 +20,16 @@ class SchemaEntry {
             if (this.generator) return this.generator(o,x,this.dflt);
             return this.dflt;
         });
-        this.link = spec.hasOwnProperty('link') ? spec.link : false;
-        this.readonly = spec.hasOwnProperty('readonly') ? spec.readonly : false;
+        //this.link = spec.hasOwnProperty('link') ? spec.link : false;
+        //this.readonly = spec.hasOwnProperty('readonly') ? spec.readonly : false;
         this.renderable = spec.hasOwnProperty('renderable') ? spec.renderable : false;
         this.eventable = (this.readonly) ? false : spec.hasOwnProperty('eventable') ? spec.eventable : true;
-        this.gizmo = spec.hasOwnProperty('gizmo') ? spec.gizmo : false;
+        //this.gizmo = spec.hasOwnProperty('gizmo') ? spec.gizmo : false;
         this.atUpdate = spec.atUpdate;
+        // proxy - if the value is an object, setup a GizmoData proxy supports setter/getter traps to invoke GizmoData set/get logic
+        this.proxy = spec.hasOwnProperty('proxy') ? spec.proxy : false;
+        // nolink - if the value is an object, do not setup GizmoData links between the trunk and leaf.  This will disable any GizmoData-specific logic for this key
+        this.nolink = spec.hasOwnProperty('nolink') ? spec.nolink : false;
         // autogen fields are not serializable
         this.serializable = (this.autogen) ? false : spec.hasOwnProperty('serializable') ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;

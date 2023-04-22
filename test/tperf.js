@@ -1,7 +1,7 @@
-import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
+import { EvtSystem } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { GizmoData } from '../js/gizmoData.js';
-import { GizmoDataW } from '../js/gizmoDataW.js';
+//import { GizmoDataW } from '../js/gizmoDataW.js';
 import { Schema } from '../js/schema.js';
 //import { Vect } from '../js/vect.js';
 
@@ -214,87 +214,6 @@ class handler {
     };
 }
 
-class tproxy {
-
-    /**
-     * root returns the root of the given GizmoData structure (if any)
-     * @param {GizmoData} gzd - The object to find the root for
-     * @returns {GizmoData} - The root of the GizmoData chain (if any)
-     */
-    static root(gzd) {
-        if (gzd && gzd instanceof tproxy) {
-            let node = gzd.$linker.constructor.root(gzd.$linker);
-            if (node) return node.proxy;
-        }
-        return null;
-    }
-
-    /**
-     * findinTrunk attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
-     * @param {GizmoData} gzd - The object to start the search at.
-     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
-     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
-     */
-    static findInTrunk(gzd, filter) {
-        if (gzd && gzd instanceof tproxy) {
-            let node = gzd.$linker.constructor.findInTrunk(gzd.$linker);
-            if (node) return node.proxy;
-        }
-        return null;
-    }
-
-    /**
-     * findinPath attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
-     * @param {GizmoData} gzd - The object to start the search at.
-     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
-     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
-     */
-    static findInPath(gzd, filter) {
-        if (filter(gzd)) return gzd;
-        return this.findInTrunk(gzd);
-    }
-
-    static registry = new Map();
-    static init() {
-        if (!this.registry.has(this.name)) this.registry.set(this.name, this);
-    }
-    static get schema() {
-        if (!this.hasOwnProperty('_schema')) this._schema = Object.assign({}, Object.getPrototypeOf(this)._schema);
-        return this._schema;
-    }
-    static get schemas() {
-        if (!this.hasOwnProperty('_schemas')) this._schemas = Object.values(this.schema);
-        return this._schemas;
-    }
-
-    constructor(spec={}) {
-        let cls = this.constructor;
-        //cls.registry.set(cls.name, cls);
-        //let name = cls.name;
-        //let registry = cls.registry;
-        //if (!registry.has(name)) registry.set(name, cls);
-        //if (!cls.registry.has(cls.name)) cls.registry.set(cls.name, this);
-        this.constructor.init();
-        let linker = new handler(spec, cls, this);
-        let proxy = new Proxy(this, linker);
-        linker.proxy = proxy;
-        for (const schema of cls.schemas) {
-            //proxy[schema.key] = schema.parser(this, spec);
-            //this[schema.key] = schema.parser(this, spec);
-            linker.iset(this, schema.key, schema.parser(this, spec));
-        }
-        return proxy;
-    }
-    atLink(trunk) {
-    }
-    atUnlink(trunk) {
-    }
-    toString() {
-        return Fmt.toString(this.constructor.name);
-    }
-
-}
-
 class tVect1 extends GizmoData { 
     static {
         Schema.apply(this, 'x', { dflt: 0 });
@@ -482,7 +401,7 @@ class tVect7 {
     }
 }
 
-class tVect8 extends GizmoDataW {
+class tVect8 extends GizmoData {
     static {
         Schema.apply(this, 'x', { dflt: 0 });
         Schema.apply(this, 'y', { dflt: 0 });
@@ -546,70 +465,6 @@ describe('perf tests', () => {
             console.timeEnd(tag)
             expect(v.x).toEqual(iterations-1);
         }
-    });
-
-});
-
-
-xdescribe('tproxy tests', () => {
-    it('data changes trigger events', ()=>{
-        class TData extends tproxy {
-            static { Schema.apply(this, 'data'); }
-            static { ExtEvtEmitter.apply(this) }
-        };
-        let o = new TData({data: 'foo'});
-        expect(o.data).toEqual('foo');
-        let receiver = ExtEvtReceiver.gen();
-        let tevt;
-        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
-        o.data = 'bar';
-        expect(tevt.tag).toEqual('gizmo.set');
-        expect(tevt.actor).toBe(o);
-        expect(tevt.set['data']).toEqual('bar');
-    });
-
-    it('nested data changes trigger events', ()=>{
-        class TSub extends tproxy {
-            static { Schema.apply(this, 'data'); };
-        };
-        class TData extends tproxy {
-            static { Schema.apply(this, 'sub', { link: true }); };
-            static { ExtEvtEmitter.apply(this) }
-        };
-        let o = new TData({sub: new TSub({data: 'foo'})});
-        expect(o.sub.data).toEqual('foo');
-        let receiver = ExtEvtReceiver.gen();
-        let tevt;
-        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
-        o.sub.data = 'bar';
-        console.log(`evt: ${Fmt.ofmt(tevt)}`);
-        console.log(`o: ${o.$linker.pathEventable}`)
-        expect(tevt.tag).toEqual('gizmo.set');
-        expect(tevt.actor).toBe(o);
-        expect(tevt.set['sub.data']).toEqual('bar');
-    });
-
-    it('can be linked', ()=>{
-        class TSub extends tproxy {
-            static { Schema.apply(this, 'data'); };
-        };
-        class TData extends tproxy {
-            static { Schema.apply(this, 'sub', { link: true }); };
-        };
-        let o = new TData({sub: new TSub({data: 'foo'})});
-        expect(o.sub.data).toEqual('foo');
-    });
-
-    it('can lookup root', ()=>{
-        class TSub extends tproxy {
-            static { Schema.apply(this, 'data'); };
-        };
-        class TData extends tproxy {
-            static { Schema.apply(this, 'sub', { link: true }); };
-        };
-        let o = new TData({sub: new TSub({data: 'foo'})});
-        expect(TData.root(o)).toEqual(o);
-        expect(TData.root(o.sub)).toEqual(o);
     });
 
 });

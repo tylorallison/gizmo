@@ -6,7 +6,6 @@ describe('gizmo contexts', () => {
     it('can trigger events', ()=>{
         let gctx = new GizmoContext();
         let receiver = ExtEvtReceiver.gen();
-        //let listeners = gctx.evtGetListeners();
         let counter = 0;
         let incr = () => counter++;
         EvtSystem.listen(gctx, receiver, 'test', incr);

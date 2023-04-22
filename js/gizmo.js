@@ -79,9 +79,7 @@ class Gizmo extends GizmoData {
         // pre constructor actions
         this.cpre(spec);
         // apply schema/parse properties
-        for (const [key, schema] of Object.entries(this.constructor.schema)) {
-            this.constructor.applySchema(schema, this, spec);
-        }
+        this.constructor.parser(this, spec);
         // -- post constructor actions
         this.cpost(spec);
         this.cfinal(spec);

@@ -1,659 +1,433 @@
-export { GizmoData };
+export { GizmoData, GizmoArray, GizmoObject };
 
 import { EvtSystem } from './event.js';
-import { SchemaEntry } from './schema.js';
 import { Fmt } from './fmt.js';
 
-class GizmoHandle {
-    static root(hdl) {
-        while (hdl) {
-            if (hdl.trunk) {
-                hdl = hdl.trunk;
-            } else {
-                return hdl;
-            }
+class GizmoDataLink {
+
+    static *eachInPath(link, filter) {
+        //console.log(`xx eachInPath(${link})`);
+        for (; link; link=link.trunk) {
+            //console.log(`  xx eachInPath(${link.node})`);
+            if (filter(link.node)) yield link.node;
+        }
+    }
+
+    static findInPath(link, filter) {
+        //console.log(`xx findInPath(${link})`);
+        for (; link; link=link.trunk) {
+            //console.log(` . xx findInPath(${link})`);
+            if (filter(link.node)) return link.node;
         }
         return null;
     }
 
-    static findInTrunk(hdl, filter) {
-        for (let trunk=hdl.trunk; trunk; trunk=trunk.trunk) {
-            if (filter(trunk)) return trunk;
-        }
-        return null;
+    static root(link) {
+        if (!link) return null;
+        for (; link.trunk; link=link.trunk);
+        return link.node;
     }
 
-    static findInPath(hdl, filter) {
-        for (let trunk=hdl; trunk; trunk=trunk.trunk) {
-            if (filter(trunk)) return trunk;
-        }
-        return null;
-    }
-
-    static path(hdl) {
+    static path(link) {
         let path = null;
-        while (hdl.trunk) {
-            let key = hdl.keyer();
-            path = (path) ? `${key}.${path}` : key;
-            hdl = hdl.trunk;
+        while (link.trunk) {
+            path = (path) ? `${link.key}.${path}` : link.key;
+            link = link.trunk;
         }
         return path;
     }
 
-    static *eachInPath(hdl, filter) {
-        for (; hdl; hdl=hdl.trunk) {
-            if (filter(hdl)) yield hdl;
+    static link(trunk, key, sentry, target) {
+        if (!trunk || !target) return false;
+        if (trunk === target || this.findInPath(trunk.$link, (n) => n === target)) {
+            throw(`hierarchy loop detected ${target} already in path: ${trunk}`);
+        }
+        if (!trunk.$link) trunk.$link = new GizmoDataLink( trunk );
+        if (!target.$link) target.$link = new GizmoDataLink( target );
+        if (!trunk.$link.leafs) {
+            trunk.$link.leafs = [ target.$link ];
+        } else {
+            trunk.$link.leafs.push(target.$link);
+        }
+        target.$link.trunk = trunk.$link;
+        target.$link.sentry = sentry;
+        target.$link.key = key;
+        this.linkUpdate(target, target);
+    }
+
+    static unlink(trunk, target) {
+        //console.log(`unlink: ${trunk} ${trunk.$link} for ${target} ${target.$link}`);
+        if (!trunk || !target || !trunk.$link || !target.$link) return;
+        if (trunk.$link.leafs) {
+            let idx = trunk.$link.leafs.indexOf(target.$link);
+            if (idx !== -1) trunk.$link.leafs.splice(idx, 1);
+        }
+        target.$link.trunk = null;
+        target.$link.sentry = null;
+        target.$link.key = null;
+        this.linkUpdate(null, target);
+    }
+
+    static linkUpdate(trunk, target) {
+        //console.log(`>> linkUpdate on evaluate: ${trunk},${target}`);
+        let link = target.$link;
+        if (link.watchers) for (let i=link.watchers.length-1; i>=0; i--) {
+            //console.log(`look at watcher: ${Fmt.ofmt(link.watchers[i])}`);
+            if (!link.trunk || !this.findInPath(link.trunk, (n) => n===link.watchers[i].node)) {
+                //console.log(`-- remove watcher: ${Fmt.ofmt(link.watchers[i])}`);
+                link.watchers.splice(i, 1);
+            }
+        }
+        if (trunk) {
+            let eventable = true;
+            for (const tnode of this.eachInPath(trunk.$link, () => true)) {
+                let tlink = tnode.$link;
+                if (tlink.sentry && tlink.sentry.atUpdate) {
+                    //console.log(`-- add watcher ${tlink.trunk.node} on ${link.node}`);
+                    link.addWatcher(tlink.trunk.node, (n,k,ov,nv) => tlink.sentry.atUpdate( tlink.trunk.node, n, k, ov, nv ));
+                }
+                if (tlink.sentry && tlink.sentry.autogendeps.size) {
+                    link.addWatcher(tlink.trunk.node, (n,k,ov,nv) => { for (const agk of tlink.sentry.autogendeps) GizmoData.set(tlink.trunk.node, agk, '#autogen#'); });
+                }
+                //console.log(`-- link ${tlink} node: ${tlink.node} eventable: ${tlink.sentry && tlink.sentry.eventable}`);
+                //console.log(`-- tlink.trunk ${tlink.trunk} eventable: ${eventable} emitter: ${EvtSystem.isEmitterCls(tlink.node.constructor)}`);
+                if (tlink.sentry) eventable &= tlink.sentry.eventable;
+                if (!tlink.trunk && eventable && EvtSystem.isEmitterCls(tlink.node.constructor)) {
+                    let path = this.path(link);
+                    //console.log(`path: ${path}`);
+                    link.addWatcher(tlink.node, (n,k,ov,nv) => {
+                        let sentry = (n.constructor.$schema) ? n.constructor.$schema.map[k] : null;
+                        if (!sentry || sentry.eventable) {
+                            EvtSystem.trigger(tlink.node, 'gizmo.set', { 'set': { [`${path}.${k}`]: nv }});
+                        }
+                    });
+                }
+            }
+        }
+
+        if (link.leafs) {
+            for (const llink of link.leafs) {
+                //console.log(`>>>> linkUpdate dive: ${llink} ${trunk},${llink.node}`);
+                this.linkUpdate(trunk, llink.node);
+            }
         }
     }
 
     constructor(node) {
         this.node = node;
-        this.schema = node.constructor.$schema;
-        this.trunk = null;
-        this.proxy = null;
-        this.sentry = null;
-        this.watchers = [];
-        this.keyer = () => (this.sentry) ? this.sentry.key : '';
-        this.pathEventable = EvtSystem.isEmitterCls(node.constructor);
-        this.pathUpdatable = false;
-        this.pathAutogen = false;
-        this.pathReadonly = false;
-        this.pathRenderable = false;
-        this.finalized = false;
-        //console.log(`${node} pathEventable: ${this.pathEventable} schema.customized: ${(this.schema) ? this.schema.customized : null}`);
-        this.get = this.iget;
-        this.set = this.iset;
     }
 
-    finalize() {
-        this.finalized = true;
-        if (EvtSystem.isEmitter(this.node)) this.addWatcher(this, (h,k,ov,nv) => {
-            let sentry = (this.schema) ? this.schema.map[k] : null;
-            let renderable = (sentry) ? sentry.renderable : false;
-            let eventable = (sentry) ? sentry.eventable : false;
-            if (eventable) EvtSystem.trigger(h.proxy, 'gizmo.set', { set: { [k]: nv }, render: renderable });
-        });
-    }
-
-
-    addWatcher(link, watcher, pri=0) {
-        this.watchers.push({ link: link, watcher: watcher, pri: pri});
+    addWatcher(node, watcher, pri=0) {
+        if (!this.watchers) this.watchers = [];
+        this.watchers.push({ node: node, watcher: watcher, pri: pri});
         this.watchers.sort((a,b) => a.pri-b.pri);
     }
-    delWatcher(link) {
-        for (let i=this.watchers.length-1; i>=0; i--) if (this.watchers[i].link === link) this.watchers.splice(i, 1);
+    delWatcher(node) {
+        for (let i=this.watchers.length-1; i>=0; i--) if (this.watchers[i].node === node) this.watchers.splice(i, 1);
     }
 
-    linkUpdate() {
-        for (let i=this.watchers.length-1; i>=0; i--) if (!this.constructor.findInPath(this.trunk, (h) => h===this.watchers[i].link)) this.watchers.splice(i, 1);
-        // FIXME: add watchers
-        let trunk = this.trunk;
-        if (trunk) {
-            //console.log(`linkUpdate: ${this.constructor.path(this)} schema.eventable: ${this.schema.eventable} trunk.pathEventable: ${trunk.pathEventable}`);
-            this.pathEventable = this.sentry.eventable && trunk.pathEventable;
-            this.pathUpdatable = this.sentry.atUpdate || trunk.pathUpdatable;
-            this.pathAutogen = (this.sentry.autogendeps.size || trunk.pathAutogen);
-            this.pathReadonly = this.sentry.readonly || trunk.pathReadonly;
-            this.pathRenderable = this.sentry.renderable || trunk.pathRenderable;
-            if (this.pathEventable) {
-                let root = this.constructor.root(trunk);
-                let path = this.constructor.path(this);
-                this.addWatcher(root, (h,k,ov,nv) => {
-                    let sentry = (this.schema) ? this.schema.map[k] : null;
-                    let renderable = (sentry) ? sentry.renderable|this.pathRenderable : this.pathRenderable;
-                    let eventable = (sentry) ? sentry.eventable : false;
-                    if (eventable) EvtSystem.trigger(root.proxy, 'gizmo.set', { set: { [`${path}.${k}`]: nv }, render: renderable });
-                });
-            }
-            if (this.pathUpdatable) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => h.sentry && h.sentry.atUpdate)) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => hdl.sentry.atUpdate( hdl.trunk.proxy, h.proxy, k, ov, nv ));
-                }
-            }
-            if (this.pathAutogen) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => (h.sentry && h.sentry.autogendeps.size))) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => {
-                        for (const agk of hdl.sentry.autogendeps) {
-                            if (agk in hdl.trunk.node) hdl.trunk.set(hdl.trunk.node, agk, '#autogen#');
-                        }
-                    });
-                }
-            }
-        } else {
-            this.pathEventable = EvtSystem.isEmitter(this.node);
-            this.pathUpdatable = false;
-            this.pathAutogen = false;
-            this.pathReadonly = false;
-            this.pathRenderable = false;
+    destroy() {
+        if (this.trunk) {
+            this.constructor.unlink(this.trunk.node, this.node);
         }
-        if (this.schema) {
-            for (const sentry of this.schema.entries) {
-                let att = this.node[sentry.key];
-                if (att && att instanceof GizmoData) {
-                    att.$handle.linkUpdate();
-                }
+        if (this.leafs) {
+            let leafs = this.leafs;
+            this.leafs = null;
+            for (const llink of leafs) {
+                this.constructor.unlink(this.node, llink.node);
             }
         }
     }
 
-    // -- defines method to set new trunk link
-    /**
-     * @param {handle} trunk 
-     * @param {sentry} sentry 
-     * @param {*} keyer 
-     */
-    link(trunk, sentry, keyer) {
-        console.log(`link: ${trunk.node}->${this.node} sentry: ${sentry.key}`);
-        // set link
-        this.trunk = trunk;
-        this.sentry = sentry;
-        if (keyer) this.keyer = keyer;
-        // update path variables for this node and all dependent branch nodes
-        this.linkUpdate()
-        if (this.node.atLink) this.node.atLink(trunk.proxy);
-        // regenerate updates to autogenerated fields
-        if (this.schema) {
-            for (const agk of this.schema.trunkGenDeps) {
-                if (agk in this.node) this.set(this.node, agk, '#autogen#');
-            }
-        }
+    toString() {
+        return Fmt.toString(this.constructor.name, 
+            this.node, 
+            (this.trunk) ? this.trunk.node : null, 
+            (this.leafs) ? this.leafs.map((v) => v.node.toString()).join(',') : null);
     }
 
-    unlink() {
-        let trunk = this.trunk;
-        this.trunk = null;
-        this.sentry = null;
-        this.keyer = null;
-        this.linkUpdate()
-        if (this.node.atUnlink) this.node.atUnlink(trunk);
-        // regenerate updates to autogenerated fields
-        if (this.schema) {
-            for (const agk of this.schema.trunkGenDeps) {
-                if (agk in this.node) this.set(this.node, agk, '#autogen#');
-            }
-        }
-    }
-
-    cset(target, key, value) {
-        let sentry = (this.schema) ? this.schema.map[key] : null;
-        if (sentry) {
-            if (sentry.generator) value = sentry.generator(target, value);
-            if (sentry.link) {
-                if (value && this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
-                    console.error(`hierarchy loop detected ${value} already in path: ${this.node}`);
-                    return false;
-                }
-                target[key] = value;
-                if (value) {
-                    if (Array.isArray(value)) {
-                        // FIXME
-                        // @@@
-                        let p = GizmoArrayHandle.attach(this, sentry, value);
-                        console.log(`p: ${p}`);
-                        target[key] = p;
-                    } else {
-                        value.$handle.link(this, sentry);
-                    }
-                }
-            } else {
-                target[key] = value;
-            }
-            if (sentry.atUpdate) this.addWatcher(this, (h,k,ov,nv) => {
-                if (k === key) sentry.atUpdate( (h.trunk) ? h.trunk.proxy : null, h.proxy, key, ov, nv );
-            });
-            if (sentry.link) this.addWatcher(this, (h,k,ov,nv) => {
-                if (k !== key) return;
-                if (ov && ov instanceof GizmoData) ov.$handle.unlink();
-                if (nv && nv instanceof GizmoData) nv.$handle.link(h, sentry);
-            });
-            if (sentry.autogendeps.size) {
-                this.addWatcher(this, (h,k,ov,nv) => {
-                    if (k !== key) return;
-                    for (const agk of sentry.autogendeps) {
-                        if (agk in this.node) this.set(this.node, agk, '#autogen#');
-                    }
-                });
-            }
-        } else {
-            target[key] = value;
-        }
-        return true;
-    }
-
-    pget(target, key, receiver) {
-        const value = target[key];
-        if (key === '$handle') return this;
-        if (key === '$target') return target;
-        if (value instanceof Function) {
-            return function (...args) {
-                return value.apply(this === receiver ? target : this, args);
-            };
-        }
-        return value;
-    }
-
-    pset(target, key, value) {
-        target[key] = value;
-        return true;
-    }
-
-    iget(target, key, receiver) {
-        let sentry = (this.schema) ? this.schema.map[key] : null;
-        if (sentry && sentry.getter) return sentry.getter(target);
-        //console.log(`key: ${key.toString()} this: ${this}`);
-        if (key === '$handle') return this;
-        if (key === '$target') return target;
-        const value = target[key];
-        if (value instanceof Function) {
-            return function (...args) {
-                return value.apply(this === receiver ? target : this, args);
-            };
-        }
-        return target[key];
-    };
-
-    iset(target, key, value) {
-        let sentry = (this.schema) ? this.schema.map[key] : null;
-        if (sentry.getter) return false;
-        let storedValue = target[key];
-        if (sentry) {
-            if (this.finalized && (sentry.readonly || this.pathReadonly)) {
-                console.error(`can't set ${key} -- readonly ${sentry.readonly} pathRO: ${this.pathReadonly}`);
-                return true;
-            }
-            if (sentry.generator) value = sentry.generator(target, value);
-        }
-        if (Object.is(storedValue, value)) return true;
-        if (sentry) {
-            if (sentry.link) {
-                if (value && this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
-                    console.error(`hierarchy loop detected ${value} already in path: ${this.node}`);
-                    return false;
-                }
-                //if (storedValue) storedValue.$handle.unlink();
-                target[key] = value;
-                //if (value) value.$handle.link(this, sentry);
-            } else {
-                target[key] = value;
-            }
-        } else {
-            target[key] = value;
-        }
-        if (this.watchers) {
-            for (const watcher of this.watchers) watcher.watcher(this, key, storedValue, value);
-        }
-
-
-        return true;
-    }
 }
 
 class GizmoData {
+
+    static get(target, key) {
+        if (!target) return undefined;
+        const sentry = (target.constructor.$schema) ? target.constructor.$schema.map[key] : null;
+        if (sentry && sentry.getter) return sentry.getter(target);
+        return target[key];
+    }
+
+    static cset(target, key, value) {
+        if (!target) return false;
+        if (target.$proxied) {
+            target[key] = value;
+            return true;
+        }
+        const sentry = (target.constructor.$schema) ? target.constructor.$schema.map[key] : null;
+        if (sentry.getter) return false;
+        if (sentry && sentry.generator) value = sentry.generator(target, value);
+        //console.log(`== cset ${target} ${key}=>${value}`);
+        if (value && (typeof value === 'object') && (!sentry || !sentry.nolink)) {
+            if (sentry && sentry.proxy) {
+                value = (Array.isArray(value)) ? GizmoArray.wrap(value) : GizmoObject.wrap(value);
+            }
+            //console.log(`cset linking ${target}.${key} to ${value}`);
+            GizmoDataLink.link(target, key, sentry, value);
+        }
+        target[key] = value;
+    }
+
+    static set(target, key, value) {
+        if (!target) return false;
+        if (target.$proxied) {
+            target[key] = value;
+            return true;
+        }
+        const sentry = (target.constructor.$schema) ? target.constructor.$schema.map[key] : null;
+        if (sentry && sentry.getter) return false;
+        const storedValue = target[key];
+        if (sentry && sentry.generator) value = sentry.generator(target, value);
+        if (Object.is(storedValue, value)) return true;
+        //console.log(`storedValue: ${storedValue} typeof ${typeof storedValue}`);
+        if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
+        //console.log(`== set ${target} ${key}=>${value}`);
+        if (value && (typeof value === 'object') && (!sentry || !sentry.nolink)) {
+            if (sentry && sentry.proxy) {
+                value = (Array.isArray(value)) ? GizmoArray.wrap(value) : GizmoObject.wrap(value);
+            }
+            GizmoDataLink.link(target, key, sentry, value);
+        }
+        target[key] = value;
+        if (sentry) {
+            if (sentry.atUpdate) sentry.atUpdate( target, target, key, storedValue, value );
+            for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
+        }
+        //console.log(`target: ${target} key: ${key}`);
+        const watchers = (target.$link) ? target.$link.watchers : null;
+        if (watchers) {
+            for (const watcher of watchers) {
+                //console.log(`trigger watcher for node: ${watcher.node}`);
+                watcher.watcher(target, key, storedValue, value);
+            }
+        }
+        if (!target.$link || !target.$link.trunk) {
+            if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
+                EvtSystem.trigger(target, 'gizmo.set', { 'set': { [key]: value }});
+            }
+        }
+    }
+
     static registry = new Map();
     static init() {
         if (!this.registry.has(this.name)) this.registry.set(this.name, this);
     }
-    
-    /**
-     * root returns the root of the given GizmoData structure (if any)
-     * @param {GizmoData} gzd - The object to find the root for
-     * @returns {GizmoData} - The root of the GizmoData chain (if any)
-     */
-    static root(gzd) {
-        if (gzd && gzd instanceof GizmoData) {
-            let node = gzd.$handle.constructor.root(gzd.$handle);
-            if (node) return node.proxy;
-        }
-        return null;
-    }
 
-    /**
-     * findinTrunk attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
-     * @param {GizmoData} gzd - The object to start the search at.
-     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
-     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
-     */
-    static findInTrunk(gzd, filter) {
-        if (gzd && gzd instanceof GizmoData) {
-            let node = gzd.$handle.constructor.findInTrunk(gzd.$handle);
-            if (node) return node.proxy;
-        }
-        return null;
-    }
-
-    /**
-     * findinPath attempts to find a GizmoData node matching the given filter in the trunk (parent nodes) of the given GizmoData object.
-     * @param {GizmoData} gzd - The object to start the search at.
-     * @param {GizmoData~filter} filter - predicate filter function to apply to each node in the trunk to determine a match
-     * @returns {GizmoData} - the first trunk node that matches the filter, otherwise null.
-     */
-    static findInPath(gzd, filter) {
-        if (filter(gzd)) return gzd;
-        return this.findInTrunk(gzd);
-    }
-
-    static parser(o, spec, setter, hdl) {
-        let cls = o.constructor;
+    static parser(o, spec, setter) {
+        const cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
-                    o[sentry.key] = sentry.parser(o, spec);
+                    this.cset(o, sentry.key, sentry.parser(o, spec));
                 }
             }
         }
     }
 
-    constructor(spec={}) {
-        let cls = this.constructor;
-        this.constructor.init();
-        let handle = new GizmoHandle(this);
-        let proxy = new Proxy(this, handle);
-        handle.proxy = proxy;
-        cls.parser(this, spec, handle.cset.bind(handle), handle);
-        handle.finalize();
-        return proxy;
+    /**
+     * xspec provides an GizmoSpec which can be used by a {@link Generator} class to create a GizmoData object.
+     * @param {Object} spec={} - overrides for properties to create in the GizmoSpec
+     * @returns {...GizmoSpec}
+     */
+    static xspec(spec={}) {
+        this.init();
+        return Object.assign({
+            $gzx: true,
+            cls: this.name,
+        }, spec);
     }
+
+    /**
+     * Create a GizmoData instance
+     * @param {object} [spec={}] - object with key/value pairs used to pass properties to the constructor
+     * @param {boolean} [applySchema=true] - defines if schema should be applied to object
+     */
+    constructor(spec={}, applySchema=true) {
+        this.constructor.init();
+        if (applySchema) this.constructor.parser(this, spec);
+    }
+
+    /**
+     * destroy breaks any links associated with the data
+     */
+    destroy() {
+        if (this.$link) this.$link.destroy();
+    }
+
     toString() {
         return Fmt.toString(this.constructor.name);
     }
 
-    /**
-     * atLink is a method called whenever a GizmoData object is linked to a trunk (parent) data object.  By default, no action is taken.
-     * Override this method in a subclass to perform actions when the instance of the data object is linked.
-     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
-     */
-    atLink(trunk) {
+}
+
+class GizmoArray {
+
+    static wrap(array) {
+        const proxy = new Proxy(array, {
+            get(target, key, receiver) {
+                if (target.$link) {
+                    switch (key) {
+                        case '$proxied':
+                            return true;
+                        case 'destroy': 
+                            return () => {
+                                if (target.$link) target.$link.destroy();
+                                delete target['$link'];
+                                if (target.destroy) target.destroy();
+                            }
+                        case 'push':
+                            return (...v) => {
+                                let i=target.length;
+                                for (const el of v) {
+                                    GizmoData.set(target, i++, el);
+                                }
+                                return target.length;
+                            }
+                        case 'unshift':
+                            return (...v) => {
+                                let i=0;
+                                for (const el of v) {
+                                    target.splice(i, 0, undefined);
+                                    GizmoData.set(target, i++, el);
+                                }
+                                return target.length;
+                            }
+                        case 'pop': return () => {
+                            let idx = target.length-1;
+                            if (idx < 0) return undefined;
+                            const v = target[idx];
+                            GizmoData.set(target, idx, undefined);
+                            target.pop();
+                            return v;
+                        }
+                        case 'shift': return () => {
+                            if (target.length < 0) return undefined;
+                            const v = target[0];
+                            GizmoData.set(target, 0, undefined);
+                            target.shift();
+                            return v;
+                        }
+                        case 'splice': return (start, deleteCount=0, ...avs) => {
+                            let tidx = start;
+                            let aidx = 0;
+                            let dvs = [];
+                            // splice out values to delete, replace w/ items to add (if any)
+                            for (let i=0; i<deleteCount; i++ ) {
+                                dvs.push(target[tidx])
+                                if (aidx < avs.length) {
+                                    GizmoData.set(target, tidx++, avs[aidx++]);
+                                } else {
+                                    GizmoData.set(target, tidx, undefined);
+                                    target.splice(tidx++, 1);
+                                }
+                            }
+                            // splice in any remainder of items to add
+                            for ( ; aidx<avs.length; aidx++ ) {
+                                target.splice(tidx, 0, undefined);
+                                GizmoData.set(target, tidx++, avs[aidx]);
+                            }
+                            return dvs;
+                        }
+                    }
+                }
+                const value = target[key];
+                if (value instanceof Function) {
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                return value;
+            },
+            set(target, key, value) {
+                GizmoData.set(target, key, value);
+                return true;
+            },
+            deleteProperty(target, key) {
+                if (key in target) {
+                    GizmoData.set(target, key, undefined);
+                    delete target[key];
+                }
+                return true;
+            }
+        });
+        return proxy;
     }
-    
+
+    constructor() {
+        let array = Array.from(arguments);
+        return this.constructor.wrap(array);
+    }
+
     /**
-     * atUnlink is a method called whenver a GizmoData object is unlinked from a trunk (parent) data object.  By default, no action is taken.
-     * Override this method in a subclass to perform class specific logic when an object is unlinked.
-     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     * destroy breaks any links associated with the data
      */
-    atUnlink(trunk) {
+    destroy() {
+        if (this.$link) this.$link.destroy();
     }
 
 }
 
-class GizmoArrayHandle extends GizmoHandle {
+class GizmoObject {
 
-    static attach(trunk, sentry, node) {
-        console.log(`-- attaching to ${trunk.node}->${node}`);
-        let handle = new GizmoArrayHandle(node);
-        let proxy = new Proxy(node, handle);
-        handle.link(trunk, sentry);
-        handle.addWatcher(handle, (h,k,ov,nv) => {
-            console.log(`link watcher triggered: k:${k} ov: ${ov} nv: ${nv}`);
-            if (ov && ov instanceof GizmoData) ov.$handle.unlink();
-            if (nv && nv instanceof GizmoData) nv.$handle.link(h, handle.esentry);
+    static wrap(array) {
+        const proxy = new Proxy(array, {
+            get(target, key, receiver) {
+                if (target.$link) {
+                    switch (key) {
+                        case '$proxied':
+                            return true;
+                        case 'destroy': 
+                            return () => {
+                                if (target.$link) target.$link.destroy();
+                                delete target['$link'];
+                                if (target.destroy) target.destroy();
+                            }
+                    }
+                }
+                const value = target[key];
+                if (value instanceof Function) {
+                    return function (...args) {
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                return value;
+            },
+            set(target, key, value) {
+                GizmoData.set(target, key, value);
+                return true;
+            },
+            deleteProperty(target, key) {
+                if (key in target) {
+                    GizmoData.set(target, key, undefined);
+                    delete target[key];
+                }
+                return true;
+            }
         });
-        handle.finalize();
-        // FIXME
-        for (let i=0; i<node.length; i++) handle.cset(node, i, node[i]);
         return proxy;
     }
 
-    constructor(node) {
-        super(node);
-        this.esentry = new SchemaEntry();
+    constructor(obj) {
+        if (!obj) obj = {};
+        return this.constructor.wrap(obj);
     }
 
-    iget(target, key, receiver) {
-        switch (key) {
-            /*
-            case 'destroy': 
-                return () => {
-                    destroy();
-                }
-            case 'clear': 
-                return () => {
-                    clear();
-                }
-                */
-            case 'push':
-                return (...v) => {
-                    let i=target.length;
-                    //let rv = target.push(...v);
-                    for (const el of v) {
-                        this.set(target, i++, v);
-                        console.log(`want to link: ${i++} to ${el}`);
-                    }
-                    return target.length;
-                }
-            /*
-            case 'unshift':
-                return (...v) => {
-                    let i=0;
-                    let rv = obj.unshift(...v);
-                    for (const el of v) link(i++, el);
-                    return rv;
-                }
-            case 'pop': return () => {
-                let idx = obj.length-1;
-                let v = obj.pop();
-                unlink(idx, v, (idx>=0));
-                return v;
-            }
-            case 'shift': return () => {
-                let idx = (obj.length) ? 0 : -1;
-                let v = obj.shift();
-                unlink(idx, v, (idx>=0));
-                return v;
-            }
-            case 'splice': return (start, deleteCount=0, ...v) => {
-                let i = start;
-                let rv = obj.splice(start, deleteCount, ...v);
-                for (const el of v) link(i++, el);
-                for (let i=0; i<deleteCount; i++) unlink(start+i, obj[start+i], i==v.length);
-                return rv;
-            }
-            */
-        }
-        return target[key];
-    }
-
-    cset(target, key, value) {
-        console.log(`cset key: k:${key} v:${value}`)
-
-        if (value && this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
-            console.error(`hierarchy loop detected ${value} already in path: ${this.node}`);
-            return false;
-        }
-        target[key] = value;
-        if (value) {
-            if (Array.isArray(value)) {
-                // FIXME
-                // @@@
-                let p = GizmoArrayHandle.attach(this, this.esentry, value);
-                console.log(`p: ${p}`);
-                target[key] = p;
-            } else if (value instanceof GizmoData) {
-                value.$handle.link(this, this.sentry);
-            }
-        }
-
-            /*
-            if (sentry.atUpdate) this.addWatcher(this, (h,k,ov,nv) => {
-                if (k === key) sentry.atUpdate( (h.trunk) ? h.trunk.proxy : null, h.proxy, key, ov, nv );
-            });
-            if (sentry.link) this.addWatcher(this, (h,k,ov,nv) => {
-                if (k !== key) return;
-                if (ov && ov instanceof GizmoData) ov.$handle.unlink();
-                if (nv && nv instanceof GizmoData) nv.$handle.link(h, sentry);
-            });
-            if (sentry.autogendeps.size) {
-                this.addWatcher(this, (h,k,ov,nv) => {
-                    if (k !== key) return;
-                    for (const agk of sentry.autogendeps) {
-                        if (agk in this.node) this.set(this.node, agk, '#autogen#');
-                    }
-                });
-            }
-        } else {
-            target[key] = value;
-        }
-            */
-        return true;
-    }
-
-    iset(target, key, value) {
-        console.log(`set key: k:${key} v:${value} value is array: ${Array.isArray(value)}`);
-
-        let storedValue = target[key];
-
-        if (this.pathReadonly) {
-            console.error(`can't set ${key} -- readonly`);
-            return true;
-        }
-
-        if (Object.is(storedValue, value)) return true;
-
-        // check for hierarchy loops
-        if (value && this.constructor.findInPath(this, (hdl) => hdl === value.$handle)) {
-            console.error(`hierarchy loop detected ${value} already in path: ${this.node}`);
-            return false;
-        }
-        target[key] = value;
-        if (this.watchers) {
-            for (const watcher of this.watchers) watcher.watcher(this, key, storedValue, value);
-        }
-
-        return true;
-    }
-
-    link(trunk, sentry, keyer) {
-        console.log(`garray wants link from: ${trunk.node}`);
-        super.link(trunk, sentry, keyer);
-    }
-
-    /*
-    linkUpdate() {
-        super.linkUpdate();
-    }
-    */
-
-    linkUpdate() {
-        console.log(`garray wants linkUpdate path: ${this.pathEventable}`);
-        for (let i=this.watchers.length-1; i>=0; i--) if (!this.constructor.findInPath(this.trunk, (h) => h===this.watchers[i].link)) this.watchers.splice(i, 1);
-        // FIXME: add watchers
-        let trunk = this.trunk;
-        if (trunk) {
-            //console.log(`linkUpdate: ${this.constructor.path(this)} schema.eventable: ${this.schema.eventable} trunk.pathEventable: ${trunk.pathEventable}`);
-            this.pathEventable = this.sentry.eventable && trunk.pathEventable;
-            this.pathUpdatable = this.sentry.atUpdate || trunk.pathUpdatable;
-            this.pathAutogen = (this.sentry.autogendeps.size || trunk.pathAutogen);
-            this.pathReadonly = this.sentry.readonly || trunk.pathReadonly;
-            this.pathRenderable = this.sentry.renderable || trunk.pathRenderable;
-            if (this.pathEventable) {
-                let root = this.constructor.root(trunk);
-                let path = this.constructor.path(this);
-                this.addWatcher(root, (h,k,ov,nv) => {
-                    console.log(`garray event watcher triggered for hdl:${h.node} ${k} ov: ${ov} nv: ${nv} nv type: ${typeof nv}`);
-                    let renderable = this.pathRenderable;
-                    EvtSystem.trigger(root.proxy, 'gizmo.set', { set: { [`${path}[${k}]`]: nv }, render: renderable });
-                });
-            }
-            if (this.pathUpdatable) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => h.sentry && h.sentry.atUpdate)) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => hdl.sentry.atUpdate( hdl.trunk.proxy, h.proxy, k, ov, nv ));
-                }
-            }
-            if (this.pathAutogen) {
-                for (const hdl of this.constructor.eachInPath(this, (h) => (h.sentry && h.sentry.autogendeps.size))) {
-                    this.addWatcher(hdl.trunk, (h,k,ov,nv) => {
-                        for (const agk of hdl.sentry.autogendeps) {
-                            if (agk in hdl.trunk.node) hdl.trunk.set(hdl.trunk.node, agk, '#autogen#');
-                        }
-                    });
-                }
-            }
-        } else {
-            this.pathEventable = EvtSystem.isEmitter(this.node);
-            this.pathUpdatable = false;
-            this.pathAutogen = false;
-            this.pathReadonly = false;
-            this.pathRenderable = false;
-        }
-        if (this.schema) {
-            for (const sentry of this.schema.entries) {
-                let att = this.node[sentry.key];
-                if (att && att instanceof GizmoData) {
-                    att.$handle.linkUpdate();
-                }
-            }
-        }
-    }
-
-    /*
-    link(idx, value, eventable=true) {
-        if (value && value instanceof GizmoData) {
-            value.$link(this.trunk, this.schema, () => {
-                let i = this.array.indexOf(value);
-                return `${this.schema.key}[${i}]`;
-            });
-        }
-        if (eventable) {
-            this.doautogen();
-            if (this.schema.eventable && !GizmoData.findInTrunk(this.trunk, (v) => v.$schema && !v.$schema.eventable)) {
-                // find event emitter in path
-                let root = GizmoData.root(this.trunk);
-                // emit
-                if (EvtSystem.isEmitter(root)) {
-                    let path = GizmoData.path(this.trunk);
-                    let key = (path) ? `${path}.${this.schema.key}[${idx}]` : `${this.schema.key}[${idx}]`;
-                    EvtSystem.trigger(root, 'gizmo.set', { 'set': { [key]: value }});
-                }
-            }
-        }
-    }
-
-    unlink(idx, value, eventable=true) {
-        if (value && value.$gdl) {
-            value.$gdl.trunk = null;
-            value.$gdl.schema = null;
-            value.$gdl.keyFcn = null;
-        }
-        if (eventable) {
-            this.doautogen();
-            if (this.schema.eventable && !GizmoData.findInTrunk(this.trunk, (v) => v.$schema && !v.$schema.eventable)) {
-                // find event emitter in path
-                let root = GizmoData.root(this.trunk);
-                // emit
-                if (EvtSystem.isEmitter(root)) {
-                    let path = GizmoData.path(this.trunk);
-                    let key = (path) ? `${path}.${this.schema.key}[${idx}]` : `${this.schema.key}[${idx}]`;
-                    EvtSystem.trigger(root, 'gizmo.set', { 'set': { [key]: null }});
-                }
-            }
-        }
-    }
-    */
-
-    /*
-    doautogen() {
-        for (const agk of this.schema.autogendeps) {
-            if (agk in this.trunk) this.trunk[agk] = '#autogen#';
-        }
-        if (this.trunk.$pathAutogen) {
-            for (const gzt of this.trunk.constructor.eachInPath(this.trunk, (gzn) => (gzn.$schema && gzn.$schema.autogendeps.size))) {
-                for (const agk of gzt.$schema.autogendeps) {
-                    if (agk in gzt.$trunk) gzt.$trunk[agk] = '#autogen#';
-                }
-            }
-        }
-    }
-
+    /**
+     * destroy breaks any links associated with the data
+     */
     destroy() {
-        for (const v of this.array) if (v && v instanceof GizmoData) v.destroy();
+        if (this.$link) this.$link.destroy();
     }
-
-    clear() {
-        for (const v of this.array) {
-            this.unlink(-1, v, false);
-        }
-    }
-    */
 
 }

@@ -11,22 +11,13 @@ class Vect extends GizmoData {
         Schema.apply(this, 'y', { dflt: 0 });
     }
 
-    // CONSTRUCTOR ---------------------------------------------------------
-    constructor(xorv, y) {
-        if (typeof xorv === 'number') {
-            super({x: xorv || 0, y: y || 0})
-        } else {
-            super(xorv);
-        }
-    }
-
     // STATIC PROPERTIES ---------------------------------------------------
     static get zero() {
-        return new Vect(0,0);
+        return new Vect();
     }
 
     static get maxValue() {
-        return new Vect(Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER);
+        return new Vect({x: Number.MAX_SAFE_INTEGER, y:Number.MAX_SAFE_INTEGER});
     }
 
     // PROPERTIES ----------------------------------------------------------
@@ -41,54 +32,125 @@ class Vect extends GizmoData {
     }
 
     // STATIC METHODS ------------------------------------------------------
-    static hasVect(obj) {
+    static iVect(obj) {
         return obj && 
                obj.x !== undefined &&
                obj.y !== undefined;
     }
 
-    static add(v1, v2) {
-        let r = v1.copy();
-        return r.add(v2);
+    static add(...vs) {
+        const r = new Vect();
+        for (const v of vs) {
+            if (v) {
+                r.x += v.x;
+                r.y += v.y;
+            }
+        }
+        return r;
     }
 
-    static sub(v1, v2) {
-        let r = v1.copy();
-        return r.sub(v2);
+    static sadd(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            r.x += v;
+            r.y += v;
+        }
+        return r;
     }
 
-    static mult(v1, n) {
-        let r = v1.copy();
-        return r.mult(n);
+    static sub(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            if (v) {
+                r.x -= v.x;
+                r.y -= v.y;
+            }
+        }
+        return r;
     }
 
-    static div(v1, n) {
-        let r = v1.copy();
-        return r.div(n);
+    static ssub(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            r.x -= v;
+            r.y -= v;
+        }
+        return r;
+    }
+
+    static mult(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            if (v) {
+                r.x *= v.x;
+                r.y *= v.y;
+            }
+        }
+        return r;
+    }
+
+    static smult(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            r.x *= v;
+            r.y *= v;
+        }
+        return r;
+    }
+
+    static div(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            if (v) {
+                r.x /= v.x;
+                r.y /= v.y;
+            }
+        }
+        return r;
+    }
+
+    static sdiv(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            r.x /= v;
+            r.y /= v;
+        }
+        return r;
     }
 
     static dot(v1, v2) {
-        return v1.dot(v2);
+        if (!v1 || !v2) return NaN;
+        return (v1.x*v2.x) (v1.y*v2.y);
     }
 
     static dist(v1, v2) {
-        let r = new Vect(v1);
-        return r.dist(v2);
+        if (!v1 || !v2) return NaN;
+        const dx = v2.x-v1.x;
+        const dy = v2.y-v1.y;
+        return Math.sqrt(dx*dx + dy*dy);
     }
 
-    static min(v1, v2) {
-        let r = v1.copy();
-        return r.min(v2);
+    static min(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            if (v.x < r.x) r.x = v.x;
+            if (v.y < r.y) r.y = v.y;
+        }
+        return r;
     }
 
-    static max(v1, v2) {
-        let r = v1.copy();
-        return r.max(v2);
+    static max(v1, ...vs) {
+        const r = new Vect(v1);
+        for (const v of vs) {
+            if (v.x > r.x) r.x = v.x;
+            if (v.y > r.y) r.y = v.y;
+        }
+        return r;
     }
 
     static round(v1) {
-        let r = new Vect(v1);
-        return r.round();
+        if (!v1) return new Vect({x:NaN,y:NaN});
+        return new Vect({x:Math.round(v1.x),y:Math.round(v1.y)});
     }
 
     static reflect(v, n) {
@@ -98,99 +160,114 @@ class Vect extends GizmoData {
     }
 
     static neg(v1) {
+        if (!v1) return new Vect({x:NaN,y:NaN});
         return new Vect(-v1.x, -v1.y);
     }
 
     static equals(v1, v2) {
         if (!v1 && !v2) return true;
         if (v1 && !v1 || !v1 && v2) return false;
-        let r = new Vect(v1);
-        return r.equals(v2);
+        return ((v1.x === v2.x) && (v1.y === v2.y));
     }
 
     // METHODS -------------------------------------------------------------
     copy() {
-        return new Vect(this.x, this.y);
+        return new Vect(this);
     }
 
-    set(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x = xorv;
-            this.y = (typeof y === 'number') ? y : xorv;
-        } else {
-            this.x = xorv.x || 0;
-            this.y = xorv.y || 0;
+    set(spec={}) {
+        if (spec && spec.hasOwnProperty('x')) this.x = spec.x;
+        if (spec && spec.hasOwnProperty('y')) this.y = spec.y;
+        return this;
+    }
+
+    add(...vs) {
+        for (const v of vs) {
+            if (v) {
+                this.x += v.x;
+                this.y += v.y;
+            }
         }
         return this;
     }
 
-    add(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x += xorv;
-            this.y += (typeof y === 'number') ? y : xorv;
-        } else {
-            this.x += xorv.x || 0;
-            this.y += xorv.y || 0;
+    sadd(...vs) {
+        for (const v of vs) {
+            this.x += v;
+            this.y += v;
         }
         return this;
     }
 
-    sub(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x -= xorv;
-            this.y -= (typeof y === 'number') ? y : xorv;
-        } else {
-            this.x -= xorv.x || 0;
-            this.y -= xorv.y || 0;
+    sub(...vs) {
+        for (const v of vs) {
+            if (v) {
+                this.x -= v.x;
+                this.y -= v.y;
+            }
         }
         return this;
     }
 
-    mult(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x *= xorv;
-            this.y *= (typeof y === 'number') ? y : xorv;
-        } else {
-            this.x *= xorv.x || 0;
-            this.y *= xorv.y || 0;
+    ssub(...vs) {
+        for (const v of vs) {
+            this.x -= v;
+            this.y -= v;
         }
         return this;
     }
 
-    div(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x /= xorv;
-            this.y /= (typeof y === 'number') ? y : xorv;
-        } else {
-            this.x /= xorv.x || 0;
-            this.y /= xorv.y || 0;
+    mult(...vs) {
+        for (const v of vs) {
+            if (v) {
+                this.x *= v.x;
+                this.y *= v.y;
+            }
         }
         return this;
     }
 
-    dot(xorv, y) {
-        if (typeof xorv === 'number') {
-            return this.x * (xorv || 0) + this.y * (y || 0);
-        } else {
-            return this.x * (xorv.x || 0) + this.y * (xorv.y || 0);
+    smult(...vs) {
+        for (const v of vs) {
+            this.x *= v;
+            this.y *= v;
         }
+        return this;
     }
 
-    dist(xorv, y) {
-        let dx, dy;
-        if (typeof xorv === 'number') {
-            dx = (xorv||0)-this.x;
-            dy = (y||0)-this.y;
-        } else {
-            dx = (xorv.x||0)-this.x;
-            dy = (xorv.y||0)-this.y;
+    div(...vs) {
+        for (const v of vs) {
+            if (v) {
+                this.x /= v.x;
+                this.y /= v.y;
+            }
         }
+        return this;
+    }
+
+    sdiv(...vs) {
+        for (const v of vs) {
+            this.x /= v;
+            this.y /= v;
+        }
+        return this;
+    }
+
+    dot(v2) {
+        if (!v2) return NaN;
+        return this.x*v2.x + this.y*v2.y;
+    }
+
+    dist(v2) {
+        if (!v2) return NaN;
+        const dx = v2.x-this.x;
+        const dy = v2.y-this.y;
         return Math.sqrt(dx*dx + dy*dy);
     }
 
     normalize() {
         let m = this.mag;
-        if (m != 0) this.div(m);
+        if (m != 0) this.sdiv(m);
         return this;
     }
 
@@ -247,11 +324,9 @@ class Vect extends GizmoData {
         return angle*180/Math.PI;
     }
 
-    equals(xorv,y) {
-        if (typeof xorv === 'number') {
-            return this.x == xorv && this.y == y;
-        }
-        return this.x == xorv.x && this.y == xorv.y;
+    equals(v2) {
+        if (!v2) return false;
+        return (this.x === v2.x && this.y === v2.y);
     }
 
     limit(max) {
@@ -261,24 +336,22 @@ class Vect extends GizmoData {
         return this;
     }
 
-    min(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x = Math.min(this.x, xorv);
-            this.y = Math.min(this.y, (typeof y === 'number') ? y : xorv);
-        } else {
-            this.x = Math.min(this.x, xorv.x);
-            this.y = Math.min(this.y, xorv.y);
+    min(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if (v.x < this.x) this.x = v.x;
+                if (v.y < this.y) this.y = v.y;
+            }
         }
         return this;
     }
 
-    max(xorv, y) {
-        if (typeof xorv === 'number') {
-            this.x = Math.max(this.x, xorv);
-            this.y = Math.max(this.y, (typeof y === 'number') ? y : xorv);
-        } else {
-            this.x = Math.max(this.x, xorv.x);
-            this.y = Math.max(this.y, xorv.y);
+    max(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if (v.x > this.x) this.x = v.x;
+                if (v.y > this.y) this.y = v.y;
+            }
         }
         return this;
     }
