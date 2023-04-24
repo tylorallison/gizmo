@@ -25,7 +25,7 @@ class Vect extends GizmoData {
         return Math.sqrt(this.x*this.x + this.y*this.y);
     }
     set mag(v) {
-        this.normalize().mult(v);
+        this.normalize().smult(v);
     }
     get sqmag() {
         return this.x*this.x + this.y*this.y;
@@ -33,17 +33,15 @@ class Vect extends GizmoData {
 
     // STATIC METHODS ------------------------------------------------------
     static iVect(obj) {
-        return obj && 
-               obj.x !== undefined &&
-               obj.y !== undefined;
+        return obj && ('x' in obj) && ('y' in obj);
     }
 
     static add(...vs) {
         const r = new Vect();
         for (const v of vs) {
             if (v) {
-                r.x += v.x;
-                r.y += v.y;
+                if ('x' in v) r.x += v.x;
+                if ('y' in v) r.y += v.y;
             }
         }
         return r;
@@ -62,8 +60,8 @@ class Vect extends GizmoData {
         const r = new Vect(v1);
         for (const v of vs) {
             if (v) {
-                r.x -= v.x;
-                r.y -= v.y;
+                if ('x' in v) r.x -= v.x;
+                if ('y' in v) r.y -= v.y;
             }
         }
         return r;
@@ -82,8 +80,8 @@ class Vect extends GizmoData {
         const r = new Vect(v1);
         for (const v of vs) {
             if (v) {
-                r.x *= v.x;
-                r.y *= v.y;
+                if ('x' in v) r.x *= v.x;
+                if ('y' in v) r.y *= v.y;
             }
         }
         return r;
@@ -102,8 +100,8 @@ class Vect extends GizmoData {
         const r = new Vect(v1);
         for (const v of vs) {
             if (v) {
-                r.x /= v.x;
-                r.y /= v.y;
+                if ('x' in v) r.x /= v.x;
+                if ('y' in v) r.y /= v.y;
             }
         }
         return r;
@@ -120,21 +118,60 @@ class Vect extends GizmoData {
 
     static dot(v1, v2) {
         if (!v1 || !v2) return NaN;
-        return (v1.x*v2.x) (v1.y*v2.y);
+        return ((v1.x||0)*(v2.x||0)) + ((v1.y||0)*(v2.y||0));
     }
 
     static dist(v1, v2) {
         if (!v1 || !v2) return NaN;
-        const dx = v2.x-v1.x;
-        const dy = v2.y-v1.y;
+        const dx = (v2.x||0)-(v1.x||0);
+        const dy = (v2.y||0)-(v1.y||0);
         return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    static mag(v1) {
+        if (!v1) return NaN;
+        return Math.sqrt((v1.x||0)*(v1.x||0) + (v1.y||0)*(v1.y||0));
+    }
+
+    static normalize(v1) {
+        if (!v1) return null;
+        let m = Math.sqrt((v1.x||0)*(v1.x||0) + (v1.y||0)*(v1.y||0));
+        return new Vect({x:(v1.x||0)/m, y:(v1.y||0)/m});
+    }
+
+    static heading(v1, rad=false) {
+        if (!v1) return NaN;
+        let a = Math.atan2(v1.y||0, v1.x||0);
+        if (rad) return a;
+        return a*180/Math.PI;
+    }
+
+    static rotate(v1, angle, rad=false) {
+        if (!v1) return null;
+        let ra = (rad) ? angle : angle*Math.PI/180;
+        ra += this.heading(v1, true);
+        let m = this.mag(v1);
+        return new Vect({x: Math.cos(ra)*m, y: Math.sin(ra)*m});
+    }
+
+    static angle(v1, v2, rad=false) {
+        if (!v1 || !v2) return NaN;
+        let a1 = Math.atan2(v1.y||0, v1.x||0);
+        let a2 = Math.atan2(v2.y||0, v2.x||0);
+        let angle = a2-a1;
+        // handle angles > 180
+        if (Math.abs(angle) > Math.PI) {
+            angle = (angle>0) ? -(angle-Math.PI) : -(angle+Math.PI);
+        }
+        if (rad) return angle;
+        return angle*180/Math.PI;
     }
 
     static min(v1, ...vs) {
         const r = new Vect(v1);
         for (const v of vs) {
-            if (v.x < r.x) r.x = v.x;
-            if (v.y < r.y) r.y = v.y;
+            if (('x' in v) && (v.x < r.x)) r.x = v.x;
+            if (('y' in v) && (v.y < r.y)) r.y = v.y;
         }
         return r;
     }
@@ -142,26 +179,26 @@ class Vect extends GizmoData {
     static max(v1, ...vs) {
         const r = new Vect(v1);
         for (const v of vs) {
-            if (v.x > r.x) r.x = v.x;
-            if (v.y > r.y) r.y = v.y;
+            if (('x' in v) && (v.x > r.x)) r.x = v.x;
+            if (('y' in v) && (v.y > r.y)) r.y = v.y;
         }
         return r;
     }
 
     static round(v1) {
-        if (!v1) return new Vect({x:NaN,y:NaN});
-        return new Vect({x:Math.round(v1.x),y:Math.round(v1.y)});
+        if (!v1) return null;
+        return new Vect({x:Math.round(v1.x||0), y:Math.round(v1.y||0)});
     }
 
     static reflect(v, n) {
         //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
         let dot = this.dot(v,n);
-        return this.sub(this.mult(n, 2*dot), v);
+        return this.sub(this.smult(n, 2*dot), v);
     }
 
     static neg(v1) {
-        if (!v1) return new Vect({x:NaN,y:NaN});
-        return new Vect(-v1.x, -v1.y);
+        if (!v1) return null;
+        return new Vect({x: ('x' in v1) ? -v1.x : 0, y: ('y' in v1) ? -v1.y: 0});
     }
 
     static equals(v1, v2) {
@@ -184,8 +221,8 @@ class Vect extends GizmoData {
     add(...vs) {
         for (const v of vs) {
             if (v) {
-                this.x += v.x;
-                this.y += v.y;
+                if ('x' in v) this.x += v.x;
+                if ('y' in v) this.y += v.y;
             }
         }
         return this;
@@ -202,8 +239,8 @@ class Vect extends GizmoData {
     sub(...vs) {
         for (const v of vs) {
             if (v) {
-                this.x -= v.x;
-                this.y -= v.y;
+                if ('x' in v) this.x -= v.x;
+                if ('y' in v) this.y -= v.y;
             }
         }
         return this;
@@ -220,8 +257,8 @@ class Vect extends GizmoData {
     mult(...vs) {
         for (const v of vs) {
             if (v) {
-                this.x *= v.x;
-                this.y *= v.y;
+                if ('x' in v) this.x *= v.x;
+                if ('y' in v) this.y *= v.y;
             }
         }
         return this;
@@ -238,8 +275,8 @@ class Vect extends GizmoData {
     div(...vs) {
         for (const v of vs) {
             if (v) {
-                this.x /= v.x;
-                this.y /= v.y;
+                if ('x' in v) this.x /= v.x;
+                if ('y' in v) this.y /= v.y;
             }
         }
         return this;
@@ -255,13 +292,13 @@ class Vect extends GizmoData {
 
     dot(v2) {
         if (!v2) return NaN;
-        return this.x*v2.x + this.y*v2.y;
+        return this.x*(v2.x||0) + this.y*(v2.y||0);
     }
 
     dist(v2) {
         if (!v2) return NaN;
-        const dx = v2.x-this.x;
-        const dy = v2.y-this.y;
+        const dx = (v2.x||0)-this.x;
+        const dy = (v2.y||0)-this.y;
         return Math.sqrt(dx*dx + dy*dy);
     }
 
@@ -280,7 +317,7 @@ class Vect extends GizmoData {
     reflect(n) {
         //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
         let dot = this.dot(n);
-        return this.neg().add(Vect.mult(n, 2*dot));
+        return this.neg().add(Vect.smult(n, 2*dot));
     }
 
     neg() {
@@ -304,17 +341,10 @@ class Vect extends GizmoData {
         return this;
     }
 
-    angle(xorv, y, rad=false) {
-        let x2, y2;
-        if (typeof xorv === 'number') {
-            x2 = (xorv||0);
-            y2 = (y||0);
-        } else {
-            x2 = xorv.x || 0;
-            y2 = xorv.y || 0;
-        }
+    angle(v2, rad=false) {
+        if (!v2) return NaN;
         let a1 = Math.atan2(this.y, this.x);
-        let a2 = Math.atan2(y2, x2);
+        let a2 = Math.atan2(v2.y||0, v2.x||0);
         let angle = a2-a1;
         // handle angles > 180
         if (Math.abs(angle) > Math.PI) {
@@ -339,8 +369,8 @@ class Vect extends GizmoData {
     min(...vs) {
         for (const v of vs) {
             if (v) {
-                if (v.x < this.x) this.x = v.x;
-                if (v.y < this.y) this.y = v.y;
+                if (('x' in v) && (v.x < this.x)) this.x = v.x;
+                if (('y' in v) && (v.y < this.y)) this.y = v.y;
             }
         }
         return this;
@@ -349,8 +379,8 @@ class Vect extends GizmoData {
     max(...vs) {
         for (const v of vs) {
             if (v) {
-                if (v.x > this.x) this.x = v.x;
-                if (v.y > this.y) this.y = v.y;
+                if (('x' in v) && (v.x > this.x)) this.x = v.x;
+                if (('y' in v) && (v.y > this.y)) this.y = v.y;
             }
         }
         return this;

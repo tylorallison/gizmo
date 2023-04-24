@@ -13,22 +13,13 @@ class Vect3 extends GizmoData {
         Schema.apply(this, 'z', { dflt: 0 });
     }
 
-    // CONSTRUCTOR ---------------------------------------------------------
-    constructor(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            super({x: xorv || 0, y: y || 0, z: z})
-        } else {
-            super(xorv);
-        }
-    }
-
     // STATIC PROPERTIES ---------------------------------------------------
     static get zero() {
-        return new Vect3(0, 0, 0);
+        return new Vect3();
     }
 
     static get maxValue() {
-        return new Vect3(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+        return new Vect3({x:Number.MAX_SAFE_INTEGER, y:Number.MAX_SAFE_INTEGER, z:Number.MAX_SAFE_INTEGER});
     }
 
     // PROPERTIES ----------------------------------------------------------
@@ -36,168 +27,281 @@ class Vect3 extends GizmoData {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
     set mag(v) {
-        this.normalize().mult(v);
+        this.normalize().smult(v);
     }
     get sqmag() {
         return this.x*this.x + this.y*this.y + this.z*this.z;
     }
 
     // STATIC METHODS ------------------------------------------------------
-    static add(v1, v2) {
-        let r = v1.copy();
-        return r.add(v2);
+    static iVect3(obj) {
+        return obj && ('x' in obj) && ('y' in obj) && ('z' in obj);
     }
 
-    static sub(v1, v2) {
-        let r = v1.copy();
-        return r.sub(v2);
+    static add(...vs) {
+        const r = new Vect3();
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) r.x += v.x;
+                if ('y' in v) r.y += v.y;
+                if ('z' in v) r.z += v.z;
+            }
+        }
+        return r;
     }
 
-    static mult(v1, n) {
-        let r = v1.copy();
-        return r.mult(n);
+    static sadd(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            r.x += v;
+            r.y += v;
+            r.z += v;
+        }
+        return r;
     }
 
-    static div(v1, n) {
-        let r = v1.copy();
-        return r.div(n);
+    static sub(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) r.x -= v.x;
+                if ('y' in v) r.y -= v.y;
+                if ('z' in v) r.z -= v.z;
+            }
+        }
+        return r;
+    }
+
+    static ssub(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            r.x -= v;
+            r.y -= v;
+            r.z -= v;
+        }
+        return r;
+    }
+
+    static mult(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) r.x *= v.x;
+                if ('y' in v) r.y *= v.y;
+                if ('z' in v) r.z *= v.z;
+            }
+        }
+        return r;
+    }
+
+    static smult(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            r.x *= v;
+            r.y *= v;
+            r.z *= v;
+        }
+        return r;
+    }
+
+    static div(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) r.x /= v.x;
+                if ('y' in v) r.y /= v.y;
+                if ('z' in v) r.z /= v.z;
+            }
+        }
+        return r;
+    }
+
+    static sdiv(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            r.x /= v;
+            r.y /= v;
+            r.z /= v;
+        }
+        return r;
     }
 
     static dot(v1, v2) {
-        return v1.dot(v2);
+        if (!v1 || !v2) return NaN;
+        return ((v1.x||0)*(v2.x||0)) + ((v1.y||0)*(v2.y||0)) + ((v1.z||0)*(v2.z||0));
     }
 
     static dist(v1, v2) {
-        return v1.dist(v2);
+        if (!v1 || !v2) return NaN;
+        const dx = (v2.x||0)-(v1.x||0);
+        const dy = (v2.y||0)-(v1.y||0);
+        const dz = (v2.z||0)-(v1.z||0);
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
     }
 
-    static min(v1, n) {
-        let r = v1.copy();
-        return r.min(n);
+    static mag(v1) {
+        if (!v1) return NaN;
+        return Math.sqrt((v1.x||0)*(v1.x||0) + (v1.y||0)*(v1.y||0) + (v1.z||0)*(v1.z||0));
     }
 
-    static max(v1, n) {
-        let r = v1.copy();
-        return r.max(n);
+    static normalize(v1) {
+        if (!v1) return null;
+        let m = Math.sqrt((v1.x||0)*(v1.x||0) + (v1.y||0)*(v1.y||0) + (v1.z||0)*(v1.z||0));
+        return new Vect3({x:(v1.x||0)/m, y:(v1.y||0)/m, z:(v1.z||0)/m});
+    }
+
+    // FIXME: add heading (given axis), rotate, angle
+
+    static min(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            if (('x' in v) && (v.x < r.x)) r.x = v.x;
+            if (('y' in v) && (v.y < r.y)) r.y = v.y;
+            if (('z' in v) && (v.z < r.z)) r.z = v.z;
+        }
+        return r;
+    }
+
+    static max(v1, ...vs) {
+        const r = new Vect3(v1);
+        for (const v of vs) {
+            if (('x' in v) && (v.x > r.x)) r.x = v.x;
+            if (('y' in v) && (v.y > r.y)) r.y = v.y;
+            if (('z' in v) && (v.z > r.z)) r.z = v.z;
+        }
+        return r;
     }
 
     static round(v1) {
-        let r = new Vect3(v1);
-        return r.round();
+        if (!v1) return null;
+        return new Vect3({x:Math.round(v1.x || 0), y:Math.round(v1.y || 0), z:Math.round(v1.z || 0)});
     }
 
     static reflect(v, n) {
         //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
         let dot = this.dot(v,n);
-        return this.sub(this.mult(n, 2*dot), v);
+        return this.sub(this.smult(n, 2*dot), v);
     }
 
     static neg(v1) {
-        return new Vect3(-v1.x, -v1.y, -v1.z);
+        if (!v1) return null;
+        return new Vect3({x: ('x' in v1) ? -v1.x : 0, y: ('y' in v1) ? -v1.y: 0, z: ('z' in v1) ? -v1.z : 0});
     }
 
     static equals(v1, v2) {
         if (!v1 && !v2) return true;
         if (v1 && !v1 || !v1 && v2) return false;
-        let r = new Vect3(v1);
-        return r.equals(v2);
+        return ((v1.x === v2.x) && (v1.y === v2.y) && (v1.z === v2.z));
     }
 
     // METHODS -------------------------------------------------------------
     copy() {
-        return new Vect3(this.x, this.y, this.z);
+        return new Vect3(this);
     }
 
-    set(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x = xorv;
-            this.y = (typeof y === 'number') ? y : xorv;
-            this.z = (typeof z === 'number') ? z : xorv;
-        } else {
-            this.x = xorv.x || 0;
-            this.y = xorv.y || 0;
-            this.z = xorv.z || 0;
+    set(spec={}) {
+        if (spec && ('x' in spec)) this.x = spec.x;
+        if (spec && ('y' in spec)) this.y = spec.y;
+        if (spec && ('z' in spec)) this.z = spec.z;
+        return this;
+    }
+
+    add(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) this.x += v.x;
+                if ('y' in v) this.y += v.y;
+                if ('z' in v) this.z += v.z;
+            }
         }
         return this;
     }
 
-    add(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x += xorv;
-            this.y += (typeof y === 'number') ? y : xorv;
-            this.z += (typeof z === 'number') ? z : xorv;
-        } else {
-            this.x += xorv.x || 0;
-            this.y += xorv.y || 0;
-            this.z += xorv.z || 0;
+    sadd(...vs) {
+        for (const v of vs) {
+            this.x += v;
+            this.y += v;
+            this.z += v;
         }
         return this;
     }
 
-    sub(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x -= xorv;
-            this.y -= (typeof y === 'number') ? y : xorv;
-            this.z -= (typeof z === 'number') ? z : xorv;
-        } else {
-            this.x -= xorv.x || 0;
-            this.y -= xorv.y || 0;
-            this.z -= xorv.z || 0;
+    sub(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) this.x -= v.x;
+                if ('y' in v) this.y -= v.y;
+                if ('z' in v) this.z -= v.z;
+            }
         }
         return this;
     }
 
-    mult(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x *= xorv;
-            this.y *= (typeof y === 'number') ? y : xorv;
-            this.z *= (typeof z === 'number') ? z : xorv;
-        } else {
-            this.x *= xorv.x || 0;
-            this.y *= xorv.y || 0;
-            if ('z' in xorv) this.z *= xorv.z || 0;
+    ssub(...vs) {
+        for (const v of vs) {
+            this.x -= v;
+            this.y -= v;
+            this.z -= v;
         }
         return this;
     }
 
-    div(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x /= xorv;
-            this.y /= (typeof y === 'number') ? y : xorv;
-            this.z /= (typeof z === 'number') ? z : xorv;
-        } else {
-            this.x /= xorv.x || 0;
-            this.y /= xorv.y || 0;
-            if ('z' in xorv) this.z /= xorv.z || 0;
+    mult(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) this.x *= v.x;
+                if ('y' in v) this.y *= v.y;
+                if ('z' in v) this.z *= v.z;
+            }
         }
         return this;
     }
 
-    dot(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            return this.x * (xorv || 0) + this.y * (y || 0) + this.z * (z || 0);
-        } else {
-            return this.x * (xorv.x || 0) + this.y * (xorv.y || 0) + this.z * (xorv.z || 0);
+    smult(...vs) {
+        for (const v of vs) {
+            this.x *= v;
+            this.y *= v;
+            this.z *= v;
         }
+        return this;
     }
 
-    dist(xorv, y, z) {
-        let dx, dy, dz;
-        if (typeof xorv === 'number') {
-            dx = (xorv || 0) - this.x;
-            dy = (y || 0) - this.y;
-            dz = (z || 0) - this.z;
-        } else {
-            dx = (xorv.x || 0) - this.x;
-            dy = (xorv.y || 0) - this.y;
-            dz = (xorv.z || 0) - this.z;
+    div(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if ('x' in v) this.x /= v.x;
+                if ('y' in v) this.y /= v.y;
+                if ('z' in v) this.z /= v.z;
+            }
         }
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return this;
+    }
+
+    sdiv(...vs) {
+        for (const v of vs) {
+            this.x /= v;
+            this.y /= v;
+            this.z /= v;
+        }
+        return this;
+    }
+
+    dot(v2) {
+        if (!v2) return NaN;
+        return this.x*(v2.x||0) + this.y*(v2.y||0) + this.z*(v2.z||0);
+    }
+
+    dist(v2) {
+        if (!v2) return NaN;
+        const dx = (v2.x||0)-this.x;
+        const dy = (v2.y||0)-this.y;
+        const dz = (v2.z||0)-this.z;
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
     }
 
     normalize() {
         let m = this.mag;
-        if (m != 0) this.div(m);
+        if (m != 0) this.sdiv(m);
         return this;
     }
 
@@ -211,7 +315,7 @@ class Vect3 extends GizmoData {
     reflect(n) {
         //𝑟 = 𝑑−2(𝑑⋅𝑛)𝑛
         let dot = this.dot(n);
-        return this.neg().add(Vect3.mult(n, 2*dot));
+        return this.neg().add(Vect3.smult(n, 2*dot));
     }
 
     neg() {
@@ -259,11 +363,9 @@ class Vect3 extends GizmoData {
         return angle * 180 / Math.PI;
     }
 
-    equals(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            return this.x == xorv && this.y == y && this.z == z;
-        }
-        return this.x == xorv.x && this.y == xorv.y && this.z == xorv.z;
+    equals(v2) {
+        if (!v2) return false;
+        return (this.x === v2.x && this.y === v2.y && this.z === v2.z);
     }
 
     limit(max) {
@@ -273,28 +375,24 @@ class Vect3 extends GizmoData {
         return this;
     }
 
-    min(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x = Math.min(this.x, xorv);
-            this.y = Math.min(this.y, (typeof y === 'number') ? y : xorv);
-            this.z = Math.min(this.z, (typeof z === 'number') ? z : xorv);
-        } else {
-            this.x = Math.min(this.x, xorv.x);
-            this.y = Math.min(this.y, xorv.y);
-            this.z = Math.min(this.z, xorv.z);
+    min(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if (('x' in v) && (v.x < this.x)) this.x = v.x;
+                if (('y' in v) && (v.y < this.y)) this.y = v.y;
+                if (('z' in v) && (v.z < this.z)) this.z = v.z;
+            }
         }
         return this;
     }
 
-    max(xorv, y, z) {
-        if (typeof xorv === 'number') {
-            this.x = Math.max(this.x, xorv);
-            this.y = Math.max(this.y, (typeof y === 'number') ? y : xorv);
-            this.z = Math.max(this.z, (typeof z === 'number') ? z : xorv);
-        } else {
-            this.x = Math.max(this.x, xorv.x);
-            this.y = Math.max(this.y, xorv.y);
-            this.z = Math.max(this.z, xorv.z);
+    max(...vs) {
+        for (const v of vs) {
+            if (v) {
+                if (('x' in v) && (v.x > this.x)) this.x = v.x;
+                if (('y' in v) && (v.y > this.y)) this.y = v.y;
+                if (('z' in v) && (v.z > this.z)) this.z = v.z;
+            }
         }
         return this;
     }
