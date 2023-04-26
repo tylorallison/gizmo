@@ -2,6 +2,7 @@ export { GizmoData, GizmoArray, GizmoObject };
 
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
+import { Serializer } from './serializer.js';
 
 class GizmoDataLink {
 
@@ -263,6 +264,13 @@ class GizmoData {
      */
     destroy() {
         if (this.$link) this.$link.destroy();
+    }
+
+    xify(sdata) {
+        return Serializer.xifyData(sdata, this, { 
+            $gzx: true,
+            cls: this.constructor.name,
+        });
     }
 
     toString() {

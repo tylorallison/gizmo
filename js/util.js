@@ -53,6 +53,7 @@ class Util {
     }
 
     static copy(entity, cache = new WeakMap()) {
+        if (!entity) return undefined;
         if (cache.has(entity)) return cache.get(entity);
         if (entity instanceof Map) {
             let c = new Map();

@@ -15,7 +15,7 @@ class UiGrid extends UiView {
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds(gzo.xform.bounds.minx+gzo.xform.x, gzo.xform.bounds.miny+gzo.xform.y, gzo.xform.bounds.width, gzo.xform.bounds.height)) });
+        Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
         Schema.apply(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
         Schema.apply(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
         Schema.apply(this, 'renderFilter', { dflt: ((idx, view) => true) });
@@ -114,17 +114,17 @@ class UiGrid extends UiView {
     }
 
     static vfromidx(idx, cols, colSize, rowSize, minx=0, miny=0, center=false) {
-        return new Vect(
-            this.xfromidx(idx, cols, colSize, minx, center),
-            this.yfromidx(idx, cols, rowSize, miny, center)
-        );
+        return new Vect({
+            x:this.xfromidx(idx, cols, colSize, minx, center),
+            y:this.yfromidx(idx, cols, rowSize, miny, center)
+        });
     }
 
     static getGridIdxs(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
         // check that object overlaps w/ grid
         // check if object has bounds...
         let minx = 0, miny = 0, maxx = 0, maxy = 0;
-        if (Bounds.hasBounds(loc)) {
+        if (Bounds.iBounds(loc)) {
             minx = loc.minx;
             miny = loc.miny;
             maxx = Math.max(loc.minx,loc.maxx-1);
@@ -226,7 +226,7 @@ class UiGrid extends UiView {
     }
 
     vfromidx(idx, center=false) {
-        return new Vect(this.xfromidx(idx, center), this.yfromidx(idx, center));
+        return new Vect({x:this.xfromidx(idx, center), y:this.yfromidx(idx, center)});
     }
 
     ifromidx(idx) {
@@ -462,7 +462,7 @@ class UiGrid extends UiView {
         let tx = this.xfromidx(idx);
         let ty = this.yfromidx(idx);
         if (this.optimizeRender) {
-            if (!this.xform.bounds.overlaps(new Bounds(dx+tx, dy+ty, this.colSize, this.rowSize))) {
+            if (!this.xform.bounds.overlaps(new Bounds({x:dx+tx, y:dy+ty, width:this.colSize, height:this.rowSize}))) {
                 if (this.dbg) console.log(`-- chunk: ${idx} is out of bounds against ${this.xform.bounds}`);
                 return;
             }

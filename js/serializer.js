@@ -1,8 +1,6 @@
 export { SerialData, Serializer };
 
 import { Fmt } from './fmt.js';
-import { Gizmo } from './gizmo.js';
-import { GizmoData } from './gizmoData.js';
 import { Hierarchy } from './hierarchy.js';
 import { Util } from './util.js';
 
@@ -23,62 +21,34 @@ class SerialData {
 
 class Serializer {
 
-    static xifyGizmoData(sdata, gzd) {
-        // test for gizmo data
-        if (!(gzd instanceof GizmoData)) return null;
-        // gzd object is serialized as an standard object based on object schema
-        let sobj = {
-            $gzx: true,
-            cls: gzd.constructor.name,
-        };
-        for (const schema of Object.values(gzd.constructor.schema)) {
-            // only schema keys marked for serialization are serialized
-            if (!schema.serializable) continue;
-            let value = gzd[schema.key];
-            if (value === undefined) continue;
-            // asset references are handled by creating an asset spec
-            if (value.hasOwnProperty('assetTag')) {
-                sobj[schema.serializeKey] = {
+    static xifyData(sdata, obj, sobj={}) {
+        if (!obj) return null;
+        if (typeof obj !== 'object') return obj;
+        for (const [k,v] of Object.entries(obj)) {
+            if (k.startsWith('$')) continue;
+            let sentry = (obj.constructor.$schema) ? obj.constructor.$schema.map[k] : null;
+            if (sentry && !sentry.serializable) continue;
+            let skey = (sentry && sentry.serializeKey) ? sentry.serializeKey : k;
+            if (v && typeof v === 'object' && v.hasOwnProperty('assetTag')) {
+                sobj[skey] = {
                     cls: 'AssetRef',
-                    assetTag: value.assetTag,
+                    assetTag: v.assetTag,
                 };
-            // gizmos are serialized as separate objects in stored data
-            } else if (schema.gizmo) {
-                if (Array.isArray(value)) {
-                    sobj[schema.serializeKey] = [];
-                    for (const item of value) sobj[schema.serializeKey].push(this.xifyGizmo(sdata, item));
-                } else {
-                    sobj[schema.serializeKey] = this.xifyGizmo(sdata, value);
-                }
-            // linked data is recursively serialized
-            } else if (schema.link) {
-                if (Array.isArray(value)) {
-                    sobj[schema.serializeKey] = [];
-                    let sarray = sobj[schema.serializeKey];
-                    for (const item of value) sarray.push(this.xifyGizmoData(sdata, item));
-                } else {
-                    sobj[schema.serializeKey] = this.xifyGizmoData(sdata, value);
-                }
-            // all other data is assumed to be directly serializable
+            } else if (v && typeof v === 'object') {
+                sobj[skey] = this.xify(sdata, v);
             } else {
-                // copy based on schema function (defaults to deep copy)
-                sobj[schema.serializeKey] = schema.serializeFcn(sdata, sobj, value);
+                sobj[skey] = v;
             }
         }
         return sobj;
     }
 
-    static xifyGizmo(sdata, gzo) {
-        // test for gizmo
-        if (!(gzo instanceof Gizmo)) return null;
-        // save new serialized gzo
-        if (!sdata.xgzos[gzo.gid]) {
-            sdata.xgzos[gzo.gid] = this.xifyGizmoData(sdata, gzo);
-        }
-        return {
-            cls: 'GizmoRef',
-            gid: gzo.gid,
-        }
+    static xify(sdata, obj) {
+        if (!obj) return null;
+        if (obj.xify) return obj.xify(sdata);
+        if (typeof obj !== 'object') return obj;
+        let sobj = (Array.isArray(obj)) ? [] : {};
+        return this.xifyData(sdata, obj, sobj);
     }
 
     static restore(sdata, generator) {
@@ -88,7 +58,7 @@ class Serializer {
             // resolve gizmo references
             let swaps = [];
             for (const [k,v,obj] of Util.kvWalk(xgzo)) {
-                if (v && typeof v === 'object' && v.cls === 'GizmoRef') {
+                if (v && typeof v === 'object' && v.cls === '$GizmoRef') {
                     let ref = refs[v.gid];
                     if (ref) swaps.push([k, ref, obj]);
                 }

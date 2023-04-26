@@ -75,7 +75,7 @@ class TextToken extends Sketch {
         if (idx > this.text.length) idx = this.text.length;
         let left = this.fmt.measure( this.text.slice(0,idx) );
         let right = this.fmt.measure( this.text.slice(0,Math.min(idx, this.text.length)) );
-        return new Bounds(left.x, 0, right.x-left.x, left.y);
+        return new Bounds({x:left.x, y:0, width:right.x-left.x, height:left.y});
     }
 
     toString() {

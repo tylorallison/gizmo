@@ -90,7 +90,7 @@ class TextFormat extends GizmoData {
             let m2w = Math.max(0, m2.actualBoundingBoxLeft) + Math.max(0, m2.actualBoundingBoxRight);
             w = m1w-m2w;
         }
-        return new Vect(w, h);
+        return new Vect({x:w, y:h});
     }
 
     copy(overrides={}) {

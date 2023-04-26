@@ -103,7 +103,7 @@ class MouseSystem extends System {
         if (Hierarchy.findInParent(e, (v) => !v.active)) return;
         // determine if view bounds contains mouse point (bounds is in world coords)
         // -- translate to local position
-        let lpos = e.xform.getLocal(new Vect(this.x, this.y));
+        let lpos = e.xform.getLocal(new Vect({x:this.x, y:this.y}));
         let contains = Bounds.contains(e.xform, lpos);
         if (contains) {
             this.targets.push(e);

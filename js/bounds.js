@@ -8,13 +8,17 @@ import { Schema } from './schema.js';
 
 // =========================================================================
 class Bounds extends GizmoData {
+    // SCHEMA --------------------------------------------------------------
+    static {
+        Schema.apply(this, 'x', { dflt: 0 });
+        Schema.apply(this, 'y', { dflt: 0 });
+        Schema.apply(this, 'width', { dflt: 0 });
+        Schema.apply(this, 'height', { dflt: 0 });
+    }
+
     // STATIC METHODS ------------------------------------------------------
-    static hasBounds(obj) {
-        return obj && 
-               obj.minx !== undefined &&
-               obj.maxx !== undefined &&
-               obj.miny !== undefined &&
-               obj.maxy !== undefined;
+    static iBounds(obj) {
+        return obj && ('minx' in obj) && ('miny' in obj) && ('maxx' in obj) && ('maxy' in obj);
     }
 
     static _intersects(minx1, miny1, maxx1, maxy1, minx2, miny2, maxx2, maxy2, inclusive=false) {
@@ -26,9 +30,9 @@ class Bounds extends GizmoData {
         let width = maxx-minx;
         let height = maxy-miny;
         if (inclusive && width >= 0 && height >= 0) {
-            return new Bounds(minx, miny, width, height);
+            return new Bounds({x:minx, y:miny, width:width, height:height});
         } else if (!inclusive && width > 0 && height > 0) {
-            return new Bounds(minx, miny, width, height);
+            return new Bounds({x:minx, y:miny, width:width, height:height});
         }  else {
             return false;
         }
@@ -47,7 +51,7 @@ class Bounds extends GizmoData {
         }
     }
 
-    static _contains(minx, miny, maxx, maxy, x, y, inclusive) {
+    static _contains(minx, miny, maxx, maxy, x, y, inclusive=false) {
         if (inclusive) {
             return x >= minx && x <= maxx &&
                 y >= miny && y <= maxy;
@@ -151,42 +155,17 @@ class Bounds extends GizmoData {
         }
     }
 
-    // SCHEMA --------------------------------------------------------------
-    static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
-        Schema.apply(this, 'width', { dflt: 0 });
-        Schema.apply(this, 'height', { dflt: 0 });
-    }
-
-
-    // CONSTRUCTOR ---------------------------------------------------------
-    /**
-     * create a new bounds
-     * @param {*} x - x position of minimum point within bounds
-     * @param {*} y - y position of minimum point within bounds
-     * @param {*} width - width in pixels
-     * @param {*} height - height in pixels
-     */
-    constructor(x, y, width, height) {
-        super({x: x, y: y, width: width, height: height});
-    }
-
     // STATIC PROPERTIES ---------------------------------------------------
     static get zero() {
-        return new Bounds(0, 0, 0, 0);
+        return new Bounds();
     }
 
     // STATIC FUNCTIONS ----------------------------------------------------
     static fromMinMax(minx, miny, maxx, maxy) {
-        return new Bounds(minx, miny, maxx-minx, maxy-miny);
+        return new Bounds({x:minx, y:miny, width:maxx-minx, height:maxy-miny});
     }
 
     // PROPERTIES ----------------------------------------------------------
-    get pos() {
-        return new Vect(this.x, this.y);
-    }
-
     get minx() {
         return this.x;
     }
@@ -194,7 +173,7 @@ class Bounds extends GizmoData {
         return this.y;
     }
     get min() {
-        return new Vect(this.x, this.y);
+        return new Vect({x:this.x, y:this.y});
     }
 
     get maxx() {
@@ -204,7 +183,7 @@ class Bounds extends GizmoData {
         return this.y + this.height;
     }
     get max() {
-        return new Vect(this.x + this.width, this.y + this.height);
+        return new Vect({x:this.x + this.width, y:this.y + this.height});
     }
 
     get midx() {
@@ -214,7 +193,7 @@ class Bounds extends GizmoData {
         return this.y + (this.height * .5);
     }
     get mid() {
-        return new Vect(this.x + (this.width * .5), this.y + (this.height * .5));
+        return new Vect({x:this.x + (this.width * .5), y:this.y + (this.height * .5)});
     }
 
     // STATIC FUNCTIONS ----------------------------------------------------
@@ -229,7 +208,7 @@ class Bounds extends GizmoData {
      * make a copy of the current bounds and return
      */
     copy() {
-        return new Bounds(this.x, this.y, this.width, this.height);
+        return new Bounds(this);
     }
 
     /**

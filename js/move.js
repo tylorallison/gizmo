@@ -51,7 +51,7 @@ class MoveSystem extends System {
     static dfltMatchFcn = ((gzo) => (gzo instanceof MoveAction && gzo.actor) );
 
     static {
-        Schema.apply(this, 'actorLocator', { eventable: false, dflt: (actor) => (actor) ? new Vect(actor.xform.x, actor.xform.y) : Vect.zero });
+        Schema.apply(this, 'actorLocator', { eventable: false, dflt: (actor) => (actor) ? new Vect({x:actor.xform.x, y:actor.xform.y}) : Vect.zero });
         Schema.apply(this, 'targetLocator', { eventable: false, dflt: (target) => target });
         Schema.apply(this, 'actorMover', { eventable: false, dflt: (actor, loc) => { if (actor && loc) { actor.xform.x = loc.x; actor.xform.y = loc.y }}} );
         Schema.apply(this, 'minDelta', { eventable: false, dflt: .001 });

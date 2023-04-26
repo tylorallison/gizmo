@@ -6,6 +6,7 @@ import { Fmt } from './fmt.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
 import { GizmoData } from './gizmoData.js';
 import { Schema } from './schema.js';
+import { Serializer } from './serializer.js';
 
 /**
  * Gizmo is the base class for all game state objects, including game model and view components.
@@ -128,6 +129,20 @@ class Gizmo extends GizmoData {
     }
 
     // METHODS -------------------------------------------------------------
+
+    xify(sdata) {
+        // save new serialized gzo
+        if (!sdata.xgzos[this.gid]) {
+            sdata.xgzos[this.gid] = Serializer.xifyData(sdata, this, { 
+                $gzx: true,
+                cls: this.constructor.name,
+            });
+        }
+        return {
+            cls: '$GizmoRef',
+            gid: this.gid,
+        }
+    }
     
     /**
      * create string representation of object

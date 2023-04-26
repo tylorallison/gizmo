@@ -1,5 +1,7 @@
 export { Schema, SchemaEntry };
 
+import { Fmt } from './fmt.js';
+
 class SchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
@@ -9,7 +11,7 @@ class SchemaEntry {
         // -- is treated as a dynamic value
         // -- setting getter will disable all set functions and notifications for this key
         this.getter = spec.getter;
-        // generator function of format (object, specification, value) => { <function returning final value> };
+        // generator function of format (object, value) => { <function returning final value> };
         this.generator = spec.generator;
         // nopathgen disables path updates (atUpdate and autogen)
         //this.nopathgen = spec.nopathgen;
@@ -17,7 +19,7 @@ class SchemaEntry {
         this.autogendeps = new Set();
         this.parser = spec.parser || ((o, x) => {
             if (x.hasOwnProperty(this.specKey)) return x[this.specKey];
-            if (this.generator) return this.generator(o,x,this.dflt);
+            if (this.generator) return this.generator(o,this.dflt);
             return this.dflt;
         });
         //this.link = spec.hasOwnProperty('link') ? spec.link : false;
@@ -46,34 +48,32 @@ class SchemaEntry {
         if (this.gizmo) return true;
         return false;
     }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.key);
+    }
 }
 
 class Schema {
 
     static apply(cls, key, spec={}) {
         let schema;
-
         if (!cls.hasOwnProperty('$schema')) {
-            schema = new Schema({base: Object.getPrototypeOf(cls).$schema});
+            schema = new Schema(Object.getPrototypeOf(cls).$schema);
             cls.$schema = schema;
-            //Object.assign({}, Object.getPrototypeOf(this)._schema);
-            //console.log(`cls: ${cls} schema: ${schema}`)
         } else {
             schema = cls.$schema;
         }
-
         let oldEntry = schema.map[key];
         let idx = -1;
         if (oldEntry) {
             idx = schema.entries.indexOf(oldEntry);
-            //clearAutogenDep(key);
-            for (const entry of this.entries) entry.autogendeps.delete(key);
+            for (const entry of schema.entries) entry.autogendeps.delete(key);
             schema.trunkGenDeps.delete(key);
         }
         let entry = new SchemaEntry(key, spec);
         // -- customized schema indicates it must have full get/set proxy
         if (entry.customized) schema.customized = true;
-        //console.log(`${key} customized: ${entry.customized}`)
         schema.map[key] = entry;
         if (idx !== -1) {
             schema.entries[idx] = entry;
@@ -89,25 +89,23 @@ class Schema {
             // handle existing schema which might have an autogen dependency
             if (oentry.autogen && (typeof oentry.autogen !== 'function' || oentry.autogen(key))) {
                 entry.autogendeps.add(oentry.key);
-                //schema.setAutogenDep(key, oentry.key);
             }
             // handle if this new schema has an autogen dependency
             if (entry.autogen && (typeof entry.autogen !== 'function' || entry.autogen(oentry.key))) {
                 oentry.autogendeps.add(key);
-                //schema.setAutogenDep(oentry.key, key);
             }
         }
 
     }
     static clear(cls, key) {
         if (cls.hasOwnProperty('$schema')) {
-            let oldSchema = cls.$schema.map[key];
-            let idx = cls.$schema.entries.indexOf(oldSchema);
+            let sentry = cls.$schema.map[key];
+            let idx = cls.$schema.entries.indexOf(sentry);
             if (idx !== -1) {
                 cls.$schema.entries.splice(idx, 1);
             }
             delete cls.$schema.map[key];
-            for (const entry of this.entries) {
+            for (const entry of cls.$schema.entries) {
                 entry.autogendeps.delete(key);
             }
             cls.$schema.trunkGenDeps.delete(key);
@@ -115,13 +113,14 @@ class Schema {
         }
     }
 
-    constructor(spec={}) {
-        this.map = {};
-        this.entries = [];
+    constructor(base={}) {
+        if (!base) base = {};
+        this.map = Object.assign({}, base.map);
+        this.entries = Array.from(base.entries || []);
         // track auto generation mapping
         // -- key: key of attribute that is being set
         // -- value: set of attribute keys that need to be generated when the keyed attribute changes
-        this.trunkGenDeps = new Set();
+        this.trunkGenDeps = new Set(base.trunkGenDeps || []);
         this.parser = null;
         // a schema is customized if any schema entries require special get/set processing
         this.customized = false;

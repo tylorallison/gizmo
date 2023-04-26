@@ -276,7 +276,7 @@ class UiText extends UiView {
         this.tokens = this.constructor.tokenize(this.text, {fmt: this.fmt, wrap: (this.fitter === 'wrap' || this.fitter === 'autowrap')});
         // create bounds for each token
         this.bounds = [];
-        for (let i=0; i<this.tokens.length; i++) this.bounds[i] = new Bounds(0, 0, this.xform.width, this.xform.height);
+        for (let i=0; i<this.tokens.length; i++) this.bounds[i] = new Bounds({x:0, y:0, width:this.xform.width, height:this.xform.height});
 
         // special case (single token)
         if (this.tokens.length === 1) {
@@ -349,7 +349,7 @@ class UiText extends UiView {
         if (!this.tokens.length) {
             console.log(`this: ${this} fmt: ${this.fmt}`)
             let tsize = this.fmt.measure(' ');
-            return new Bounds(0,0, tsize.x, tsize.y);
+            return new Bounds({x:0,y:0, width:tsize.x, height:tsize.y});
         }
         // FIXME: assumes single token
         if (idx < 0) idx = 0;
@@ -362,7 +362,7 @@ class UiText extends UiView {
         let tx = (bounds.width) ? (bounds.width-token.width)*this.alignx : 0;
         let ty = (bounds.height) ? (bounds.height-token.height)*this.aligny : 0;
 
-        return new Bounds(this.bounds[0].x + spacing.x + tx, this.bounds[0].y + ty, token.width, token.height);
+        return new Bounds({x:this.bounds[0].x + spacing.x + tx, y:this.bounds[0].y + ty, width: token.width, height:token.height});
     }
 
     subrender(ctx) {

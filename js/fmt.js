@@ -7,30 +7,30 @@ class Fmt {
         return `{${name}:${args.join('|')}}`;
     }
 
-    static ofmt(obj, name, fmtRules={}) {
-        if (!obj) return "";
-        let kvs = [];
+    static ofmt(obj, seen=new WeakSet()) {
+        if (seen.has(obj)) return '<circular data>';
+        if (!obj) return '';
+        seen.add(obj);
         if (obj instanceof Map) {
+            const tokens = [];
             for (const [key, value] of obj) {
-                let rule = fmtRules[key];
-                if (!rule && value && value.constructor.name === "Object") rule = Fmt.ofmt;
-                if (!rule && value instanceof Map) rule = Fmt.ofmt;
-                kvs.push(key + ':' + ((rule) ? rule(value) : value));
+                tokens.push( (value && (typeof value === 'object')) ? `${key}:${this.ofmt(value, seen)}` : `${key}:${value}` );
             }
-        } else {
-            let keys = Object.keys(obj);
-            for (const key of keys) {
-                let rule = fmtRules[key];
-                if (!rule && obj[key] && obj[key].constructor.name === "Object") rule = Fmt.ofmt;
-                if (!rule && obj[key] instanceof Map) rule = Fmt.ofmt;
-                kvs.push(key + ':' + ((rule) ? rule(obj[key]) : obj[key]));
+            return `<Map:${tokens.join(',')}>`;
+        } else if (Array.isArray(obj)) {
+            const tokens = [];
+            for (const value of obj) {
+                tokens.push( (value && (typeof value === 'object')) ?  `${this.ofmt(value, seen)}` : `${value}` );
             }
+            return `[${tokens.join(',')}]`;
+        } else if (typeof obj === 'object') {
+            const tokens = [];
+            for (const [key,value] of Object.entries(obj)) {
+                tokens.push( (value && (typeof value === 'object')) ? `${key}:${this.ofmt(value, seen)}` : `${key}:${value}` );
+            }
+            return `{${tokens.join(',')}}`;
         }
-        if (name) {
-            return `{name:${kvs.join('|')}}`;
-        } else {
-            return `{${kvs.join('|')}}`;
-        }
+        return `${obj}`;
     }
 
 }
