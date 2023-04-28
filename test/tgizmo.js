@@ -1,7 +1,18 @@
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Gizmo } from '../js/gizmo.js';
+import { GizmoContext } from '../js/gizmoContext.js';
 
 describe('gizmos', () => {
+
+    it('gizmos can be wrapped', ()=>{
+        let pgctx = new GizmoContext({proxied: true});
+        console.log(`pgctx.proxied: ${pgctx.proxied}`);
+        let pg = new Gizmo({gctx: pgctx});
+        expect(pg.$proxied).toBeTruthy();
+        let npgctx = new GizmoContext({proxied: false});
+        let npg = new Gizmo({gctx: npgctx});
+        expect(npg.$proxied).toBeFalsy();
+    });
 
     it('can trigger events', ()=>{
         let g = new Gizmo();

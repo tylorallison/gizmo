@@ -7,6 +7,7 @@ import { GizmoData } from '../js/gizmoData.js';
 
 class TUpdateRoot extends Gizmo {
     static { Schema.apply(this, 'sub', {link: true}); };
+    static { Schema.apply(this, 'psub', {proxy: true}); };
 };
 
 class TUpdateSub extends GizmoData {
@@ -20,36 +21,41 @@ describe('an update system', () => {
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
         sys = new UpdateSystem( { gctx: gctx });
-        g = new TUpdateRoot({ gctx: gctx, sub: new TUpdateSub({ data: 'hello world'}) });
+        g = new TUpdateRoot({ gctx: gctx, sub: new TUpdateSub({ data: 'hello world'}), psub: new TUpdateSub({ data: 'nihao' }) });
         receiver = ExtEvtReceiver.gen();
         EvtSystem.listen(gctx, receiver, 'gizmo.updated', (tevt) => tevts.push(tevt));
         tevts = [];
     });
 
     it('gizmos trigger updates', ()=>{
-        g.sub.var1 = 'bar';
+        GizmoData.set(g.sub, 'var1', 'bar');
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
         expect(tevt.update).toEqual({ 'sub.var1': 'bar'});
+        g.psub.var1 = 'zaijian';
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        tevt = tevts.pop() || {};
+        expect(tevt.actor).toEqual(g);
+        expect(tevt.update).toEqual({ 'psub.var1': 'zaijian'});
     });
 
     it('gizmos updates are correlated', ()=>{
-        g.sub.var1 = 'foo';
-        g.sub.var2 = 'bar';
-        g.sub.var1 = 'baz';
+        g.psub.var1 = 'foo';
+        g.psub.var2 = 'bar';
+        g.psub.var1 = 'baz';
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
-        expect(tevt.update).toEqual({ 'sub.var1': 'baz', 'sub.var2': 'bar'});
+        expect(tevt.update).toEqual({ 'psub.var1': 'baz', 'psub.var2': 'bar'});
     });
 
     it('destroyed system does not trigger updates', ()=>{
         expect(gctx.evtEmitterLinks.get('gizmo.set').length).toEqual(1);
         sys.destroy();
         expect(gctx.evtEmitterLinks.get('gizmo.set')).ToBeFalsey;
-        g.sub.var1 = 'bar';
+        g.psub.var1 = 'bar';
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(0);
     });

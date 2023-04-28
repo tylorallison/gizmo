@@ -53,6 +53,14 @@ class GizmoDataLink {
         target.$link.trunk = trunk.$link;
         target.$link.sentry = sentry;
         target.$link.key = key;
+        //console.log(`link ${trunk} to ${target} key: ${key} cname: ${target.constructor.name} schema: ${target.constructor.$schema}`);
+        if (target.constructor.$schema) {
+            //console.log(`-- link ${trunk}.${key} to ${target} deps: ${Array.from(target.constructor.$schema.trunkGenDeps)}`);
+            for (const agk of target.constructor.$schema.trunkGenDeps) {
+                //console.log(`XXX set autogen ${target}.${agk}`);
+                GizmoData.set(target, agk, '#autogen#');
+            }
+        }
         this.linkUpdate(target, target);
     }
 
@@ -66,6 +74,9 @@ class GizmoDataLink {
         target.$link.trunk = null;
         target.$link.sentry = null;
         target.$link.key = null;
+        if (target.$schema) {
+            for (const agk of target.$schema.trunkGenDeps) GizmoData.set(target, agk, '#autogen#');
+        }
         this.linkUpdate(null, target);
     }
 
@@ -167,7 +178,7 @@ class GizmoData {
         const sentry = (target.constructor.$schema) ? target.constructor.$schema.map[key] : null;
         if (sentry.getter) return false;
         if (sentry && sentry.generator) value = sentry.generator(target, value);
-        //console.log(`== cset ${target} ${key}=>${value}`);
+        console.log(`== cset ${target} ${key}=>${value}`);
         if (value && (typeof value === 'object') && (!sentry || !sentry.nolink)) {
             if (sentry && sentry.proxy) {
                 value = (Array.isArray(value)) ? GizmoArray.wrap(value) : GizmoObject.wrap(value);
@@ -189,13 +200,13 @@ class GizmoData {
         const storedValue = target[key];
         if (sentry && sentry.generator) value = sentry.generator(target, value);
         if (Object.is(storedValue, value)) return true;
-        //console.log(`storedValue: ${storedValue} typeof ${typeof storedValue}`);
         if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
-        //console.log(`== set ${target} ${key}=>${value}`);
+        console.log(`== set ${target} ${key}=>${value}`);
         if (value && (typeof value === 'object') && (!sentry || !sentry.nolink)) {
             if (sentry && sentry.proxy) {
                 value = (Array.isArray(value)) ? GizmoArray.wrap(value) : GizmoObject.wrap(value);
             }
+            //console.log(`set linking ${target}.${key} to ${value}`);
             GizmoDataLink.link(target, key, sentry, value);
         }
         target[key] = value;
@@ -213,6 +224,7 @@ class GizmoData {
         }
         if (!target.$link || !target.$link.trunk) {
             if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
+                console.log(`target: ${target} emit set: ${key}:${value}`);
                 EvtSystem.trigger(target, 'gizmo.set', { 'set': { [key]: value }});
             }
         }
@@ -227,6 +239,7 @@ class GizmoData {
         const cls = o.constructor;
         if (cls.$schema) {
             for (const sentry of cls.$schema.entries) {
+                //console.log(`run sentry: ${sentry}`);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
@@ -234,6 +247,7 @@ class GizmoData {
                 }
             }
         }
+        o.$parsed = true;
     }
 
     /**
@@ -254,9 +268,20 @@ class GizmoData {
      * @param {object} [spec={}] - object with key/value pairs used to pass properties to the constructor
      * @param {boolean} [applySchema=true] - defines if schema should be applied to object
      */
-    constructor(spec={}, applySchema=true) {
+    constructor(spec={}, applySchema=true, proxied=false) {
         this.constructor.init();
-        if (applySchema) this.constructor.parser(this, spec);
+        let self = (proxied) ? GizmoObject.wrap(this) : this;
+        if (applySchema) self.constructor.parser(self, spec);
+        return self;
+    }
+
+    $regen() {
+        if (this.constructor.$schema) {
+            for (const agk of this.constructor.$schema.trunkGenDeps) {
+                //console.log(`== regen ${this}.${agk}`);
+                GizmoData.set(this, agk, '#autogen#');
+            }
+        }
     }
 
     /**
@@ -284,10 +309,9 @@ class GizmoArray {
     static wrap(array) {
         const proxy = new Proxy(array, {
             get(target, key, receiver) {
+                if (key === '$proxied') return true;
                 if (target.$link) {
                     switch (key) {
-                        case '$proxied':
-                            return true;
                         case 'destroy': 
                             return () => {
                                 if (target.$link) target.$link.destroy();
@@ -386,15 +410,19 @@ class GizmoArray {
 
 }
 
+function nameFunction(name, body) {
+    return { [name](...args) { return body.apply(this, args) } }[name]
+}
+
 class GizmoObject {
 
-    static wrap(array) {
-        const proxy = new Proxy(array, {
+    static wrap(obj) {
+        //console.log(`-- obj is: ${obj} constructor: ${obj.constructor.name}`);
+        const proxy = new Proxy(obj, {
             get(target, key, receiver) {
+                if (key === '$proxied') return true;
                 if (target.$link) {
                     switch (key) {
-                        case '$proxied':
-                            return true;
                         case 'destroy': 
                             return () => {
                                 if (target.$link) target.$link.destroy();
@@ -404,10 +432,11 @@ class GizmoObject {
                     }
                 }
                 const value = target[key];
-                if (value instanceof Function) {
-                    return function (...args) {
+                //if (key === 'constructor') console.log(`key: ${key.toString()} receiver: ${receiver}`);
+                if (value instanceof Function && key !== 'constructor') {
+                    return nameFunction(value.name, function (...args) {
                         return value.apply(this === receiver ? target : this, args);
-                    };
+                    });
                 }
                 return value;
             },
@@ -423,6 +452,7 @@ class GizmoObject {
                 return true;
             }
         });
+        //console.log(`-- proxy is: ${proxy} constructor: ${proxy.constructor.name}`);
         return proxy;
     }
 

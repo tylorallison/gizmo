@@ -3,6 +3,7 @@ export { Schema, SchemaEntry };
 import { Fmt } from './fmt.js';
 
 class SchemaEntry {
+    // FIXME clean up old values
     constructor(key, spec={}) {
         this.key = key;
         this.dflt = spec.dflt;
@@ -40,7 +41,7 @@ class SchemaEntry {
 
     get customized() {
         if (this.getter) return true;
-        if (this.setter) return true;
+        if (this.generator) return true;
         if (this.autogen) return true;
         if (this.atUpdate) return true;
         if (this.readonly) return true;

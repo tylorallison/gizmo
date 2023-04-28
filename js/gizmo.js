@@ -4,7 +4,7 @@ import { GizmoContext } from './gizmoContext.js';
 import { ExtEvtEmitter, ExtEvtReceiver, EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
-import { GizmoData } from './gizmoData.js';
+import { GizmoData, GizmoObject } from './gizmoData.js';
 import { Schema } from './schema.js';
 import { Serializer } from './serializer.js';
 
@@ -76,7 +76,9 @@ class Gizmo extends GizmoData {
      * @param {Object} spec - object with key/value pairs used to pass properties to the constructor
      */
     constructor(spec={}) {
-        super(spec, false);
+        let gctx = spec.gctx || GizmoContext.main;
+        let proxied = gctx.proxied;
+        super(spec, false, proxied);
         // pre constructor actions
         this.cpre(spec);
         // apply schema/parse properties

@@ -40,6 +40,7 @@ class GizmoContext extends GizmoData {
         Schema.apply(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.ctxid}` });
         Schema.apply(this, 'game', { dflt: null });
         Schema.apply(this, 'userActive', { dflt: false });
+        Schema.apply(this, 'proxied', { dflt: true });
         ExtEvtEmitter.apply(this);
     }
 

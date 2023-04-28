@@ -20,7 +20,7 @@ class Animator extends Sketch {
     /** @member {Object} Animator#transitions - map of transitions  { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]} */
     static { Schema.apply(this, 'transitions', { dflt: {}, readonly: true }); }
     /** @member {Object} Animator#state - current animator state, tracks to target state */
-    static { Schema.apply(this, 'state', { dflt: 'idle', renderable: true, setter: (o,x,v) => {
+    static { Schema.apply(this, 'state', { dflt: 'idle', renderable: true, generator: (o,v) => {
         if (o.sketches.hasOwnProperty(v)) {
             if (o.sketch) o.sketch.disable();
             let targetSketch = o.sketches[v];

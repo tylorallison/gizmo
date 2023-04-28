@@ -5,10 +5,20 @@ import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Vect } from '../js/vect.js';
 import { Schema } from '../js/schema.js';
+import { GizmoObject } from '../js/gizmoData.js';
 
 class TXFormRoot extends Gizmo {
     static {
-        Schema.apply(this, 'xform', { link: true });
+        Schema.apply(this, 'xform', { proxy: true });
+    }
+
+    cpost(spec={}) {
+        super.cpost(spec);
+        EvtSystem.listen(this, this, 'gizmo.rooted', this.onRooted.bind(this));
+    }
+
+    onRooted(evt) {
+        this.xform.$regen();
     }
 }
 
@@ -22,6 +32,15 @@ describe('xforms', () => {
         EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => tevts.push(evt));
     });
 
+    xit(`test xform constructor`, () => {
+        let xform = new XForm();
+        let w = GizmoObject.wrap(xform);
+        console.log(`xform.constructor.name: ${xform.constructor.name}`);
+        console.log(`xform.constructor.$schema: ${xform.constructor.$schema}`);
+        console.log(`w.constructor.name: ${w.constructor.name}`);
+        console.log(`w.constructor.$schema: ${w.constructor.$schema}`);
+    })
+
     it('updates triggered to bound gizmo', ()=>{
         root.xform.gripOffsetLeft = 5;
         expect(tevts.length).toEqual(2);
@@ -33,9 +52,12 @@ describe('xforms', () => {
 
     it('gizmo cleared from xform on gizmo destroy', ()=>{
         let x = root.xform;
-        expect(x.$trunk).toBe(root);
+        let n = x.$link.trunk.node;
+        console.log(`n: ${n} proxy: ${n.$proxied}`);
+        console.log(`root: ${root}: ${root.$proxied}`);
+        expect(x.$link.trunk.node).toBe(root);
         root.destroy();
-        expect(x.$trunk).toBe(null);
+        expect(x.$link.trunk).toBe(null);
     });
 
     it('data can be set on init', ()=>{
@@ -43,6 +65,15 @@ describe('xforms', () => {
         expect(x.left).toEqual(.1);
         expect(x.right).toEqual(.2);
     });
+
+    // c(node1)
+    //   c(xform1)
+    //   cset(node1.xform, xform1)
+    // c(node2)
+    //   c(xform2)
+    //   cset(node2.xform, xform2)
+    // set(node1.child, node2)
+    // 
 
     for (const test of [
         { d: 'root xform has valid properties', specs: [{fixedWidth: 100, fixedHeight: 200}], 
@@ -53,15 +84,12 @@ describe('xforms', () => {
           xrslt: {minx: -100, maxx: 0, miny: -200, maxy: 0, width: 100, height: 200, deltax: 100, deltay: 200}},
         { d: 'default child has same dimensions as parent', specs: [{fixedWidth: 100, fixedHeight: 200, x: 50, y: 100}, {}], 
           xrslt: {minx: -50, maxx: 50, miny: -100, maxy: 100, width: 100, height: 200, deltax: 0, deltay: 0}},
-          // FIXME
-        /*
         { d: 'stretched child mid origin', specs: [{fixedWidth: 100, fixedHeight: 200, x: 50, y: 100}, {grip:0}], 
           xrslt: {minx: -50, maxx: 50, miny: -100, maxy: 100, width: 100, height: 200, deltax: 0, deltay: 0}},
         { d: 'stretched child tl origin', specs: [{fixedWidth: 100, fixedHeight: 200, x: 50, y: 100}, {grip:0, origx: 0, origy:0}], 
           xrslt: {minx: 0, maxx: 100, miny: 0, maxy: 200, width: 100, height: 200, deltax: -50, deltay: -100}},
         { d: 'stretched child br origin', specs: [{fixedWidth: 100, fixedHeight: 200, x: 50, y: 100}, {grip:0, origx: 1, origy:1}], 
           xrslt: {minx: -100, maxx: 0, miny: -200, maxy: 0, width: 100, height: 200, deltax: 50, deltay: 100}},
-          */
     ]) {
         it(test.d, ()=>{
             let parent, node;
@@ -81,16 +109,16 @@ describe('xforms', () => {
     }
 
     for (const test of [
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect(0,0), xlp: new Vect(-50,-50) },
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect(50,50), xlp: new Vect(0,0) },
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect(100,100), xlp: new Vect(50,50) },
-        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect(50,50), xlp: new Vect(0,0) },
-        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect(0,0), xlp: new Vect(-25,-50) },
-        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect(100,100), xlp: new Vect(25,50) },
-        { origx: 0, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect(100,100), xlp: new Vect(50,50) },
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect(50,50), xlp: new Vect(0,0) },
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect(0,0), xlp: new Vect(-50,50) },
-        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect(100,100), xlp: new Vect(50,-50) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect({x:0,y:0}), xlp: new Vect({x:-50,y:-50}) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect({x:50,y:50}), xlp: new Vect({x:0,y:0}) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: 0, wp: new Vect({x:100,y:100}), xlp: new Vect({x:50,y:50}) },
+        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect({x:50,y:50}), xlp: new Vect({x:0,y:0}) },
+        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect({x:0,y:0}), xlp: new Vect({x:-25,y:-50}) },
+        { origx: .5, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect({x:100,y:100}), xlp: new Vect({x:25,y:50}) },
+        { origx: 0, origy: .5, scalex: 2, scaley: 1, angle: 0, wp: new Vect({x:100,y:100}), xlp: new Vect({x:50,y:50}) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect({x:50,y:50}), xlp: new Vect({x:0,y:0}) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect({x:0,y:0}), xlp: new Vect({x:-50,y:50}) },
+        { origx: .5, origy: .5, scalex: 1, scaley: 1, angle: Math.PI/2, wp: new Vect({x:100,y:100}), xlp: new Vect({x:50,y:-50}) },
     ]) {
         let desc = `world to local to world translations: ${Fmt.ofmt(test)}`;
         it(desc, ()=>{

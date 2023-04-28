@@ -23,7 +23,7 @@ class UiView extends Gizmo {
     static {
         Schema.apply(this, 'visible', {dflt: true, renderable: true});
         Schema.apply(this, 'active', {dflt: false});
-        Schema.apply(this, 'xform', {link: true, renderable: true, parser: (o,x) => x.xform || new XForm()});
+        Schema.apply(this, 'xform', {proxy: true, renderable: true, parser: (o,x) => x.xform || new XForm()});
         Schema.apply(this, 'smoothing', {dflt: null, renderable: true});
         Schema.apply(this, 'alpha', {dflt: 1, renderable: true});
         Schema.apply(this, 'dbg', {dflt: false});
@@ -49,12 +49,6 @@ class UiView extends Gizmo {
 
     cpost(spec={}) {
         super.cpost(spec);
-        /*
-        this.depth = spec.hasOwnProperty('depth') ? spec.depth : ((spec.hasOwnProperty('dfltDepth')) ? spec.dfltDepth : 0);
-        this.autocenter = spec.hasOwnProperty('autocenter') ? spec.autocenter : false;
-        this.autosize = (spec.hasOwnProperty('autosize')) ? spec.autosize : true;
-        */
-
         EvtSystem.listen(this, this, 'mouse.clicked', this.onMouseClicked);
         EvtSystem.listen(this, this, 'gizmo.updated', this.onMouseEntered, { filter: (evt) => evt.update && evt.update.mouseOver === true});
         EvtSystem.listen(this, this, 'gizmo.updated', this.onMouseExited, { filter: (evt) => evt.update && evt.update.mouseOver === false});
@@ -84,20 +78,6 @@ class UiView extends Gizmo {
     onMouseExited(evt) {
         if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
     }
-
-    // FIXME: remove?
-    /*
-    onResized(evt) {
-        if (this.autocenter) {
-            if (this.autocenter && this.parent) {
-                let offx = Math.max(0, (this.parent.xform.width - this.xform.width)/2);
-                this.xform.offx = offx;
-                let offy = Math.max(0, (this.parent.xform.height - this.xform.height)/2);
-                this.xform.offy = offy;
-            }
-        }
-    }
-    */
 
     onRooted(evt) {
         this.xform.$regen();
@@ -154,7 +134,6 @@ class UiView extends Gizmo {
             ctx.clip();
         }
         // pre render, specific to subclass
-
         this.prerender(ctx);
         // private render, specific to subclass
         this.subrender(ctx);

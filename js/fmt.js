@@ -26,6 +26,7 @@ class Fmt {
         } else if (typeof obj === 'object') {
             const tokens = [];
             for (const [key,value] of Object.entries(obj)) {
+                if (key === '$link') continue;
                 tokens.push( (value && (typeof value === 'object')) ? `${key}:${this.ofmt(value, seen)}` : `${key}:${value}` );
             }
             return `{${tokens.join(',')}}`;
