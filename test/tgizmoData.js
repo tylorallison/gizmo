@@ -1,25 +1,52 @@
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
-import { GizmoArray, GizmoData, GizmoObject } from '../js/gizmoData.js';
-import { Schema } from '../js/schema.js';
+import { GizmoData, GizmoArray, GizmoObject } from '../js/gizmoData.js';
 
 const gClass = GizmoData;
-const gSetter = (o, k, v) => gClass.set(o, k, v);
+//const gSetter = (o, k, v) => gClass.set(o, k, v);
+const gSetter = (o, k, v) => o[k] = v;
 
 describe('gizmo data', () => {
 
     it('can be registered', ()=>{
         let cls = class TRegister extends gClass {};
         let o = new cls;
+        //console.log(`o: ${o}`);
         expect(gClass.registry.has('TRegister')).toBeTruthy();
+    });
+
+    it('can have schema applied/redefined', ()=>{
+        class TCls1 extends gClass {
+            static { gClass.schema(this, 'var1', { dflt: 'foo'} ); }
+            static { gClass.schema(this, 'var2', { dflt: 'bar'} ); }
+        };
+        class TCls2 extends TCls1 {
+            static { gClass.schema(this, 'var3', { dflt: 'hello', readonly: true} ); }
+        };
+        class TCls3 extends TCls1 {
+            static { gClass.schema(this, 'var1', { dflt: 'there'} ); }
+            static { gClass.clearSchema(this, 'var2'); }
+        };
+        let o = new TCls1();
+        let o2 = new TCls2();
+        let o3 = new TCls3();
+        expect(o.var1).toEqual('foo');
+        expect(o.var2).toEqual('bar');
+        expect(o.var3).toEqual(undefined);
+        expect(o2.var1).toEqual('foo');
+        expect(o2.var2).toEqual('bar');
+        expect(o2.var3).toEqual('hello');
+        expect(o3.var1).toEqual('there');
+        expect(o3.var2).toEqual(undefined);
+        expect(o3.var3).toEqual(undefined);
     });
 
     it('can be linked', ()=>{
         class TGizmoDataSub extends gClass {
-            static { Schema.apply(this, 'data'); };
+            static { gClass.schema(this, 'data'); };
         };
         class TGizmoData extends gClass {
-            static { Schema.apply(this, 'sub', { link: true }); };
+            static { gClass.schema(this, 'sub', { link: true }); };
         };
         let o = new TGizmoData({sub: new TGizmoDataSub({data: 'foo'})});
         expect(o.sub.data).toEqual('foo');
@@ -27,11 +54,11 @@ describe('gizmo data', () => {
 
     it('links cannot loop', ()=>{
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'data'); };
+            static { gClass.schema(this, 'data'); };
         };
         class TRoot extends gClass {
             static gid = 0;
-            static { Schema.apply(this, 'sub', { link: true }); };
+            static { gClass.schema(this, 'sub', { link: true }); };
             constructor(spec={}) {
                 super(spec);
                 this.id = this.constructor.gid++;
@@ -61,8 +88,8 @@ describe('gizmo data', () => {
     it('atUpdate atts trigger for root object', ()=>{
         let update = {};
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'el'); }
-            static { Schema.apply(this, 'elu', { atUpdate: (r,o,k,ov,nv) => update = { r:r, o:o, k:k, ov:ov, nv:nv } }); }
+            static { gClass.schema(this, 'el'); }
+            static { gClass.schema(this, 'elu', { atUpdate: (r,o,k,ov,nv) => update = { r:r, o:o, k:k, ov:ov, nv:nv } }); }
         };
         let leaf = new TLeaf({el: 'hello', elu: 'really'});
         expect(update).toEqual({});
@@ -76,16 +103,16 @@ describe('gizmo data', () => {
         let subUpdate = {};
         let rootUpdate = {};
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'el'); }
+            static { gClass.schema(this, 'el'); }
         };
         class TSub extends gClass {
-            static { Schema.apply(this, 'leaf', { link: true }); }
+            static { gClass.schema(this, 'leaf', { link: true }); }
         };
         class TSubUpdate extends gClass {
-            static { Schema.apply(this, 'leaf', { atUpdate: (r,o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); }
+            static { gClass.schema(this, 'leaf', { atUpdate: (r,o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         class TRoot extends gClass {
-            static { Schema.apply(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
+            static { gClass.schema(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         let leaf = new TLeaf({el: 'hello'});
         let sub = new TSub();
@@ -118,13 +145,13 @@ describe('gizmo data', () => {
     it('leaf atUpdate reset w/ new root', ()=>{
         let rootUpdate = {};
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'el'); }
+            static { gClass.schema(this, 'el'); }
         };
         class TARoot extends gClass {
-            static { Schema.apply(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
+            static { gClass.schema(this, 'sub', { atUpdate: (r,o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         class TBRoot extends gClass {
-            static { Schema.apply(this, 'sub' ); }
+            static { gClass.schema(this, 'sub' ); }
         };
         let leaf = new TLeaf({el: 'hello'});
         let roota = new TARoot();
@@ -147,8 +174,8 @@ describe('gizmo data', () => {
 
     it('autogenerated fields can be specified for all changes to data', ()=>{
         class TAuto extends gClass {
-            static { Schema.apply(this, 'sdata', { dflt: 1 }); };
-            static { Schema.apply(this, 'adata', { autogen: true, generator: (o,x,v) => o.sdata*2 }); };
+            static { gClass.schema(this, 'sdata', { dflt: 1 }); };
+            static { gClass.schema(this, 'adata', { autogen: true, generator: (o,x,v) => o.sdata*2 }); };
         };
         let gzd = new TAuto();
         expect(gzd.sdata).toEqual(1);
@@ -160,9 +187,9 @@ describe('gizmo data', () => {
 
     it('autogenerated fields can be specified for all a specific field', ()=>{
         class TAuto extends gClass {
-            static { Schema.apply(this, 'sdata1', { dflt: 1 }); };
-            static { Schema.apply(this, 'sdata2', { dflt: 2 }); };
-            static { Schema.apply(this, 'adata', { autogen: (k) => k === 'sdata1', generator: (o,x,v) => o.sdata1*o.sdata2 }); };
+            static { gClass.schema(this, 'sdata1', { dflt: 1 }); };
+            static { gClass.schema(this, 'sdata2', { dflt: 2 }); };
+            static { gClass.schema(this, 'adata', { autogen: (k) => k === 'sdata1', generator: (o,x,v) => o.sdata1*o.sdata2 }); };
         };
         let gzd = new TAuto();
         expect(gzd.sdata1).toEqual(1);
@@ -180,12 +207,12 @@ describe('gizmo data', () => {
 
     it('autogenerated fields can be specified for sub data', ()=>{
         class TSub extends gClass {
-            static { Schema.apply(this, 'sdata', { dflt: 1 }); };
+            static { gClass.schema(this, 'sdata', { dflt: 1 }); };
         };
         class TAuto extends gClass {
-            static { Schema.apply(this, 'sub', { link: true }); };
-            static { Schema.apply(this, 'other', { dflt: 2 }); };
-            static { Schema.apply(this, 'adata', { autogen: (k) => k === 'sub', generator: (o,x,v) => o.sub.sdata*o.other }); };
+            static { gClass.schema(this, 'sub', { link: true }); };
+            static { gClass.schema(this, 'other', { dflt: 2 }); };
+            static { gClass.schema(this, 'adata', { autogen: (k) => k === 'sub', generator: (o,x,v) => o.sub.sdata*o.other }); };
         };
         let gzd = new TAuto({ sub: new TSub() });
         expect(gzd.adata).toEqual(2);
@@ -199,8 +226,8 @@ describe('gizmo data', () => {
 
     it('root changes trigger events', ()=>{
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'data'); }
-            static { Schema.apply(this, 'ndata', { eventable: false }); }
+            static { gClass.schema(this, 'data'); }
+            static { gClass.schema(this, 'ndata', { eventable: false }); }
             static { ExtEvtEmitter.apply(this) }
         };
         let o = new TLeaf({data: 'foo', ndata: 'ok'});
@@ -220,12 +247,12 @@ describe('gizmo data', () => {
 
     it('leaf changes trigger events', ()=>{
         class TLeaf extends gClass {
-            static { Schema.apply(this, 'data'); };
-            static { Schema.apply(this, 'ndata', { eventable: false }); };
+            static { gClass.schema(this, 'data'); };
+            static { gClass.schema(this, 'ndata', { eventable: false }); };
         };
         class TRoot extends gClass {
-            static { Schema.apply(this, 'sub', { link: true }); }
-            static { Schema.apply(this, 'nsub', { link: true, eventable: false }); }
+            static { gClass.schema(this, 'sub', { link: true }); }
+            static { gClass.schema(this, 'nsub', { link: true, eventable: false }); }
             static { ExtEvtEmitter.apply(this); }
         };
         let o = new TRoot({sub: new TLeaf({data: 'foo', ndata: 'nfoo'}), nsub: new TLeaf({data: 'nfoo'})});
@@ -257,8 +284,8 @@ describe('gizmo data', () => {
 describe('a gizmo array', () => {
     class TRef extends gClass {
         static { 
-            Schema.apply(this, 'items', { link: 'array', parser: () => new GizmoArray() }); 
-            Schema.apply(this, 'auto', { autogen: (k) => k === 'items', generator: (o,x,v) => {
+            gClass.schema(this, 'items', { link: 'array', parser: () => new GizmoArray() }); 
+            gClass.schema(this, 'auto', { autogen: (k) => k === 'items', generator: (o,x,v) => {
                 return (o.items.length) ? 'hello:there' : 'wait';
             }}); 
             ExtEvtEmitter.apply(this)
@@ -370,7 +397,7 @@ describe('a gizmo array', () => {
 describe('a gizmo map', () => {
     class TRef extends gClass {
         static { 
-            Schema.apply(this, 'atts', { link: 'map', parser: () => { return new GizmoObject() }}); 
+            gClass.schema(this, 'atts', { link: 'map', parser: () => { return new GizmoObject() }}); 
             ExtEvtEmitter.apply(this)
         };
     };
@@ -379,6 +406,7 @@ describe('a gizmo map', () => {
         gzd = new TRef();
         receiver = ExtEvtReceiver.gen();
         EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+        EvtSystem.listen(gzd, receiver, 'gizmo.delete', (evt) => tevt = evt);
     });
 
     it('causes gizmo events when k/v set', ()=>{
@@ -394,33 +422,15 @@ describe('a gizmo map', () => {
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual(undefined);
+        expect(gzd.atts.foo).toBeFalsy();
     });
 
     it('can use gizmodata.set', ()=>{
         gSetter(gzd.atts, 'foo', 'bar');
-        //gzd.atts['foo'] = 'bar';
+        expect(gzd.atts.foo).toBeTruthy();
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
     });
-
-/*
-    it('causes gizmo events when k/v deleted', ()=>{
-        gzd.atts.set('foo', 'bar');
-        expect(tevt.set['atts.foo']).toEqual('bar');
-        expect(gzd.atts.has('foo')).toBeTruthy()
-        gzd.atts.delete('foo');
-        expect(tevt.set['atts.foo']).toEqual(null);
-        expect(gzd.atts.has('foo')).toBeFalsy()
-    });
-
-    it('triggers autogen', ()=>{
-        expect(gzd.auto).toEqual('wait');
-        gzd.atts.set('seeker', 'there');
-        expect(gzd.auto).toEqual('hello:there');
-        gzd.atts.delete('seeker');
-        expect(gzd.auto).toEqual('wait');
-    });
-*/
 
 });

@@ -1,5 +1,7 @@
 export { Fmt };
 
+import { GizmoData } from './gizmoData.js';
+
 // =========================================================================
 class Fmt {
     // STATIC METHODS ------------------------------------------------------
@@ -11,6 +13,9 @@ class Fmt {
         if (seen.has(obj)) return '<circular data>';
         if (!obj) return '';
         seen.add(obj);
+        if (obj instanceof GizmoData) {
+            return `${obj}`;
+        }
         if (obj instanceof Map) {
             const tokens = [];
             for (const [key, value] of obj) {
@@ -30,6 +35,8 @@ class Fmt {
                 tokens.push( (value && (typeof value === 'object')) ? `${key}:${this.ofmt(value, seen)}` : `${key}:${value}` );
             }
             return `{${tokens.join(',')}}`;
+        } else if (typeof obj === 'function') {
+            return `fcn<${obj.name}`;
         }
         return `${obj}`;
     }

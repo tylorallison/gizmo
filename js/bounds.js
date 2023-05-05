@@ -4,16 +4,15 @@ import { Vect } from './vect.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 
 // =========================================================================
 class Bounds extends GizmoData {
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
-        Schema.apply(this, 'width', { dflt: 0 });
-        Schema.apply(this, 'height', { dflt: 0 });
+        this.schema(this, 'x', { dflt: 0 });
+        this.schema(this, 'y', { dflt: 0 });
+        this.schema(this, 'width', { dflt: 0 });
+        this.schema(this, 'height', { dflt: 0 });
     }
 
     // STATIC METHODS ------------------------------------------------------

@@ -21,15 +21,16 @@ class SerialData {
 
 class Serializer {
 
-    static xifyData(sdata, obj, sobj={}) {
+    static xifyData(sdata, obj, sobj={}, schema=null) {
         if (!obj) return null;
         if (typeof obj !== 'object') return obj;
+        if (!schema) schema = obj.$schema;
         for (const [k,v] of Object.entries(obj)) {
             if (k.startsWith('$')) continue;
-            let sentry = (obj.constructor.$schema) ? obj.constructor.$schema.map[k] : null;
+            let sentry = (schema) ? schema.map[k] : null;
             if (sentry && !sentry.serializable) continue;
             let skey = (sentry && sentry.serializeKey) ? sentry.serializeKey : k;
-            if (v && typeof v === 'object' && v.hasOwnProperty('assetTag')) {
+            if (v && typeof v === 'object' && ('assetTag' in v)) {
                 sobj[skey] = {
                     cls: 'AssetRef',
                     assetTag: v.assetTag,

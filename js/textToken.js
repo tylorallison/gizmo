@@ -2,7 +2,6 @@ export { TextToken };
 
 import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
-import { Schema } from './schema.js';
 import { Sketch } from './sketch.js';
 import { TextFormat } from './textFormat.js';
 
@@ -17,12 +16,12 @@ class TextToken extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'text', { dflt: 'default text', renderable: true });
-        Schema.apply(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || new TextFormat())});
-        Schema.apply(this, 'alignx', { dflt: .5, renderable: true });
-        Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
-        Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).x ))});
-        Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).y ))});
+        this.schema(this, 'text', { dflt: 'default text', renderable: true });
+        this.schema(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || new TextFormat())});
+        this.schema(this, 'alignx', { dflt: .5, renderable: true });
+        this.schema(this, 'aligny', { dflt: .5, renderable: true });
+        this.schema(this, 'width', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).x ))});
+        this.schema(this, 'height', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).y ))});
     }
 
     // METHODS -------------------------------------------------------------

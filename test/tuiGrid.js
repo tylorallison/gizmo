@@ -1,5 +1,6 @@
 import { Bounds } from '../js/bounds.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
+import { Fmt } from '../js/fmt.js';
 import { GizmoContext } from '../js/gizmoContext.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
@@ -12,11 +13,14 @@ describe('a UI grid', () => {
     let g1, g2, g3, g4;
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
-        grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, bounds: new Bounds(0,0,128,128), xform: new XForm({fixedWidth: 64, fixedHeight: 64, grip: .5})});
-        sys = new UpdateSystem( { gctx: gctx });
+        grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, bounds: new Bounds({x:0,y:0,width:128,height:128}), xform: new XForm({fixedWidth: 64, fixedHeight: 64, grip: .5})});
+        sys = new UpdateSystem( { gctx: gctx, dbg: false });
         receiver = ExtEvtReceiver.gen();
         tevts = [];
-        EvtSystem.listen(grid, receiver, 'gizmo.updated', (evt) => tevts.push(evt));
+        EvtSystem.listen(grid, receiver, 'gizmo.updated', (evt) => {
+            console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
+            tevts.push(evt);
+        });
         g1 = new UiView({gctx: gctx, tag: 'g1', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
         g2 = new UiView({gctx: gctx, tag: 'g2', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 96, y: 32})});
         g3 = new UiView({gctx: gctx, tag: 'g3', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 96})});
@@ -103,11 +107,11 @@ describe('a UI grid', () => {
     it('gzos can be found at bounds', ()=>{
         for (const g of [g1, g2, g3, g4]) grid.add(g);
         for (const [bounds, rslt] of [
-            [new Bounds(30,30,4,4), [g1]],
-            [new Bounds(92,30,4,4), [g2]],
-            [new Bounds(30,92,4,4), [g3]],
-            [new Bounds(92,92,4,4), []],
-            [new Bounds(62,62,4,4), [g4]],
+            [new Bounds({x:30,y:30,width:4,height:4}), [g1]],
+            [new Bounds({x:92,y:30,width:4,height:4}), [g2]],
+            [new Bounds({x:30,y:92,width:4,height:4}), [g3]],
+            [new Bounds({x:92,y:92,width:4,height:4}), []],
+            [new Bounds({x:62,y:62,width:4,height:4}), [g4]],
         ]) {
             let gzos = Array.from(grid.findAtBounds(bounds, (v) => true));
             expect(gzos).toEqual(rslt);
@@ -117,11 +121,11 @@ describe('a UI grid', () => {
     it('first gzo can be found at bounds', ()=>{
         for (const g of [g1, g2, g3, g4]) grid.add(g);
         for (const [bounds, rslt] of [
-            [new Bounds(30,30,4,4), g1],
-            [new Bounds(92,30,4,4), g2],
-            [new Bounds(30,92,4,4), g3],
-            [new Bounds(92,92,4,4), null],
-            [new Bounds(62,62,4,4), g4],
+            [new Bounds({x:30,y:30,width:4,height:4}), g1],
+            [new Bounds({x:92,y:30,width:4,height:4}), g2],
+            [new Bounds({x:30,y:92,width:4,height:4}), g3],
+            [new Bounds({x:92,y:92,width:4,height:4}), null],
+            [new Bounds({x:62,y:62,width:4,height:4}), g4],
         ]) {
             let gzos = grid.firstAtBounds(bounds, (v) => true);
             expect(gzos).toEqual(rslt);
@@ -131,12 +135,16 @@ describe('a UI grid', () => {
     it('grid tracks gzo movement', ()=>{
         grid.add(g1);
         grid.add(g2);
+        //console.log(`-- before game tock 1`);
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.xform.x = 96;
         g2.xform.x = 32;
+        //console.log(`-- before game tock 2`);
+        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        //console.log(`-- before game tock 3`);
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([1]);
         expect(grid.idxof(g2)).toEqual([0]);

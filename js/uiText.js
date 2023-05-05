@@ -2,7 +2,6 @@ export { UiText };
 
 import { Bounds } from './bounds.js';
 import { Mathf } from './math.js';
-import { Schema } from './schema.js';
 import { TextToken } from './textToken.js';
 import { TextFormat } from './textFormat.js';
 import { UiView } from './uiView.js';
@@ -35,18 +34,18 @@ class UiText extends UiView {
     static get dfltFmt() { return new TextFormat() };
 
     static {
-        Schema.apply(this, 'text', { dflt: 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'text', { dflt: 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
         // none, stretch, wrap, autowrap
-        Schema.apply(this, 'fitter', { dflt: 'stretch', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'alignx', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'aligny', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        Schema.apply(this, 'tokens', { link: 'array', parser: (() => ([])) });
-        Schema.apply(this, 'needsLayout', { eventable: false, dflt: true });
-        Schema.apply(this, 'lastHeight', { eventable: false, dflt: 0 });
-        Schema.apply(this, 'lastWidth', { eventable: false, dflt: 0 });
+        this.schema(this, 'fitter', { dflt: 'stretch', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'alignx', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'aligny', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'tokens', { link: 'array', parser: (() => ([])) });
+        this.schema(this, 'needsLayout', { eventable: false, dflt: true });
+        this.schema(this, 'lastHeight', { eventable: false, dflt: 0 });
+        this.schema(this, 'lastWidth', { eventable: false, dflt: 0 });
         // -- leading is the space between lines, expressed as percent of line height
-        Schema.apply(this, 'leadingPct', { renderable: true, dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'leadingPct', { renderable: true, dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
     }
 
     // STATIC METHODS ------------------------------------------------------

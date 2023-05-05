@@ -2,7 +2,6 @@ export { Array2D };
 
 import { Direction } from './direction.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 
 /**
  * Implements a 2-dimensional array and methods for indexing and accessing data within
@@ -10,13 +9,13 @@ import { Schema } from './schema.js';
  */
 class Array2D extends GizmoData {
     /** @member {string} Array2D#cols=16 - columns in 2d array */
-    static { Schema.apply(this, 'cols', { readonly: true, dflt: 16 }); }
+    static { this.schema(this, 'cols', { readonly: true, dflt: 16 }); }
     /** @member {string} Array2D#rows=16 - rows in 2d array */
-    static { Schema.apply(this, 'rows', { readonly: true, dflt: 16 }); }
+    static { this.schema(this, 'rows', { readonly: true, dflt: 16 }); }
     /** @member {string} Array2D#length - length of flat array */
-    static { Schema.apply(this, 'length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
+    static { this.schema(this, 'length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
     /** @member {string} Array2D#entries - array storage */
-    static { Schema.apply(this, 'entries', { link: 'array', readonly: true, parser: (o,x) => x.entries || [] }); }
+    static { this.schema(this, 'entries', { link: 'array', readonly: true, parser: (o,x) => x.entries || [] }); }
 
     // STATIC METHODS ------------------------------------------------------
     /**

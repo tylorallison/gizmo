@@ -3,7 +3,6 @@ export { Animation };
 import { Sketch } from './sketch.js';
 import { Timer } from './timer.js';
 import { Random } from './random.js';
-import { Schema } from './schema.js';
 
 // =========================================================================
 /** 
@@ -13,21 +12,21 @@ import { Schema } from './schema.js';
 class Animation extends Sketch {
     // SCHEMA --------------------------------------------------------------
     /** @member {boolean} Animation#loop - should the animation be looped */
-    static { Schema.apply(this, 'loop', { dflt: true }); }
+    static { this.schema(this, 'loop', { dflt: true }); }
     /** @member {boolean} Animation#timer - timer for this animation */
-    static { Schema.apply(this, 'timer', { link: true, serializable: false, eventable: false }); }
+    static { this.schema(this, 'timer', { link: true, serializable: false, eventable: false }); }
     /** @member {boolean} Animation#sketchIdx - index of current animation frame */
-    static { Schema.apply(this, 'sketchIdx', { eventable: false, dflt: 0 }); }
+    static { this.schema(this, 'sketchIdx', { eventable: false, dflt: 0 }); }
     /** @member {Sketch[]} Animation#sketches - array of cels/sketches to animate */
-    static { Schema.apply(this, 'sketches', { dflt: [], readonly: true }); }
+    static { this.schema(this, 'sketches', { dflt: [], readonly: true }); }
     /** @member {boolean} Animation#sketch - the current animation frame/sketch */
-    static { Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
+    static { this.schema(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
     /** @member {boolean} Animation#width - width of current animation frame */
-    static { Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.schema(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {boolean} Animation#height - height of current animation frame */
-    static { Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.schema(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animation frame */
-    static { Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
+    static { this.schema(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     /**

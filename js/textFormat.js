@@ -2,7 +2,6 @@ export { TextFormat };
 
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 import { Stats } from './stats.js';
 import { Vect } from './vect.js';
 
@@ -12,16 +11,16 @@ class TextFormat extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'style', { dflt: 'normal' });
-        Schema.apply(this, 'variant', { dflt: 'normal' });
-        Schema.apply(this, 'weight', { dflt: 'normal' });
-        Schema.apply(this, 'size', { dflt: 12 });
-        Schema.apply(this, 'family', { dflt: 'sans-serif' });
-        Schema.apply(this, 'color', { dflt: 'black' });
-        Schema.apply(this, 'border', { dflt: 0 });
-        Schema.apply(this, 'borderColor', { dflt: 'white' });
-        Schema.apply(this, 'highlight', { dflt: false });
-        Schema.apply(this, 'highlightColor', { dflt: 'yellow' });
+        this.schema(this, 'style', { dflt: 'normal' });
+        this.schema(this, 'variant', { dflt: 'normal' });
+        this.schema(this, 'weight', { dflt: 'normal' });
+        this.schema(this, 'size', { dflt: 12 });
+        this.schema(this, 'family', { dflt: 'sans-serif' });
+        this.schema(this, 'color', { dflt: 'black' });
+        this.schema(this, 'border', { dflt: 0 });
+        this.schema(this, 'borderColor', { dflt: 'white' });
+        this.schema(this, 'highlight', { dflt: false });
+        this.schema(this, 'highlightColor', { dflt: 'yellow' });
     }
 
     static parse(str) {

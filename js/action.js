@@ -1,7 +1,6 @@
 export { Action };
 
 import { Gizmo } from './gizmo.js';
-import { Schema } from './schema.js';
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Util } from './util.js';
@@ -11,14 +10,14 @@ class Action extends Gizmo {
 
     static {
         // FIXME
-        Schema.apply(this, 'dbg', {dflt: true});
-        Schema.apply(this, 'done', { dflt: false });
-        Schema.apply(this, 'ok', { dflt: true });
-        Schema.apply(this, 'atts', { readonly: true });
-        Schema.apply(this, 'actor', { gizmo: true });
-        Schema.apply(this, 'startSfx', { parser: (o,x) => x.startSfx || o.constructor.dfltStartSfx });
-        Schema.apply(this, 'okSfx', { parser: (o,x) => x.okSfx || o.constructor.dfltOkSfx });
-        Schema.apply(this, 'failSfx', { parser: (o,x) => x.failSfx || o.constructor.dfltFailSfx });
+        this.schema(this, 'dbg', {dflt: true});
+        this.schema(this, 'done', { dflt: false });
+        this.schema(this, 'ok', { dflt: true });
+        this.schema(this, 'atts', { readonly: true });
+        this.schema(this, 'actor', { gizmo: true });
+        this.schema(this, 'startSfx', { parser: (o,x) => x.startSfx || o.constructor.dfltStartSfx });
+        this.schema(this, 'okSfx', { parser: (o,x) => x.okSfx || o.constructor.dfltOkSfx });
+        this.schema(this, 'failSfx', { parser: (o,x) => x.failSfx || o.constructor.dfltFailSfx });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

@@ -2,17 +2,16 @@ import { GizmoContext } from '../js/gizmoContext.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Gizmo } from '../js/gizmo.js';
 import { UpdateSystem } from '../js/updateSystem.js';
-import { Schema } from '../js/schema.js';
 import { GizmoData } from '../js/gizmoData.js';
 
 class TUpdateRoot extends Gizmo {
-    static { Schema.apply(this, 'sub', {link: true}); };
-    static { Schema.apply(this, 'psub', {proxy: true}); };
+    static { this.schema(this, 'sub', {link: true}); };
+    static { this.schema(this, 'psub', {proxy: true}); };
 };
 
 class TUpdateSub extends GizmoData {
-    static { Schema.apply(this, 'var1'); };
-    static { Schema.apply(this, 'var2'); };
+    static { this.schema(this, 'var1'); };
+    static { this.schema(this, 'var2'); };
 };
 
 describe('an update system', () => {

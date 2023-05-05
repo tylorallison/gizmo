@@ -1,7 +1,6 @@
 export { Sfx };
 
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 import { SfxSystem } from './sfxSystem.js';
 
 /** ========================================================================
@@ -11,11 +10,11 @@ class Sfx extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'assetTag', { readonly: true });
-        Schema.apply(this, 'audio', { parser: (o,x) => x.audio || new ArrayBuffer() });
-        Schema.apply(this, 'channel', { dflt: this.dfltChannel });
-        Schema.apply(this, 'loop', { dflt: false });
-        Schema.apply(this, 'volume', { dflt: 1 });
+        this.schema(this, 'assetTag', { readonly: true });
+        this.schema(this, 'audio', { parser: (o,x) => x.audio || new ArrayBuffer() });
+        this.schema(this, 'channel', { dflt: this.dfltChannel });
+        this.schema(this, 'loop', { dflt: false });
+        this.schema(this, 'volume', { dflt: 1 });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

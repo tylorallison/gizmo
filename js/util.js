@@ -132,6 +132,10 @@ class Util {
         }
     }
 
+    static nameFunction(name, body) {
+        return { [name](...args) { return body.apply(this, args) } }[name]
+    }
+
 }
 
 class xUtil {
@@ -189,16 +193,6 @@ class xUtil {
             xhr.setRequestHeader("Cache-Control", "no-store");
             xhr.send();
         });
-    }
-
-    static objKeyValue(obj, key, dflt) {
-        return (obj && obj.hasOwnProperty(key)) ? obj[key] : dflt;
-    }
-
-    static bind(obj, ...names) {
-        for (const name of names) {
-            obj[name] = obj[name].bind(obj);
-        }
     }
 
     static feq(v1, v2) {

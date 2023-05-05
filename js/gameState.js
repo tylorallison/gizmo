@@ -4,7 +4,6 @@ import { Assets } from './assets.js';
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
-import { Schema } from './schema.js';
 
 /**
  * A generic game state class that provides building blocks for game state transitions.  For example, a title screen, a main menu screen, and the 
@@ -22,10 +21,10 @@ class GameState extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'dbg', {dflt: false});
-        Schema.apply(this, 'state', {dflt: 'none'});
-        Schema.apply(this, 'assets', {readonly: true, parser: (o,x) => ((o.gctx.game && o.gctx.game.assets) ? o.gctx.game.assets: new Assets())});
-        Schema.apply(this, 'assetSpecs', {readonly: true, parser: (o,x) => {
+        this.schema(this, 'dbg', {dflt: false});
+        this.schema(this, 'state', {dflt: 'none'});
+        this.schema(this, 'assets', {readonly: true, parser: (o,x) => ((o.gctx.game && o.gctx.game.assets) ? o.gctx.game.assets: new Assets())});
+        this.schema(this, 'assetSpecs', {readonly: true, parser: (o,x) => {
             if (x.assetSpecs) return x.assetSpecs;
             if (o.constructor.assetSpecs) return o.constructor.assetSpecs;
             return [];

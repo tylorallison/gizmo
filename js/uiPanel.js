@@ -1,18 +1,16 @@
 export { UiPanel };
 
 import { Rect } from './rect.js';
-import { Schema } from './schema.js';
-import { Stats } from './stats.js';
 import { UiView } from './uiView.js';
 
 class UiPanel extends UiView {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch, link: true, renderable: true });
-        Schema.apply(this, 'fitter', { dflt: 'stretch', renderable: true });
-        Schema.apply(this, 'alignx', { dflt: .5, renderable: true });
-        Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
+        this.schema(this, 'sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch, link: true, renderable: true });
+        this.schema(this, 'fitter', { dflt: 'stretch', renderable: true });
+        this.schema(this, 'alignx', { dflt: .5, renderable: true });
+        this.schema(this, 'aligny', { dflt: .5, renderable: true });
     }
 
     // STATIC PROPERTIES ---------------------------------------------------

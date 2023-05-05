@@ -1,6 +1,5 @@
 export { Rect };
 
-import { Schema } from './schema.js';
 import { Sketch } from './sketch.js';
 import { Stats } from './stats.js';
 
@@ -11,11 +10,11 @@ class Rect extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'border', {dflt: 0, renderable: true});
-        Schema.apply(this, 'borderColor', {dflt: 'black', renderable: true});
-        Schema.apply(this, 'color', {dflt: 'rgba(127,127,127,.75', renderable: true});
-        Schema.apply(this, 'fill', {dflt: true, renderable: true});
-        Schema.apply(this, 'dash', {dflt: null, renderable: true});
+        this.schema(this, 'border', {dflt: 0, renderable: true});
+        this.schema(this, 'borderColor', {dflt: 'black', renderable: true});
+        this.schema(this, 'color', {dflt: 'rgba(127,127,127,.75', renderable: true});
+        this.schema(this, 'fill', {dflt: true, renderable: true});
+        this.schema(this, 'dash', {dflt: null, renderable: true});
     }
 
     // METHODS -------------------------------------------------------------

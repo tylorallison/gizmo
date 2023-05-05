@@ -10,7 +10,6 @@ import { UpdateSystem } from './updateSystem.js';
 import { StateMgr } from './stateMgr.js';
 import { SystemMgr } from './systemMgr.js';
 import { Generator } from './generator.js';
-import { Schema } from './schema.js';
 import { UiCanvas } from './uiCanvas.js';
 import { SfxSystem } from './sfxSystem.js';
 
@@ -32,23 +31,23 @@ class Game extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {*} Game#dbg - enables debugging for gizmo */
-    static { Schema.apply(this, 'dbg', { eventable: false, dflt: false}); }
+    static { this.schema(this, 'dbg', { eventable: false, dflt: false}); }
     /** @member {string} Game#name - name for game */
-    static { Schema.apply(this, 'name', { dflt: this.name, readonly: true}); }
+    static { this.schema(this, 'name', { dflt: this.name, readonly: true}); }
     /** @member {int} Game#maxDeltaTime - max value for a single frame delta time */
-    static { Schema.apply(this, 'maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
+    static { this.schema(this, 'maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
     /** @member {int} Game#frame - frame counter */
-    static { Schema.apply(this, 'frame', { eventable: false, dflt: 0}); }
+    static { this.schema(this, 'frame', { eventable: false, dflt: 0}); }
     /** @member {float} Game#lastUpdate - time of last update */
-    static { Schema.apply(this, 'lastUpdate', { eventable: false, dflt: 0}); }
+    static { this.schema(this, 'lastUpdate', { eventable: false, dflt: 0}); }
     /** @member {Assets} Game#assets - game assets */
-    static { Schema.apply(this, 'assets', { readonly: true, parser: (o,x) => new Assets()}); }
+    static { this.schema(this, 'assets', { readonly: true, parser: (o,x) => new Assets()}); }
     /** @member {SystemMgr} Game#systems - game systems {@link System} */
-    static { Schema.apply(this, 'systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
+    static { this.schema(this, 'systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
-    static { Schema.apply(this, 'states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
+    static { this.schema(this, 'states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
     /** @member {Generator} Game#generator - generator for gizmos in game */
-    static { Schema.apply(this, 'generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
+    static { this.schema(this, 'generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {

@@ -1,17 +1,16 @@
 import { Generator } from '../js/generator.js';
 import { GizmoData } from '../js/gizmoData.js';
-import { Schema } from '../js/schema.js';
 
 describe('a generator', () => {
     class TGen extends GizmoData {
         static {
-            Schema.apply(this, 'field1', { dflt: 5 });
+            GizmoData.schema(this, 'field1', { dflt: 5 });
         }
     }
     class TBase extends GizmoData {
         static {
-            Schema.apply(this, 'field2', { dflt: 5 });
-            Schema.apply(this, 'tgen', { link: true });
+            GizmoData.schema(this, 'field2', { dflt: 5 });
+            GizmoData.schema(this, 'tgen', { link: true });
         }
     }
 

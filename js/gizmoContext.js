@@ -3,7 +3,6 @@ export { GizmoContext };
 import { ExtEvtEmitter } from './event.js';
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 
 /**
  * The GizmoContext class provides a global context that is attached to all classes derived from the {@link Gizmo} class.  It groups
@@ -36,11 +35,11 @@ class GizmoContext extends GizmoData {
     /** @member {Game} GizmoContext#game - game instance */
     /** @member {boolean} GizmoContext#userActive - indicates if user has interacted with UI/game by clicking or pressing a key */
     static {
-        Schema.apply(this, 'ctxid', { readonly: true, parser: (obj, x) => obj.constructor.ctxid++ });
-        Schema.apply(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.ctxid}` });
-        Schema.apply(this, 'game', { dflt: null });
-        Schema.apply(this, 'userActive', { dflt: false });
-        Schema.apply(this, 'proxied', { dflt: true });
+        this.schema(this, 'ctxid', { readonly: true, parser: (obj, x) => obj.constructor.ctxid++ });
+        this.schema(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.ctxid}` });
+        this.schema(this, 'game', { dflt: null });
+        this.schema(this, 'userActive', { dflt: false });
+        this.schema(this, 'proxied', { dflt: true });
         ExtEvtEmitter.apply(this);
     }
 

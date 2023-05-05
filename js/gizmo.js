@@ -4,8 +4,7 @@ import { GizmoContext } from './gizmoContext.js';
 import { ExtEvtEmitter, ExtEvtReceiver, EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
-import { GizmoData, GizmoObject } from './gizmoData.js';
-import { Schema } from './schema.js';
+import { GizmoData } from './gizmoData.js';
 import { Serializer } from './serializer.js';
 
 /**
@@ -16,6 +15,19 @@ import { Serializer } from './serializer.js';
  * @extends GizmoData
  */
 class Gizmo extends GizmoData {
+
+    // SCHEMA --------------------------------------------------------------
+    /** @member {GizmoContext} Gizmo#gctx - reference to gizmo context */
+    static { this.schema(this, 'gctx', { readonly: true, serializable: false, nolink: true, parser: (obj, x) => (x.gctx || GizmoContext.main )}); }
+    /** @member {int} Gizmo#gid - unique gizmo identifier*/
+    static { this.schema(this, 'gid', { readonly: true, parser: (obj, x) => (Gizmo.gid++) }); }
+    /** @member {string} Gizmo#tag - tag for this gizmo */
+    static { this.schema(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.gid}` }); }
+    static {
+        ExtEvtEmitter.apply(this);
+        ExtEvtReceiver.apply(this);
+        ExtHierarchy.apply(this);
+    }
 
     // STATIC VARIABLES ----------------------------------------------------
     static gid = 1;
@@ -55,19 +67,6 @@ class Gizmo extends GizmoData {
      */
     static ignore(receiver, tag, fcn) {
         EvtSystem.ignore(this.gctx, receiver, tag, fcn);
-    }
-
-    // SCHEMA --------------------------------------------------------------
-    /** @member {GizmoContext} Gizmo#gctx - reference to gizmo context */
-    static { Schema.apply(this, 'gctx', { readonly: true, serializable: false, parser: (obj, x) => (x.gctx || GizmoContext.main )}); }
-    /** @member {int} Gizmo#gid - unique gizmo identifier*/
-    static { Schema.apply(this, 'gid', { readonly: true, parser: (obj, x) => (Gizmo.gid++) }); }
-    /** @member {string} Gizmo#tag - tag for this gizmo */
-    static { Schema.apply(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.gid}` }); }
-    static {
-        ExtEvtEmitter.apply(this);
-        ExtEvtReceiver.apply(this);
-        ExtHierarchy.apply(this);
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -135,10 +134,10 @@ class Gizmo extends GizmoData {
     xify(sdata) {
         // save new serialized gzo
         if (!sdata.xgzos[this.gid]) {
-            sdata.xgzos[this.gid] = Serializer.xifyData(sdata, this, { 
+            sdata.xgzos[this.gid] = Serializer.xifyData(sdata, this.$values, { 
                 $gzx: true,
                 cls: this.constructor.name,
-            });
+            }, this.$schema);
         }
         return {
             cls: '$GizmoRef',

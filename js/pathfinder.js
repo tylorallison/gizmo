@@ -3,7 +3,6 @@ export { PathGraph, Pathfinder };
 import { Fmt } from "./fmt.js";
 import { GizmoData } from "./gizmoData.js";
 import { PriorityQueue } from "./priq.js";
-import { Schema } from "./schema.js";
 
 class PathGraph {
     contains(node) {
@@ -25,9 +24,9 @@ class PathGraph {
 
 class Pathfinder extends GizmoData {
     static {
-        Schema.apply(this, 'graph', { eventable: false, parser: (o,x) => x.graph || new PathGraph()});
-        Schema.apply(this, 'dbg', { dflt: false });
-        Schema.apply(this, 'maxTries', { dflt: 1000 });
+        this.schema(this, 'graph', { eventable: false, parser: (o,x) => x.graph || new PathGraph()});
+        this.schema(this, 'dbg', { dflt: false });
+        this.schema(this, 'maxTries', { dflt: 1000 });
     }
 
     find(e, from, to, equalizer) {

@@ -1,14 +1,13 @@
 export{ Vect };
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 
 // =========================================================================
 class Vect extends GizmoData {
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
+        this.schema(this, 'x', { dflt: 0 });
+        this.schema(this, 'y', { dflt: 0 });
     }
 
     // STATIC PROPERTIES ---------------------------------------------------
@@ -213,8 +212,8 @@ class Vect extends GizmoData {
     }
 
     set(spec={}) {
-        if (spec && spec.hasOwnProperty('x')) this.x = spec.x;
-        if (spec && spec.hasOwnProperty('y')) this.y = spec.y;
+        if (spec && ('x' in spec)) this.x = spec.x;
+        if (spec && ('y' in spec)) this.y = spec.y;
         return this;
     }
 

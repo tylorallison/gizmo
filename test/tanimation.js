@@ -4,11 +4,10 @@ import { UpdateSystem } from '../js/updateSystem.js';
 import { Rect } from '../js/rect.js';
 import { Animation } from '../js/animation.js';
 import { UiView } from '../js/uiView.js';
-import { Schema } from '../js/schema.js';
 
 class TSketchView extends UiView {
     static {
-        Schema.apply(this, 'sketch', { renderable: true, link: true });
+        this.schema(this, 'sketch', { renderable: true, link: true });
     }
     cpost(spec) {
         super.cpost(spec);
@@ -30,9 +29,6 @@ describe('an animation', () => {
         ]});
         view = new TSketchView({ gctx: gctx, sketch: anim });
         sys = new UpdateSystem( { gctx: gctx });
-        //receiver = ExtEvtReceiver.gen();
-        //tevts = [];
-        //EvtSystem.listen(anim, receiver, 'gizmo.updated', (evt) => tevts.push(evt));
     });
 
     it('timer stops when animation is destroyed', ()=>{
@@ -45,16 +41,5 @@ describe('an animation', () => {
         links = EvtSystem.findLinksForEvt(gctx, { tag: 'game.tock' });
         expect(links.length).toEqual(1); // update system has listener
     });
-
-    /*
-    it('adoption/orphan triggers sketch enable/disable', ()=>{
-        let cvs = new UiCanvas({gctx: gctx});
-        expect(sketch.active).toBeFalse();
-        Hierarchy.adopt(cvs, sketch);
-        expect(sketch.active).toBeTrue();
-        Hierarchy.orphan(sketch);
-        expect(sketch.active).toBeFalse();
-    });
-    */
 
 });

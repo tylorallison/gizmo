@@ -5,22 +5,21 @@ import { Gizmo } from '../js/gizmo.js';
 import { GizmoContext } from '../js/gizmoContext.js';
 import { GizmoData } from '../js/gizmoData.js';
 import { Rect } from '../js/rect.js';
-import { Schema } from '../js/schema.js';
 import { SerialData, Serializer } from '../js/serializer.js';
 import { XForm } from '../js/xform.js';
 
 class TSerializerSub extends GizmoData {
-    static { Schema.apply(this, 'value'); };
+    static { this.schema(this, 'value'); };
 };
 class TSerializerData extends GizmoData {
     static { 
-        Schema.apply(this, 'sub', { link: true });
+        this.schema(this, 'sub', { link: true });
     };
 };
 class TSerializerGizmo extends Gizmo {
     static { 
-        Schema.apply(this, 'data', { link: true });
-        Schema.apply(this, 'asset', { link: true });
+        this.schema(this, 'data', { link: true });
+        this.schema(this, 'asset', { link: true });
     };
 }
 

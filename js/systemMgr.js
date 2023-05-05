@@ -2,14 +2,13 @@ export { SystemMgr };
 
 import { EvtSystem } from './event.js';
 import { Gizmo } from './gizmo.js';
-import { Schema } from './schema.js';
 import { System } from './system.js';
 
 class SystemMgr extends Gizmo {
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'dbg', { dflt: false });
-        Schema.apply(this, 'systems', { readonly: true, parser: () => ({}) });
+        this.schema(this, 'dbg', { dflt: false });
+        this.schema(this, 'systems', { readonly: true, parser: () => ({}) });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

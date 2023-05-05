@@ -2,20 +2,19 @@ export { SfxSystem };
 
 import { Assets } from './assets.js';
 import { EvtSystem } from './event.js';
-import { Schema } from './schema.js';
 import { System } from './system.js';
 
 class SfxSystem extends System {
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'ready', { serializeable: false, parser: false });
-        Schema.apply(this, 'decodes', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
-        Schema.apply(this, 'ctx', { eventable: false, serializeable: false, parser: (o,x) => null });
-        Schema.apply(this, 'assets', { eventable: false, serializeable: false, readonly: true, parser: (o,x) => x.assets || (o.gctx.game) ? o.gctx.game.assets : new Assets() });
-        Schema.apply(this, 'streams', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
-        Schema.apply(this, 'reqs', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
-        Schema.apply(this, 'volumes', { eventable: false, serializeable: false, parser: (o,x) => (x.volumes || {}) });
-        Schema.apply(this, 'gains', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
+        this.schema(this, 'ready', { serializeable: false, parser: false });
+        this.schema(this, 'decodes', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
+        this.schema(this, 'ctx', { eventable: false, serializeable: false, parser: (o,x) => null });
+        this.schema(this, 'assets', { eventable: false, serializeable: false, readonly: true, parser: (o,x) => x.assets || (o.gctx.game) ? o.gctx.game.assets : new Assets() });
+        this.schema(this, 'streams', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
+        this.schema(this, 'reqs', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
+        this.schema(this, 'volumes', { eventable: false, serializeable: false, parser: (o,x) => (x.volumes || {}) });
+        this.schema(this, 'gains', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

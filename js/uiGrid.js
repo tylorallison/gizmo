@@ -4,7 +4,6 @@ import { Array2D } from "./array2d.js";
 import { Bounds } from "./bounds.js";
 import { EvtSystem } from "./event.js";
 import { Fmt } from "./fmt.js";
-import { Schema } from "./schema.js";
 import { Stats } from "./stats.js";
 import { UiView } from "./uiView.js";
 import { Vect } from "./vect.js";
@@ -15,28 +14,28 @@ class UiGrid extends UiView {
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        Schema.apply(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
-        Schema.apply(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
-        Schema.apply(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
-        Schema.apply(this, 'renderFilter', { dflt: ((idx, view) => true) });
-        Schema.apply(this, 'optimizeRender', { dflt: true });
-        Schema.apply(this, 'chunks', { parser: (o,x) => {
+        this.schema(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
+        this.schema(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
+        this.schema(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
+        this.schema(this, 'renderFilter', { dflt: ((idx, view) => true) });
+        this.schema(this, 'optimizeRender', { dflt: true });
+        this.schema(this, 'chunks', { parser: (o,x) => {
             if (x.chunks) return x.chunks;
             return new Array2D({rows: x.rows || 8, cols: x.cols || 8});
         }});
-        Schema.apply(this, 'gzoIdxMap', { readonly: true, parser: (o,x) => new Map() });
-        Schema.apply(this, 'rerender', { renderable: true, parser: (o,x) => true });
-        Schema.apply(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
-        Schema.apply(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        Schema.apply(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
-        Schema.apply(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        Schema.apply(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
-        Schema.apply(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z) });
-        Schema.apply(this, 'alignx', { dflt: .5, renderable: true });
-        Schema.apply(this, 'aligny', { dflt: .5, renderable: true });
-        Schema.apply(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
-        Schema.apply(this, 'colSize', { renderable: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
-        Schema.apply(this, 'length', { readonly: true, getter: (o,x) => o.chunks.length });
+        this.schema(this, 'gzoIdxMap', { readonly: true, parser: (o,x) => new Map() });
+        this.schema(this, 'rerender', { renderable: true, parser: (o,x) => true });
+        this.schema(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
+        this.schema(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
+        this.schema(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
+        this.schema(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
+        this.schema(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
+        this.schema(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z) });
+        this.schema(this, 'alignx', { dflt: .5, renderable: true });
+        this.schema(this, 'aligny', { dflt: .5, renderable: true });
+        this.schema(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
+        this.schema(this, 'colSize', { renderable: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
+        this.schema(this, 'length', { readonly: true, getter: (o,x) => o.chunks.length });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -83,11 +82,12 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
+        //console.log(`needs update: ${needsUpdate} this: ${this}`);
         if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
     }
 
     onChildDestroyed(evt) {
-        console.log(`onChildDestroyed: ${Fmt.ofmt(evt)}`);
+        //console.log(`onChildDestroyed: ${Fmt.ofmt(evt)}`);
         this.remove(evt.actor);
     }
 

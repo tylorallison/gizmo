@@ -1,6 +1,5 @@
 export { Sprite };
 
-import { Schema } from './schema.js';
 import { Sketch } from './sketch.js';
 
 /** ========================================================================
@@ -9,9 +8,9 @@ import { Sketch } from './sketch.js';
 class Sprite extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'img', {readonly: true});
-        Schema.apply(this, 'width', {getter: ((o,x) => ((o.img) ? o.img.width : 0)), readonly: true});
-        Schema.apply(this, 'height', {getter: ((o,x) => ((o.img) ? o.img.height : 0)), readonly: true});
+        this.schema(this, 'img', {readonly: true});
+        this.schema(this, 'width', {getter: ((o,x) => ((o.img) ? o.img.width : 0)), readonly: true});
+        this.schema(this, 'height', {getter: ((o,x) => ((o.img) ? o.img.height : 0)), readonly: true});
     }
 
     // METHODS -------------------------------------------------------------

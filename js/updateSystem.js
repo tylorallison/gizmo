@@ -2,7 +2,6 @@ export { UpdateSystem };
 
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
-import { Schema } from './schema.js';
 import { System } from './system.js';
 import { Util } from './util.js';
 
@@ -18,9 +17,9 @@ class UpdateSystem extends System {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'updates', { eventable: false, parser: (o,x) => new Map() });
-        Schema.apply(this, 'waiting', { eventable: false, parser: (o,x) => [] });
-        Schema.apply(this, 'renders', { eventable: false, parser: (o,x) => new Set() });
+        this.schema(this, 'updates', { eventable: false, parser: (o,x) => new Map() });
+        this.schema(this, 'waiting', { eventable: false, parser: (o,x) => [] });
+        this.schema(this, 'renders', { eventable: false, parser: (o,x) => new Set() });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -47,6 +46,7 @@ class UpdateSystem extends System {
     setUpdate(g, set) {
         if (!this.updates.has(g.gid)) this.updates.set(g.gid, {});
         Util.update(this.updates.get(g.gid), set);
+        if (this.dbg) console.log(`setUpdate: ${g} set: ${Fmt.ofmt(set)}`);
         // update store
         if (this.iterating) {
             this.waiting.push(g);
@@ -58,6 +58,7 @@ class UpdateSystem extends System {
     }
 
     prepare(evt) {
+        //console.log(`== prepare`);
         // swap out set of prepared updates from events
         // -- this allows events to trigger while the update system is iterating through updates
         this.currentUpdates = this.updates;
@@ -69,6 +70,7 @@ class UpdateSystem extends System {
     }
 
     iterate(evt, e) {
+        //console.log(`== iterate on ${e}`);
         let updates = this.currentUpdates.get(e.gid);
         if (!updates && !this.currentRenders.has(e.gid)) return;
         // trigger entity updates

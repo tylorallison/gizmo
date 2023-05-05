@@ -16,11 +16,11 @@ class Grid extends Array2D {
     static dfltRows = 8;
 
     static {
-        Schema.apply(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
-        Schema.apply(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
-        Schema.apply(this, 'dbg', { dflt: false });
-        Schema.apply(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
-        Schema.apply(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
+        this.schema(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
+        this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
+        this.schema(this, 'dbg', { dflt: false });
+        this.schema(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
+        this.schema(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
     }
 
     constructor(spec={}) {

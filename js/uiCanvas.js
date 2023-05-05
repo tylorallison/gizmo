@@ -1,7 +1,6 @@
 export { UiCanvas };
 
 import { EvtSystem } from './event.js';
-import { Schema } from './schema.js';
 import { UiView } from './uiView.js';
 import { XForm } from './xform.js';
 
@@ -26,12 +25,12 @@ class UiCanvas extends UiView {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'active', {dflt: true});
-        Schema.apply(this, 'canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
-        Schema.apply(this, 'canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
-        Schema.apply(this, 'xform', { link: true, renderable: true, parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height })});
-        Schema.apply(this, 'ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
-        Schema.apply(this, 'fitToWindow', { readonly: true, dflt: true });
+        this.schema(this, 'active', {dflt: true});
+        this.schema(this, 'canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
+        this.schema(this, 'canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
+        this.schema(this, 'xform', { link: true, renderable: true, parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height }) });
+        this.schema(this, 'ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
+        this.schema(this, 'fitToWindow', { readonly: true, dflt: true });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

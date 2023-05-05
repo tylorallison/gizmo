@@ -3,7 +3,6 @@ export { System }
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
-import { Schema } from './schema.js';
 import { Stats } from './stats.js';
 import { Timer } from './timer.js';
 
@@ -14,13 +13,13 @@ class System extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'iterateTTL', { eventable: false, parser: (o,x) => x.hasOwnProperty('iterateTTL') ? x.iterateTTL : o.constructor.dfltIterateTTL});
-        Schema.apply(this, 'dbg', { eventable: false, dflt: false });
-        Schema.apply(this, 'active', { eventable: false, dflt: true });
-        Schema.apply(this, 'matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
-        Schema.apply(this, 'store', { readonly: true, parser: (o,x) => x.store || new Map()});
-        Schema.apply(this, 'iterating', { eventable: false, dflt: false });
-        Schema.apply(this, 'timer', { readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
+        this.schema(this, 'iterateTTL', { eventable: false, parser: (o,x) => x.hasOwnProperty('iterateTTL') ? x.iterateTTL : o.constructor.dfltIterateTTL});
+        this.schema(this, 'dbg', { eventable: false, dflt: false });
+        this.schema(this, 'active', { eventable: false, dflt: true });
+        this.schema(this, 'matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
+        this.schema(this, 'store', { readonly: true, parser: (o,x) => x.store || new Map()});
+        this.schema(this, 'iterating', { eventable: false, dflt: false });
+        this.schema(this, 'timer', { readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

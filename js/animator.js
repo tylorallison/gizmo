@@ -1,7 +1,6 @@
 export { Animator };
 
 import { EvtSystem, ExtEvtReceiver } from './event.js';
-import { Schema } from './schema.js';
 import { Sketch } from './sketch.js';
 import { GizmoData } from './gizmoData.js';
 
@@ -14,13 +13,13 @@ class Animator extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
-    static { Schema.apply(this, 'trunkKey', { dflt: 'state', readonly: true }); }
+    static { this.schema(this, 'trunkKey', { dflt: 'state', readonly: true }); }
     /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */
-    static { Schema.apply(this, 'sketches', { dflt: {}, readonly: true }); }
+    static { this.schema(this, 'sketches', { dflt: {}, readonly: true }); }
     /** @member {Object} Animator#transitions - map of transitions  { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]} */
-    static { Schema.apply(this, 'transitions', { dflt: {}, readonly: true }); }
+    static { this.schema(this, 'transitions', { dflt: {}, readonly: true }); }
     /** @member {Object} Animator#state - current animator state, tracks to target state */
-    static { Schema.apply(this, 'state', { dflt: 'idle', renderable: true, generator: (o,v) => {
+    static { this.schema(this, 'state', { dflt: 'idle', renderable: true, generator: (o,v) => {
         if (o.sketches.hasOwnProperty(v)) {
             if (o.sketch) o.sketch.disable();
             let targetSketch = o.sketches[v];
@@ -69,15 +68,15 @@ class Animator extends Sketch {
         return o.state;
     } }); }
     /** @member {Object} Animator#state - current animator sketch */
-    static { Schema.apply(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
+    static { this.schema(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
     /** @member {Object} Animator#width - width of current animator sketch*/
-    static { Schema.apply(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.schema(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {Object} Animator#height - height of current animator sketch*/
-    static { Schema.apply(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.schema(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animator sketch */
-    static { Schema.apply(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
+    static { this.schema(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
     /** @member {integer} Sketch#done - is current animator sketch marked as done */
-    static { Schema.apply(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
+    static { this.schema(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
     static { ExtEvtReceiver.apply(this); }
 
     // DATA CHANGE HANDLERS ------------------------------------------------

@@ -1,10 +1,8 @@
 export { UiView };
 
 import { EvtSystem } from './event.js';
-import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Hierarchy } from './hierarchy.js';
-import { Schema } from './schema.js';
 import { SfxSystem } from './sfxSystem.js';
 import { XForm } from './xform.js';
 
@@ -21,20 +19,20 @@ class UiView extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'visible', {dflt: true, renderable: true});
-        Schema.apply(this, 'active', {dflt: false});
-        Schema.apply(this, 'xform', {proxy: true, renderable: true, parser: (o,x) => x.xform || new XForm()});
-        Schema.apply(this, 'smoothing', {dflt: null, renderable: true});
-        Schema.apply(this, 'alpha', {dflt: 1, renderable: true});
-        Schema.apply(this, 'dbg', {dflt: false});
-        Schema.apply(this, 'mask', {dflt: false});
-        Schema.apply(this, 'mouseOver', {dflt: false, renderable: true});
-        Schema.apply(this, 'mousePressed', {dflt: false, renderable: true});
-        Schema.apply(this, 'mousePriority', {dflt: 0, renderable: true});
-        Schema.apply(this, 'mouseBlock', {dflt: false, renderable: true});
-        Schema.apply(this, 'mouseClickedSound');
-        Schema.apply(this, 'mouseEnteredSound');
-        Schema.apply(this, 'mouseExitedSound');
+        this.schema(this, 'visible', {dflt: true, renderable: true});
+        this.schema(this, 'active', {dflt: false});
+        this.schema(this, 'xform', {proxy: true, renderable: true, parser: (o,x) => x.xform || new XForm()});
+        this.schema(this, 'smoothing', {dflt: null, renderable: true});
+        this.schema(this, 'alpha', {dflt: 1, renderable: true});
+        this.schema(this, 'dbg', {dflt: false});
+        this.schema(this, 'mask', {dflt: false});
+        this.schema(this, 'mouseOver', {dflt: false, renderable: true});
+        this.schema(this, 'mousePressed', {dflt: false, renderable: true});
+        this.schema(this, 'mousePriority', {dflt: 0, renderable: true});
+        this.schema(this, 'mouseBlock', {dflt: false, renderable: true});
+        this.schema(this, 'mouseClickedSound');
+        this.schema(this, 'mouseEnteredSound');
+        this.schema(this, 'mouseExitedSound');
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

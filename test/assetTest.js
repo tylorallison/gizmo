@@ -9,7 +9,6 @@ import { XForm } from '../js/xform.js';
 import { Sprite } from '../js/sprite.js';
 import { Animation } from '../js/animation.js';
 import { Generator } from '../js/generator.js';
-import { Schema } from '../js/schema.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { Animator } from '../js/animator.js';
 import { Timer } from '../js/timer.js';
@@ -17,7 +16,7 @@ import { Timer } from '../js/timer.js';
 
 class TestModel extends UiPanel {
     static {
-        Schema.apply(this, 'state', { dflt: 'on', renderable: true });
+        this.schema(this, 'state', { dflt: 'on', renderable: true });
     }
 }
 

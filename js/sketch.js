@@ -2,7 +2,6 @@ export { Sketch };
 
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 import { Stats } from './stats.js';
 
 /**
@@ -30,21 +29,21 @@ class Sketch extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {string} Sketch#assetTag - if sketch came from asset, tag associated with asset definition */
-    static { Schema.apply(this, 'assetTag', { readonly: true }); }
+    static { this.schema(this, 'assetTag', { readonly: true }); }
     /** @member {number} Sketch#width=0 - width of sketch */
-    static { Schema.apply(this, 'width', {dflt: 0, readonly: true}); }
+    static { this.schema(this, 'width', {dflt: 0, readonly: true}); }
     /** @member {number} Sketch#height=0 - height of sketch */
-    static { Schema.apply(this, 'height', {dflt: 0, readonly: true}); }
+    static { this.schema(this, 'height', {dflt: 0, readonly: true}); }
     /** @member {boolean} Sketch#active=false - indicates if sketch is active */
-    static { Schema.apply(this, 'active', {dflt: false}); }
+    static { this.schema(this, 'active', {dflt: false}); }
     /** @member {boolean|null} Sketch#smoothing=nul - indicates if image smoothing should be applied to this sketch, true/false controls this sketch, null defers to current context setting */
-    static { Schema.apply(this, 'smoothing', {dflt: null, renderable: true}); }
+    static { this.schema(this, 'smoothing', {dflt: null, renderable: true}); }
     /** @member {float} Sketch#alpha=1 - transparency of sketch, 0 is not visible, 1 is no transparency */
-    static { Schema.apply(this, 'alpha', {dflt: 1, renderable: true}); }
+    static { this.schema(this, 'alpha', {dflt: 1, renderable: true}); }
     /** @member {integer} Sketch#ttl - time to live for sketch */
-    static { Schema.apply(this, 'ttl', {readonly: true, renderable: true, parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL}); }
+    static { this.schema(this, 'ttl', {readonly: true, renderable: true, parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL}); }
     /** @member {boolean} Sketch#done=false - if sketch has finished animation */
-    static { Schema.apply(this, 'done', {parser: () => false}); }
+    static { this.schema(this, 'done', {parser: () => false}); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     destroy() {

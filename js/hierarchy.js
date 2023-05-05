@@ -1,7 +1,8 @@
 export { Hierarchy, ExtHierarchy }
 
 import { EvtSystem } from './event.js';
-import { Schema } from './schema.js';
+import { Fmt } from './fmt.js';
+import { GizmoData } from './gizmoData.js';
 
 class Hierarchy {
 
@@ -17,7 +18,7 @@ class Hierarchy {
             return;
         }
         // avoid cycles in children
-        if ('children' in parent) {
+        if (Array.isArray(parent.children)) {
             if (this.find(child, (v) => v === parent)) {
                 console.error(`hierarchy loop detected ${child} already in children of parent: ${parent}`);
                 return;
@@ -25,7 +26,7 @@ class Hierarchy {
         }
         // assign parent/child links
         child.parent = parent;
-        if ('children' in parent) parent.children.push(child);
+        if (Array.isArray(parent.children)) parent.children.push(child);
         // event handling
         EvtSystem.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
         let root = this.root(parent);
@@ -38,7 +39,7 @@ class Hierarchy {
     static orphan(child) {
         if (child.parent) {
             let parent = child.parent;
-            if ('children' in parent) {
+            if (Array.isArray(parent.children)) {
                 let idx = parent.children.indexOf(child);
                 if (idx != -1) {
                     parent.children.splice(idx, 1);
@@ -108,8 +109,8 @@ class Hierarchy {
 
 class ExtHierarchy {
     static apply(cls, spec={}) {
-        Schema.apply(cls, 'parent', { serializable: false, parser: () => null });
-        Schema.apply(cls, 'children', { gizmo: true, parser: (o,x) => { 
+        GizmoData.schema(cls, 'parent', { serializable: false, parser: () => null });
+        GizmoData.schema(cls, 'children', { gizmo: true, parser: (o,x) => { 
             let v = x.children || [];
             for (const el of v) Hierarchy.adopt(o, el);
             return v;

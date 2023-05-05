@@ -6,7 +6,6 @@ import { Fmt } from './fmt.js';
 import { GameState } from './gameState.js';
 import { Gizmo } from './gizmo.js';
 import { Timer } from './timer.js';
-import { Schema } from './schema.js';
 
 class StateMgr extends Gizmo {
 
@@ -17,9 +16,9 @@ class StateMgr extends Gizmo {
         
     // SCHEMA --------------------------------------------------------------
     static {
-        Schema.apply(this, 'dbg', { dflt: false });
-        Schema.apply(this, 'states', { readonly: true, parser: () => ({}) });
-        Schema.apply(this, 'current');
+        this.schema(this, 'dbg', { dflt: false });
+        this.schema(this, 'states', { readonly: true, parser: () => ({}) });
+        this.schema(this, 'current');
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

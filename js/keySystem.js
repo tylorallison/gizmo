@@ -1,13 +1,12 @@
 export { KeySystem }
 
 import { EvtSystem } from './event.js';
-import { Schema } from './schema.js';
 import { System } from './system.js';
 
 class KeySystem extends System {
 
     static {
-        Schema.apply(this, 'pressed', { readonly: true, parser: () => new Map()});
+        this.schema(this, 'pressed', { readonly: true, parser: () => new Map()});
     }
 
     cpre(spec) {

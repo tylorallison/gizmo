@@ -4,12 +4,11 @@ import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Vect } from '../js/vect.js';
-import { Schema } from '../js/schema.js';
 import { GizmoObject } from '../js/gizmoData.js';
 
 class TXFormRoot extends Gizmo {
     static {
-        Schema.apply(this, 'xform', { proxy: true });
+        this.schema(this, 'xform', { proxy: true });
     }
 
     cpost(spec={}) {
@@ -32,15 +31,6 @@ describe('xforms', () => {
         EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => tevts.push(evt));
     });
 
-    xit(`test xform constructor`, () => {
-        let xform = new XForm();
-        let w = GizmoObject.wrap(xform);
-        console.log(`xform.constructor.name: ${xform.constructor.name}`);
-        console.log(`xform.constructor.$schema: ${xform.constructor.$schema}`);
-        console.log(`w.constructor.name: ${w.constructor.name}`);
-        console.log(`w.constructor.$schema: ${w.constructor.$schema}`);
-    })
-
     it('updates triggered to bound gizmo', ()=>{
         root.xform.gripOffsetLeft = 5;
         expect(tevts.length).toEqual(2);
@@ -53,8 +43,6 @@ describe('xforms', () => {
     it('gizmo cleared from xform on gizmo destroy', ()=>{
         let x = root.xform;
         let n = x.$link.trunk.node;
-        console.log(`n: ${n} proxy: ${n.$proxied}`);
-        console.log(`root: ${root}: ${root.$proxied}`);
         expect(x.$link.trunk.node).toBe(root);
         root.destroy();
         expect(x.$link.trunk).toBe(null);

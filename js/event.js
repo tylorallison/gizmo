@@ -2,7 +2,6 @@ export { ExtEvtEmitter, ExtEvtReceiver, EvtLink, EvtSystem, Evt };
 
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Schema } from './schema.js';
 
 class EvtLink {
     constructor(tag, emitter, receiver, fcn, opts={}) {
@@ -38,16 +37,18 @@ class EvtSystem {
      */
 
     static isEmitter(obj) {
-        return obj && obj.hasOwnProperty('evtEmitterLinks') && obj.hasOwnProperty('evtCounts');
+        return obj && ('evtEmitterLinks' in obj) && ('evtCounts' in obj);
     }
     static isEmitterCls(cls) {
-        return cls && cls.$schema && cls.$schema.map.hasOwnProperty('evtEmitterLinks') && cls.$schema.map.hasOwnProperty('evtCounts');
+        let schema = (cls && cls.prototype) ? cls.prototype.$schema : null;
+        return schema && schema.map.hasOwnProperty('evtEmitterLinks') && schema.map.hasOwnProperty('evtCounts');
     }
     static isReceiver(obj) {
-        return obj && obj.hasOwnProperty('evtReceiverLinks');
+        return obj && ('evtReceiverLinks' in obj);
     }
     static isReceiverCls(cls) {
-        return cls && cls.$schema && cls.$schema.map.hasOwnProperty('evtReceiverLinks');
+        let schema = (cls && cls.prototype) ? cls.prototype.$schema : null;
+        return schema && schema.map.hasOwnProperty('evtReceiverLinks');
     }
 
     static addCount(emitter, tag) {
@@ -177,7 +178,7 @@ class Evt {
 
     // METHODS -------------------------------------------------------------
     toString() {
-        return Fmt.ofmt(this, this.constructor.name);
+        return Fmt.toString(this.constructor.name, Fmt.ofmt(this));
     }
 }
 
@@ -191,19 +192,14 @@ class ExtEvtEmitter {
     /** @member {Map} ExtEvtEmitter#evtEmitterLinks - a map of event to emitter links for that event */
     static apply(cls, spec={}) {
         // data
-        Schema.apply(cls, 'evtCounts', { eventable: false, serializable: false, parser: () =>  new Map() });
-        Schema.apply(cls, 'evtEmitterLinks', { eventable: false, serializable: false, parser: () => new Map() });
+        GizmoData.schema(cls, 'evtCounts', { eventable: false, serializable: false, parser: () =>  new Map() });
+        GizmoData.schema(cls, 'evtEmitterLinks', { eventable: false, serializable: false, parser: () => new Map() });
     }
 
     static gen(spec={}) {
-        let cls = class {
-            constructor() {
-                GizmoData.parser(this, {});
-                //for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
-            }
-        }
+        let cls = class extends GizmoData {}
         this.apply(cls);
-        return new cls();
+        return new cls(spec);
     }
 
 }
@@ -212,18 +208,22 @@ class ExtEvtReceiver {
 
     static apply(cls, spec={}) {
         // -- data
-        Schema.apply(cls, 'evtReceiverLinks', { eventable: false, serializable: false, parser: () => [] });
+        GizmoData.schema(cls, 'evtReceiverLinks', { eventable: false, serializable: false, parser: () => [] });
     }
 
     static gen(spec={}) {
+        let cls = class extends GizmoData {}
+        this.apply(cls);
+        /*
         let cls = class {
             constructor() {
                 GizmoData.parser(this, {});
                 //for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
             }
         }
-        this.apply(cls);
-        return new cls();
+        */
+        //this.apply(cls);
+        return new cls(spec);
     }
 
 }

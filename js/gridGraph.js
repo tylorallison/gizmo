@@ -3,20 +3,19 @@ export { GridGraph };
 import { Direction } from './direction.js';
 import { GizmoData } from './gizmoData.js';
 import { MoveToAction } from './move.js';
-import { Schema } from './schema.js';
 import { UiGrid } from './uiGrid.js';
 import { Vect } from './vect.js';
 
 class GridGraph extends GizmoData {
     static dfltSpeed = .1;
     static {
-        Schema.apply(this, 'grid', { eventable: false, readonly: true, parser: (o,x) => x.grid || new UiGrid()});
-        Schema.apply(this, 'charger', { eventable: false, readonly: true, parser: (o,x) => x.charger || ((graph, base, e, from, to) => {
+        this.schema(this, 'grid', { eventable: false, readonly: true, parser: (o,x) => x.grid || new UiGrid()});
+        this.schema(this, 'charger', { eventable: false, readonly: true, parser: (o,x) => x.charger || ((graph, base, e, from, to) => {
             let fromv = graph.grid.vfromidx(from, true);
             let tov = graph.grid.vfromidx(to, true);
             return base + Math.round(Vect.dist(fromv, tov)); 
         })});
-        Schema.apply(this, 'blocker', { eventable: false, readonly: true, parser: (o,x) => x.blocker || ((graph, e, to) => {
+        this.schema(this, 'blocker', { eventable: false, readonly: true, parser: (o,x) => x.blocker || ((graph, e, to) => {
             for (const other of graph.grid.findAtIdx(to, (gzo) => gzo !== e)) {
                 if (e.hasOwnProperty('blockedBy') && other.hasOwnProperty('blocks')) {
                     if (e.blockedBy & other.blocks) return true;
@@ -24,7 +23,7 @@ class GridGraph extends GizmoData {
             }
             return false;
         })});
-        Schema.apply(this, 'mover', { eventable: false, readonly: true, parser: (o,x) => x.mover || ((graph, last, e, to) => {
+        this.schema(this, 'mover', { eventable: false, readonly: true, parser: (o,x) => x.mover || ((graph, last, e, to) => {
             let targetLoc = graph.grid.vfromidx(to, true);
             return [new MoveToAction({ 
                 target: targetLoc,
