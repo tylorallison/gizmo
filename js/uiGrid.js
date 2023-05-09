@@ -15,27 +15,27 @@ class UiGrid extends UiView {
 
     static {
         this.schema(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
-        this.schema(this, 'bounds', { renderable: true, link: true, parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
+        this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
         this.schema(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
-        this.schema(this, 'renderFilter', { dflt: ((idx, view) => true) });
-        this.schema(this, 'optimizeRender', { dflt: true });
-        this.schema(this, 'chunks', { parser: (o,x) => {
+        this.schema(this, 'renderFilter', { eventable: false, dflt: ((idx, view) => true) });
+        this.schema(this, 'optimizeRender', { eventable: false, dflt: true });
+        this.schema(this, 'chunks', { link: false, parser: (o,x) => {
             if (x.chunks) return x.chunks;
             return new Array2D({rows: x.rows || 8, cols: x.cols || 8});
         }});
-        this.schema(this, 'gzoIdxMap', { readonly: true, parser: (o,x) => new Map() });
-        this.schema(this, 'rerender', { renderable: true, parser: (o,x) => true });
+        this.schema(this, 'gzoIdxMap', { link: false, readonly: true, parser: (o,x) => new Map() });
+        this.schema(this, 'rerender', { parser: (o,x) => true });
         this.schema(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
         this.schema(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         this.schema(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
         this.schema(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         this.schema(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
         this.schema(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z) });
-        this.schema(this, 'alignx', { dflt: .5, renderable: true });
-        this.schema(this, 'aligny', { dflt: .5, renderable: true });
-        this.schema(this, 'rowSize', { renderable: true, parser: (o,x) => o.bounds.height/o.chunks.rows });
-        this.schema(this, 'colSize', { renderable: true, parser: (o,x) => o.bounds.width/o.chunks.cols });
-        this.schema(this, 'length', { readonly: true, getter: (o,x) => o.chunks.length });
+        this.schema(this, 'alignx', { dflt: .5 });
+        this.schema(this, 'aligny', { dflt: .5 });
+        this.schema(this, 'rowSize', { parser: (o,x) => o.bounds.height/o.chunks.rows });
+        this.schema(this, 'colSize', { parser: (o,x) => o.bounds.width/o.chunks.cols });
+        this.schema(this, 'length', { getter: (o,x) => o.chunks.length });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -83,7 +83,7 @@ class UiGrid extends UiView {
             this.chunkUpdates.add(idx);
         }
         //console.log(`needs update: ${needsUpdate} this: ${this}`);
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
     }
 
     onChildDestroyed(evt) {
@@ -408,7 +408,7 @@ class UiGrid extends UiView {
         EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
         // if chunkUpdates have been set, trigger update for grid
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
     }
 
     remove(gzo) {
@@ -427,7 +427,7 @@ class UiGrid extends UiView {
             //console.log(`remove adding idx to update: ${idx}`);
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.set', { render: true });
+        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
     }
 
     resize() {
@@ -461,9 +461,10 @@ class UiGrid extends UiView {
         // everything from the grid "chunk" is rendered to an offscreen chunk canvas
         let tx = this.xfromidx(idx);
         let ty = this.yfromidx(idx);
+        //console.log(`d: ${dx},${dy} t: ${tx},${ty}`);
         if (this.optimizeRender) {
             if (!this.xform.bounds.overlaps(new Bounds({x:dx+tx, y:dy+ty, width:this.colSize, height:this.rowSize}))) {
-                if (this.dbg) console.log(`-- chunk: ${idx} is out of bounds against ${this.xform.bounds}`);
+                if (this.dbg) console.log(`-- chunk: ${idx} ${dx+tx},${dy+ty} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }

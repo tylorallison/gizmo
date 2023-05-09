@@ -14,19 +14,19 @@ class Animation extends Sketch {
     /** @member {boolean} Animation#loop - should the animation be looped */
     static { this.schema(this, 'loop', { dflt: true }); }
     /** @member {boolean} Animation#timer - timer for this animation */
-    static { this.schema(this, 'timer', { link: true, serializable: false, eventable: false }); }
+    static { this.schema(this, 'timer', { serializable: false, eventable: false }); }
     /** @member {boolean} Animation#sketchIdx - index of current animation frame */
     static { this.schema(this, 'sketchIdx', { eventable: false, dflt: 0 }); }
     /** @member {Sketch[]} Animation#sketches - array of cels/sketches to animate */
-    static { this.schema(this, 'sketches', { dflt: [], readonly: true }); }
+    static { this.schema(this, 'sketches', { link: false, dflt: [], readonly: true }); }
     /** @member {boolean} Animation#sketch - the current animation frame/sketch */
-    static { this.schema(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
+    static { this.schema(this, 'sketch', { parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
     /** @member {boolean} Animation#width - width of current animation frame */
-    static { this.schema(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.schema(this, 'width', { getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {boolean} Animation#height - height of current animation frame */
-    static { this.schema(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.schema(this, 'height', { getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animation frame */
-    static { this.schema(this, 'ttl', { readonly: true, getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
+    static { this.schema(this, 'ttl', { getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     /**

@@ -6,7 +6,6 @@ import { GizmoData } from '../js/gizmoData.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { Mathf } from '../js/math.js';
 import { SheetRef } from '../js/refs.js';
-import { Schema } from '../js/schema.js';
 import { Sprite } from '../js/sprite.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { UiPanel } from '../js/uiPanel.js';
@@ -16,14 +15,14 @@ import { XForm } from '../js/xform.js';
 
 class Light extends GizmoData {
     static {
-        Schema.apply(this, 'point', {dflt: false});
-        Schema.apply(this, 'color', {parser: (o,x) => x.color || new Vect3(1,1,1)});
-        Schema.apply(this, 'ambientIntensity', {dflt: 0});
-        Schema.apply(this, 'diffuseIntensity', {dflt: 1});
-        Schema.apply(this, 'v', {parser: (o,x) => x.v || Vect3.zero});
-        Schema.apply(this, 'attenuationConstant', {dflt: 0});
-        Schema.apply(this, 'attenuationLinear', {dflt: 0});
-        Schema.apply(this, 'attenuationExp', {dflt: 1});
+        this.schema(this, 'point', {dflt: false});
+        this.schema(this, 'color', {parser: (o,x) => x.color || new Vect3({x:1,y:1,z:1})});
+        this.schema(this, 'ambientIntensity', {dflt: 0});
+        this.schema(this, 'diffuseIntensity', {dflt: 1});
+        this.schema(this, 'v', {parser: (o,x) => x.v || Vect3.zero});
+        this.schema(this, 'attenuationConstant', {dflt: 0});
+        this.schema(this, 'attenuationLinear', {dflt: 0});
+        this.schema(this, 'attenuationExp', {dflt: 1});
     }
 }
 
@@ -34,13 +33,13 @@ class NSprite extends Sprite {
     }
 
     static {
-        Schema.apply(this, 'nimg', {readonly: true});
-        Schema.apply(this, 'specularity', {dflt: 1});
-        Schema.apply(this, 'specularPower', {dflt: 1});
-        Schema.apply(this, 'shiny', {dflt: 1});
-        Schema.apply(this, 'idata', {readonly: true, parser: (o,x) => o.constructor.getDataFromImage(o.img)});
-        Schema.apply(this, 'ndata', {renderable: true, parser: () => null});
-        Schema.apply(this, 'normals', {readonly: true, parser: () => []});
+        this.schema(this, 'nimg', {readonly: true});
+        this.schema(this, 'specularity', {dflt: 1});
+        this.schema(this, 'specularPower', {dflt: 1});
+        this.schema(this, 'shiny', {dflt: 1});
+        this.schema(this, 'idata', {readonly: true, parser: (o,x) => o.constructor.getDataFromImage(o.img)});
+        this.schema(this, 'ndata', {renderable: true, parser: () => null});
+        this.schema(this, 'normals', {readonly: true, parser: () => []});
     }
 
     static getDataFromImage(img) {
@@ -95,7 +94,7 @@ class NSprite extends Sprite {
         var spec = Math.pow(dot, 20) * this.specularity;
         spec += Math.pow(dot, 400) * this.shiny;
         var intensity = spec + 0.5;
-        return new Vect3(light.color.x*intensity, light.color.y*intensity, light.color.z*intensity);
+        return new Vect3({x:light.color.x*intensity, y:light.color.y*intensity, z:light.color.z*intensity});
     }
 
     calcLight(
@@ -140,7 +139,7 @@ class NSprite extends Sprite {
                 scz = light.color.z * specular;
             }
         }
-        let rv = new Vect3(acx + dcx + scx, acy + dcy + scy, acz + dcz + scz);
+        let rv = new Vect3({x:acx + dcx + scx, y:acy + dcy + scy, z:acz + dcz + scz});
         return rv;
     }
 
@@ -196,10 +195,10 @@ class NSprite extends Sprite {
                     let attenuation = light.attenuationConstant + light.attenuationLinear * distance + light.attenuationExp * distance * distance;
                     //console.log(`lightAtPoint: ${x},${y} ${lightAtPoint} d: ${distance} attenuation: ${attenuation}`)
                     if (attenuation > 0) {
-                        lightAtPoint.div(attenuation);
+                        lightAtPoint.sdiv(attenuation);
                     }
                 } else {
-                    lightAtPoint = this.calcLight(Vect3.add(pos, new Vect(0,0,100)), pos, light, light.v, normal);
+                    lightAtPoint = this.calcLight(Vect3.add(pos, new Vect({x:0,y:0,z:100})), pos, light, light.v, normal);
                 }
                 data[i] = Math.round(Mathf.clamp(odata[i] * lightAtPoint.x, 0, 255));
                 data[i+1] = Math.round(Mathf.clamp(odata[i+1] * lightAtPoint.y, 0, 255));
@@ -310,8 +309,8 @@ class DLightTest extends Game {
         });
 
         let panels = [];
-        let rows = 4;
-        let cols = 4;
+        let rows = 2;
+        let cols = 3;
         let scale = 4;
         for (let i=0; i<cols; i++) {
             for (let j=0; j<rows; j++) {
@@ -326,11 +325,11 @@ class DLightTest extends Game {
             }
         }
 
-        let view = new Vect3(cvs.width/2,cvs.height/2,100);
+        let view = new Vect3({x:cvs.width/2,y:cvs.height/2,z:100});
         EvtSystem.listen(this.gctx, this, 'mouse.moved', (evt) => {
             for (const panel of panels) {
-                let lpos = panel.xform.getLocal(new Vect(evt.x,evt.y));
-                light.v = new Vect3(lpos.x-panel.xform.minx, lpos.y-panel.xform.miny, 32);
+                let lpos = panel.xform.getLocal(new Vect({x:evt.x,y:evt.y}));
+                light.v = new Vect3({x:lpos.x-panel.xform.minx, y:lpos.y-panel.xform.miny, z:32});
                 panel.sketch.updateLight(view, light);
             }
         });

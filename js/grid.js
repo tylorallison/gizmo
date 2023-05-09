@@ -18,7 +18,7 @@ class Grid extends Array2D {
     static {
         this.schema(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
         this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
-        this.schema(this, 'dbg', { dflt: false });
+        this.schema(this, 'dbg', { eventable: false, dflt: false });
         this.schema(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
         this.schema(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
     }

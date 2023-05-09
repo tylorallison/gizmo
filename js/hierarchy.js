@@ -109,8 +109,8 @@ class Hierarchy {
 
 class ExtHierarchy {
     static apply(cls, spec={}) {
-        GizmoData.schema(cls, 'parent', { serializable: false, parser: () => null });
-        GizmoData.schema(cls, 'children', { gizmo: true, parser: (o,x) => { 
+        GizmoData.schema(cls, 'parent', { link: false, serializable: false, parser: () => null });
+        GizmoData.schema(cls, 'children', { link: false, parser: (o,x) => { 
             let v = x.children || [];
             for (const el of v) Hierarchy.adopt(o, el);
             return v;

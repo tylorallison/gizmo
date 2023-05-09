@@ -16,12 +16,12 @@ class TextToken extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'text', { dflt: 'default text', renderable: true });
-        this.schema(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || new TextFormat())});
-        this.schema(this, 'alignx', { dflt: .5, renderable: true });
-        this.schema(this, 'aligny', { dflt: .5, renderable: true });
-        this.schema(this, 'width', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).x ))});
-        this.schema(this, 'height', { readonly: true, getter: ((o,x) => ( o.fmt.measure(o.text).y ))});
+        this.schema(this, 'text', { dflt: 'default text' });
+        this.schema(this, 'fmt', { parser: (o,x) => (x.fmt || new TextFormat())});
+        this.schema(this, 'alignx', { dflt: .5 });
+        this.schema(this, 'aligny', { dflt: .5 });
+        this.schema(this, 'width', { getter: ((o,x) => ( o.fmt.measure(o.text).x ))});
+        this.schema(this, 'height', { getter: ((o,x) => ( o.fmt.measure(o.text).y ))});
     }
 
     // METHODS -------------------------------------------------------------

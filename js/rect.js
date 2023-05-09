@@ -10,11 +10,11 @@ class Rect extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'border', {dflt: 0, renderable: true});
-        this.schema(this, 'borderColor', {dflt: 'black', renderable: true});
-        this.schema(this, 'color', {dflt: 'rgba(127,127,127,.75', renderable: true});
-        this.schema(this, 'fill', {dflt: true, renderable: true});
-        this.schema(this, 'dash', {dflt: null, renderable: true});
+        this.schema(this, 'border', {dflt: 0});
+        this.schema(this, 'borderColor', {dflt: 'black'});
+        this.schema(this, 'color', {dflt: 'rgba(127,127,127,.75'});
+        this.schema(this, 'fill', {dflt: true});
+        this.schema(this, 'dash', {dflt: null});
     }
 
     // METHODS -------------------------------------------------------------

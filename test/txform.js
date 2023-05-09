@@ -28,11 +28,15 @@ describe('xforms', () => {
         root = new TXFormRoot({ xform: new XForm()});
         receiver = ExtEvtReceiver.gen();
         tevts = [];
-        EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => tevts.push(evt));
+        EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => {
+            tevts.push(evt);
+            console.error(`event: ${Fmt.ofmt(evt)}`);
+        });
     });
 
     it('updates triggered to bound gizmo', ()=>{
         root.xform.gripOffsetLeft = 5;
+        console.log(`tevts: ${Fmt.ofmt(tevts)}`);
         expect(tevts.length).toEqual(2);
         let tevt = tevts.pop() || {};
         expect(tevt.tag).toEqual('gizmo.set'); 

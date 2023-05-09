@@ -19,7 +19,6 @@ class UpdateSystem extends System {
     static {
         this.schema(this, 'updates', { eventable: false, parser: (o,x) => new Map() });
         this.schema(this, 'waiting', { eventable: false, parser: (o,x) => [] });
-        this.schema(this, 'renders', { eventable: false, parser: (o,x) => new Set() });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -37,9 +36,6 @@ class UpdateSystem extends System {
         if (!('actor' in evt)) return;
         if (!('set' in evt) && !('render' in evt)) return;
         this.setUpdate(evt.actor, evt.set);
-        if (evt.render) {
-            this.renders.add(evt.actor.gid);
-        }
     }
 
     // METHODS -------------------------------------------------------------
@@ -58,13 +54,10 @@ class UpdateSystem extends System {
     }
 
     prepare(evt) {
-        //console.log(`== prepare`);
         // swap out set of prepared updates from events
         // -- this allows events to trigger while the update system is iterating through updates
         this.currentUpdates = this.updates;
-        this.currentRenders = this.renders;
         this.updates = new Map();
-        this.renders = new Set();
         // waiting list for updated gizmos that are encountered while iterating in system (e.g.: an update event causes an kv update)
         this.waiting = [];
     }
@@ -72,10 +65,9 @@ class UpdateSystem extends System {
     iterate(evt, e) {
         //console.log(`== iterate on ${e}`);
         let updates = this.currentUpdates.get(e.gid);
-        if (!updates && !this.currentRenders.has(e.gid)) return;
+        if (!updates) return;
         // trigger entity updates
         let data = { frame: evt.frame, update: updates };
-        if (this.currentRenders.has(e.gid)) data.render = true;
         EvtSystem.trigger(e, 'gizmo.updated', data);
     }
 

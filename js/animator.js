@@ -15,17 +15,17 @@ class Animator extends Sketch {
     /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
     static { this.schema(this, 'trunkKey', { dflt: 'state', readonly: true }); }
     /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */
-    static { this.schema(this, 'sketches', { dflt: {}, readonly: true }); }
+    static { this.schema(this, 'sketches', { dflt: {}, readonly: true, link: false }); }
     /** @member {Object} Animator#transitions - map of transitions  { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]} */
-    static { this.schema(this, 'transitions', { dflt: {}, readonly: true }); }
+    static { this.schema(this, 'transitions', { dflt: {}, readonly: true, link: false }); }
     /** @member {Object} Animator#state - current animator state, tracks to target state */
-    static { this.schema(this, 'state', { dflt: 'idle', renderable: true, generator: (o,v) => {
-        if (o.sketches.hasOwnProperty(v)) {
+    static { this.schema(this, 'state', { dflt: 'idle', generator: (o,v) => {
+        if (v in o.sketches) {
             if (o.sketch) o.sketch.disable();
             let targetSketch = o.sketches[v];
             let transition = false;
             // check for transition
-            if (o.sketch && o.transitions.hasOwnProperty(v)) {
+            if (o.sketch && v in o.transitions) {
                 // find best
                 let possibles = o.transitions[v];
                 let match;
@@ -58,7 +58,7 @@ class Animator extends Sketch {
                             o.sketch.reset();
                             o.sketch.enable();
                         }
-                    }, { once: true, filter: (evt) => evt.update.hasOwnProperty(path) });
+                    }, { once: true, filter: (evt) => (path in evt.update) });
                 }
             }
             o.sketch.reset();
@@ -68,7 +68,7 @@ class Animator extends Sketch {
         return o.state;
     } }); }
     /** @member {Object} Animator#state - current animator sketch */
-    static { this.schema(this, 'sketch', { link: true, renderable: true, parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
+    static { this.schema(this, 'sketch', { parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
     /** @member {Object} Animator#width - width of current animator sketch*/
     static { this.schema(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {Object} Animator#height - height of current animator sketch*/
@@ -88,7 +88,9 @@ class Animator extends Sketch {
         // if linked to gizmo
         let self = this;
         if (EvtSystem.isEmitter(trunk)) {
-            EvtSystem.listen(trunk, this, 'gizmo.updated', (evt) => { self.state = evt.update.state }, { filter: (evt) => evt.update.hasOwnProperty(this.trunkKey) });
+            EvtSystem.listen(trunk, this, 'gizmo.updated', (evt) => { 
+                self.state = evt.update.state; 
+            }, { filter: (evt) => (this.trunkKey in evt.update) });
         }
         if (this.state !== trunk[this.trunkKey]) this.state = trunk[this.trunkKey];
     }

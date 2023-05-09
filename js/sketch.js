@@ -37,11 +37,11 @@ class Sketch extends GizmoData {
     /** @member {boolean} Sketch#active=false - indicates if sketch is active */
     static { this.schema(this, 'active', {dflt: false}); }
     /** @member {boolean|null} Sketch#smoothing=nul - indicates if image smoothing should be applied to this sketch, true/false controls this sketch, null defers to current context setting */
-    static { this.schema(this, 'smoothing', {dflt: null, renderable: true}); }
+    static { this.schema(this, 'smoothing', {dflt: null}); }
     /** @member {float} Sketch#alpha=1 - transparency of sketch, 0 is not visible, 1 is no transparency */
-    static { this.schema(this, 'alpha', {dflt: 1, renderable: true}); }
+    static { this.schema(this, 'alpha', {dflt: 1}); }
     /** @member {integer} Sketch#ttl - time to live for sketch */
-    static { this.schema(this, 'ttl', {readonly: true, renderable: true, parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL}); }
+    static { this.schema(this, 'ttl', {readonly: true, parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL}); }
     /** @member {boolean} Sketch#done=false - if sketch has finished animation */
     static { this.schema(this, 'done', {parser: () => false}); }
 

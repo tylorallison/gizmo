@@ -35,13 +35,25 @@ class GizmoDataLink {
         return path;
     }
 
+    static assignLinkProperty(obj, link) {
+        Object.defineProperty(obj, '$link', {
+            value: link,
+            enumerable: false,
+            writable: false,
+            configurable: false,
+        });
+    }
+
     static link(trunk, key, sentry, target) {
         if (!trunk || !target) return false;
         if (trunk === target || this.findInPath(trunk.$link, (n) => n === target)) {
+            console.error(`hierarchy loop detected ${target} already in path: ${trunk}`);
             throw(`hierarchy loop detected ${target} already in path: ${trunk}`);
         }
-        if (!trunk.$link) trunk.$link = new GizmoDataLink( trunk );
-        if (!target.$link) target.$link = new GizmoDataLink( target );
+        //if (!trunk.$link) trunk.$link = new GizmoDataLink( trunk );
+        if (!trunk.$link) this.assignLinkProperty(trunk, new GizmoDataLink( trunk ));
+        //if (!target.$link) target.$link = new GizmoDataLink( target );
+        if (!target.$link) this.assignLinkProperty(target, new GizmoDataLink( target ));
         if (!trunk.$link.leafs) {
             trunk.$link.leafs = [ target.$link ];
         } else {
@@ -50,7 +62,7 @@ class GizmoDataLink {
         target.$link.trunk = trunk.$link;
         target.$link.sentry = sentry;
         target.$link.key = key;
-        //console.log(`link ${trunk} to ${target} key: ${key} cname: ${target.constructor.name} schema: ${target.constructor.$schema}`);
+        //console.log(`== link ${trunk} to ${target} key: ${key} cname: ${target.constructor.name} schema: ${target.$schema}`);
         if (target.$schema) {
             //console.log(`-- link ${trunk}.${key} to ${target} deps: ${Array.from(target.constructor.$schema.trunkGenDeps)}`);
             for (const agk of target.$schema.trunkGenDeps) {
@@ -59,6 +71,7 @@ class GizmoDataLink {
             }
         }
         this.linkUpdate(target, target);
+        if ('atLink' in target) target.atLink(trunk);
     }
 
     static unlink(trunk, target) {
@@ -75,6 +88,7 @@ class GizmoDataLink {
             for (const agk of target.$schema.trunkGenDeps) GizmoData.set(target, agk, '#autogen#');
         }
         this.linkUpdate(null, target);
+        if ('atUnlink' in target) target.atUnlink(trunk);
     }
 
     static linkUpdate(trunk, target) {
@@ -96,6 +110,7 @@ class GizmoDataLink {
                     link.addWatcher(tlink.trunk.node, (n,k,ov,nv) => tlink.sentry.atUpdate( tlink.trunk.node, n, k, ov, nv ));
                 }
                 if (tlink.sentry && tlink.sentry.autogendeps.size) {
+                    //console.log(`-- add autogen watcher ${tlink.trunk.node} on ${link.node}`);
                     link.addWatcher(tlink.trunk.node, (n,k,ov,nv) => { for (const agk of tlink.sentry.autogendeps) GizmoData.set(tlink.trunk.node, agk, '#autogen#'); });
                 }
                 //console.log(`-- link ${tlink} node: ${tlink.node} eventable: ${tlink.sentry && tlink.sentry.eventable}`);
@@ -162,6 +177,7 @@ class SchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
         this.dflt = spec.dflt;
+        this.dflter = spec.dflter;
         this.specKey = spec.specKey || this.key;
         // getter function of format (object, specification) => { <function returning value> };
         // -- is treated as a dynamic value
@@ -174,14 +190,16 @@ class SchemaEntry {
         this.autogendeps = new Set();
         this.parser = spec.parser || ((o, x) => {
             if (this.specKey in x) return x[this.specKey];
-            if (this.generator) return this.generator(o,this.dflt);
-            return this.dflt;
+            const dflt = (this.dflter) ? this.dflter(o) : this.dflt;
+            if (this.generator) return this.generator(o,dflt);
+            return dflt;
         });
+        this.proxy = ('proxy' in spec) ? spec.proxy : false;
         this.renderable = ('renderable' in spec) ? spec.renderable : false;
-        this.eventable = (this.readonly) ? false : ('eventable' in spec) ? spec.eventable : true;
+        this.eventable = (this.getter) ? false : ('eventable' in spec) ? spec.eventable : true;
         this.atUpdate = spec.atUpdate;
-        // nolink - if the value is an object, do not setup GizmoData links between the trunk and leaf.  This will disable any GizmoData-specific logic for this key
-        this.nolink = ('nolink' in spec) ? spec.nolink : false;
+        // link - if the value is an object, setup GizmoData links between the trunk and leaf.
+        this.link = ('link' in spec) ? spec.link : true;
         // autogen fields are not serializable
         this.serializable = (this.autogen) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializeKey = spec.serializeKey ? spec.serializeKey : this.key;
@@ -248,9 +266,10 @@ class GizmoData {
             if (Object.is(storedValue, value)) return true;
             if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
         }
-        //console.log(`== set ${target} ${key}=>${value}`);
+        //console.log(`== set ${target} ${key}=>${value} sentry: ${sentry}`);
         // FIXME: link
-        if (value && (typeof value === 'object') && (!sentry || !sentry.nolink)) {
+        if (value && (typeof value === 'object') && (!sentry || sentry.link)) {
+            //console.log(` . do proxy: ${sentry.proxy}`);
             if (sentry && sentry.proxy) {
                 value = (Array.isArray(value)) ? GizmoArray.wrap(value) : GizmoObject.wrap(value);
             }
@@ -258,15 +277,18 @@ class GizmoData {
             GizmoDataLink.link(target, key, sentry, value);
         }
         target.$values[key] = value;
+        if (sentry) {
+            for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
+        }
         if (target.$defined) {
             if (sentry) {
                 if (sentry.atUpdate) sentry.atUpdate( target, target, key, storedValue, value );
-                for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
             }
             //console.log(`target: ${target} key: ${key}`);
             const watchers = (target.$link) ? target.$link.watchers : null;
             if (watchers) {
                 for (const watcher of watchers) {
+                    //console.log(`-- target: ${target} key: ${key} watcher`);
                     watcher.watcher(target, key, storedValue, value);
                 }
             }
@@ -348,7 +370,7 @@ class GizmoData {
         const schema = o.$schema;
         if (schema) {
             for (const sentry of schema.entries) {
-                //console.log(`run sentry: ${sentry}`);
+                //console.log(`${o} parser run sentry: ${sentry}`);
                 if (setter) {
                     setter(o, sentry.key, sentry.parser(o, spec));
                 } else {
@@ -382,7 +404,7 @@ class GizmoData {
      * destroy breaks any links associated with the data
      */
     destroy() {
-        console.log(`-- destroy ${this}`);
+        //console.log(`-- destroy ${this}`);
         if (this.$link) this.$link.destroy();
     }
 
@@ -411,10 +433,11 @@ class GizmoData {
 class GizmoArray {
 
     static wrap(array) {
+        let defined = false;
         const proxy = new Proxy(array, {
             get(target, key, receiver) {
                 if (key === '$values') return target;
-                if (key === '$defined') return true;
+                if (key === '$defined') return defined;
                 if (key === '$proxy') return receiver;
                 if (target.$link) {
                     switch (key) {
@@ -497,21 +520,21 @@ class GizmoArray {
             },
             deleteProperty(target, key) {
                 if (key in target) {
-                    console.log(`target: ${target} link: ${target.$link}`);
+                    //console.log(`target: ${target} link: ${target.$link}`);
                     const storedValue = target[key];
                     if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
                     delete target[key];
                     const watchers = (target.$link) ? target.$link.watchers : null;
                     if (watchers) {
                         for (const watcher of watchers) {
-                            console.log(`trigger delete watcher for node: ${watcher.node}`);
+                            //console.log(`trigger delete watcher for node: ${watcher.node}`);
                             watcher.watcher(target, key, storedValue, undefined);
                         }
                     }
                     if (!target.$link || !target.$link.trunk) {
-                        console.log(`trigger delete`);
+                        //console.log(`trigger delete`);
                         if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
-                            console.log(`target: ${target} sentry: ${sentry} emit delete: ${key}:${value}`);
+                            //console.log(`target: ${target} sentry: ${sentry} emit delete: ${key}:${value}`);
                             EvtSystem.trigger(target, 'gizmo.delete', { 'set': { [key]: undefined }});
                         }
                     }
@@ -520,6 +543,12 @@ class GizmoArray {
             }
 
         });
+        let i = 0;
+        for (const v of array) {
+            //console.log(`---- array[${i} v: ${v}`);
+            GizmoData.set(proxy, i++, v);
+        }
+        defined = true;
         return proxy;
     }
 
@@ -540,11 +569,12 @@ class GizmoArray {
 class GizmoObject {
 
     static wrap(obj) {
+        let defined = false;
         //console.log(`-- obj is: ${obj} constructor: ${obj.constructor.name}`);
         const proxy = new Proxy(obj, {
             get(target, key, receiver) {
                 if (key === '$values') return target;
-                if (key === '$defined') return true;
+                if (key === '$defined') return defined;
                 if (key === '$proxy') return receiver;
                 if (target.$link) {
                     switch (key) {
@@ -591,6 +621,8 @@ class GizmoObject {
                 return true;
             }
         });
+        for (const [k,v] of Object.entries(obj)) GizmoData.set(proxy, k, v);
+        defined = true;
         //console.log(`-- proxy is: ${proxy} constructor: ${proxy.constructor.name}`);
         return proxy;
     }

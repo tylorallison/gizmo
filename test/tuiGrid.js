@@ -18,7 +18,7 @@ describe('a UI grid', () => {
         receiver = ExtEvtReceiver.gen();
         tevts = [];
         EvtSystem.listen(grid, receiver, 'gizmo.updated', (evt) => {
-            console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
+            //console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
             tevts.push(evt);
         });
         g1 = new UiView({gctx: gctx, tag: 'g1', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
@@ -148,7 +148,7 @@ describe('a UI grid', () => {
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([1]);
         expect(grid.idxof(g2)).toEqual([0]);
-        expect(tevts.length).toEqual(1);
+        expect(tevts.length).toEqual(2);
     });
 
     it('grid tracks gzo destroy', ()=>{

@@ -192,8 +192,8 @@ class ExtEvtEmitter {
     /** @member {Map} ExtEvtEmitter#evtEmitterLinks - a map of event to emitter links for that event */
     static apply(cls, spec={}) {
         // data
-        GizmoData.schema(cls, 'evtCounts', { eventable: false, serializable: false, parser: () =>  new Map() });
-        GizmoData.schema(cls, 'evtEmitterLinks', { eventable: false, serializable: false, parser: () => new Map() });
+        GizmoData.schema(cls, 'evtCounts', { link: false, serializable: false, parser: () =>  new Map() });
+        GizmoData.schema(cls, 'evtEmitterLinks', { link: false, serializable: false, parser: () => new Map() });
     }
 
     static gen(spec={}) {
@@ -208,7 +208,7 @@ class ExtEvtReceiver {
 
     static apply(cls, spec={}) {
         // -- data
-        GizmoData.schema(cls, 'evtReceiverLinks', { eventable: false, serializable: false, parser: () => [] });
+        GizmoData.schema(cls, 'evtReceiverLinks', { link: false, serializable: false, parser: () => [] });
     }
 
     static gen(spec={}) {

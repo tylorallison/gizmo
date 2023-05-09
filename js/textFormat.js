@@ -62,7 +62,7 @@ class TextFormat extends GizmoData {
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
         spec.size = spec.size || 12;
-        if (spec.hasOwnProperty('delta')) spec.size += spec.delta;
+        if ('delta' in spec) spec.size += spec.delta;
         super(spec);
     }
 
@@ -93,11 +93,11 @@ class TextFormat extends GizmoData {
     }
 
     copy(overrides={}) {
-        return new this.constructor(Object.assign({}, this, overrides));
+        return new this.constructor(Object.assign({}, this.$values, overrides));
     }
 
     toString() {
-        return Fmt.toString(this.constructor.name, Fmt.ofmt(this));
+        return Fmt.toString(this.constructor.name, Fmt.ofmt(this.$values));
     }
 
 }

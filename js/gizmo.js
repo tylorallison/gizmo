@@ -18,7 +18,7 @@ class Gizmo extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {GizmoContext} Gizmo#gctx - reference to gizmo context */
-    static { this.schema(this, 'gctx', { readonly: true, serializable: false, nolink: true, parser: (obj, x) => (x.gctx || GizmoContext.main )}); }
+    static { this.schema(this, 'gctx', { readonly: true, serializable: false, link: false, parser: (obj, x) => (x.gctx || GizmoContext.main )}); }
     /** @member {int} Gizmo#gid - unique gizmo identifier*/
     static { this.schema(this, 'gid', { readonly: true, parser: (obj, x) => (Gizmo.gid++) }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */

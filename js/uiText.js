@@ -34,18 +34,18 @@ class UiText extends UiView {
     static get dfltFmt() { return new TextFormat() };
 
     static {
-        this.schema(this, 'text', { dflt: 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'fmt', { renderable: true, link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'text', { dflt: 'default text', atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'fmt', { parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
         // none, stretch, wrap, autowrap
-        this.schema(this, 'fitter', { dflt: 'stretch', renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'alignx', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'aligny', { dflt: .5, renderable: true, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'tokens', { link: 'array', parser: (() => ([])) });
+        this.schema(this, 'fitter', { dflt: 'stretch', atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'alignx', { dflt: .5, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'aligny', { dflt: .5, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'tokens', { parser: (() => ([])) });
         this.schema(this, 'needsLayout', { eventable: false, dflt: true });
         this.schema(this, 'lastHeight', { eventable: false, dflt: 0 });
         this.schema(this, 'lastWidth', { eventable: false, dflt: 0 });
         // -- leading is the space between lines, expressed as percent of line height
-        this.schema(this, 'leadingPct', { renderable: true, dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema(this, 'leadingPct', { dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
     }
 
     // STATIC METHODS ------------------------------------------------------
@@ -191,8 +191,8 @@ class UiText extends UiView {
 
     static measureWrapHeight(text, opts={}) {
         let fmt = opts.fmt || new TextFormat();
-        let leadingPct = opts.hasOwnProperty('leadingPct') ? opts.leadingPct : .25;
-        let autofit = opts.hasOwnProperty('autofit') ? opts.autofit : false;
+        let leadingPct = ('leadingPct' in opts) ? opts.leadingPct : .25;
+        let autofit = ('autofit' in opts) ? opts.autofit : false;
         let width = opts.width || 0;
         let height = opts.height || 0;
         // tokenize

@@ -46,10 +46,10 @@ class RenderSystem extends System {
         }
     }
     onViewUpdated(evt) {
+        if (this.dbg) console.log(`${this} view updated: ${evt.actor} ${Fmt.ofmt(evt)}`);
         // renderable?
         let actor = evt.actor;
         if (!actor.constructor.renderable) return;
-        if (!evt.render) return;
         // skip non-visible entities
         if (!actor.visible) return;
         if (Hierarchy.findInParent(actor, (v) => !v.active)) return;

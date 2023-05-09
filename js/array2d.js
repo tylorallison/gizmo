@@ -15,7 +15,7 @@ class Array2D extends GizmoData {
     /** @member {string} Array2D#length - length of flat array */
     static { this.schema(this, 'length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
     /** @member {string} Array2D#entries - array storage */
-    static { this.schema(this, 'entries', { link: 'array', readonly: true, parser: (o,x) => x.entries || [] }); }
+    static { this.schema(this, 'entries', { readonly: true, parser: (o,x) => x.entries || [] }); }
 
     // STATIC METHODS ------------------------------------------------------
     /**

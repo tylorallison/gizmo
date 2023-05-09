@@ -19,16 +19,16 @@ class UiInputText extends UiView {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'token', { link: true, renderable: true, parser: (o,x) => (x.hasOwnProperty('token')) ? x.token : new TextToken() });
-        this.schema(this, 'cursor', { link: true, renderable: true, parser: (o,x) => (x.hasOwnProperty('cursor')) ? x.cursor : o.constructor.dfltCursor });
+        this.schema(this, 'token', { parser: (o,x) => (x.hasOwnProperty('token')) ? x.token : new TextToken() });
+        this.schema(this, 'cursor', { parser: (o,x) => (x.hasOwnProperty('cursor')) ? x.cursor : o.constructor.dfltCursor });
         this.schema(this, 'cursorBlinkRate', { dflt: this.dfltCursorBlinkRate });
         this.schema(this, 'cursorHeightPct', { dflt: this.dfltCursorHeightPct });
         this.schema(this, 'cursorAlignY', { dflt: 0 });
         this.schema(this, 'cursorWidthPct', { dflt: this.dfltCursorWidthPct });
-        this.schema(this, 'cursorIdx', { serializable: false, renderable: true, parser: (o,x) => o.token.text.length });
-        this.schema(this, 'cursorOn', { serializable: false, dflt: false, renderable: true });
-        this.schema(this, 'timer', { link: true, eventable: false, serializable: false });
-        this.schema(this, 'selected', { serializable: false, dflt: false, renderable: true, atUpdate: (r,o,k,ov,nv) => o.updateSelected(nv)});
+        this.schema(this, 'cursorIdx', { serializable: false, parser: (o,x) => o.token.text.length });
+        this.schema(this, 'cursorOn', { serializable: false, dflt: false });
+        this.schema(this, 'timer', { eventable: false, serializable: false });
+        this.schema(this, 'selected', { serializable: false, dflt: false, atUpdate: (r,o,k,ov,nv) => o.updateSelected(nv)});
     }
 
     updateSelected(value) {
@@ -74,17 +74,17 @@ class UiInput extends UiPanel {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch, link: true, renderable: true });
-        this.schema(this, 'highlight', { parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight, link: true, renderable: true });
-        this.schema(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', renderable: true, atUpdate: (r,o,k,ov,nv) => o.updateText(nv) }),
-        this.schema(this, 'emptyText', { renderable: true, dflt: 'enter value' }),
+        this.schema(this, 'sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch });
+        this.schema(this, 'highlight', { parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight });
+        this.schema(this, 'text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', atUpdate: (r,o,k,ov,nv) => o.updateText(nv) }),
+        this.schema(this, 'emptyText', { dflt: 'enter value' }),
 
-        this.schema(this, 'textFmt', { eventable: false, renderable: false, parser: (o,x) => (x.textFmt || this.dfltTextFmt)});
-        this.schema(this, 'selectedTextFmt', { eventable: false, renderable: false, parser: (o,x) => (x.selectedTextFmt || this.dfltSelectedTextFmt)});
-        this.schema(this, 'emptyTextFmt', {eventable: false, renderable: false, parser: (o,x) => (x.emptyTextFmt || this.dfltEmptyTextFmt)});
+        this.schema(this, 'textFmt', { eventable: false, parser: (o,x) => (x.textFmt || this.dfltTextFmt)});
+        this.schema(this, 'selectedTextFmt', { eventable: false, parser: (o,x) => (x.selectedTextFmt || this.dfltSelectedTextFmt)});
+        this.schema(this, 'emptyTextFmt', {eventable: false, parser: (o,x) => (x.emptyTextFmt || this.dfltEmptyTextFmt)});
         this.schema(this, 'charset', { dflt: this.dfltCharset });
 
-        this.schema(this, 'ttext', { readonly: true, serializable: false, gizmo: true, parser: (o,x) => {
+        this.schema(this, 'ttext', { readonly: true, serializable: false, parser: (o,x) => {
             let ttext = x.ttext || new UiInputText({});
             // override token text/format
             ttext.token.text = (o.text) ? o.text : o.emptyText;

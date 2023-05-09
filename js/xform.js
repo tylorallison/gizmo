@@ -55,9 +55,12 @@ class XForm extends GizmoData {
             if (r && r.$link && r.$link.trunk) {
                 let trunk = r.$link.trunk.node;
                 //console.error(`${gzo} set xform.bounds to ${nv} gzo.xform: ${gzo.xform}`);
-                for (const child of trunk.children) {
-                    if (child.xform) child.xform.$regen();
-                    //console.log(`autogen child ${child} of ${trunk} bounds: ${child.xform.bounds} parent bounds ${(trunk.xform) ? trunk.xform.bounds : null}`);
+                //console.log(`trunk: ${Fmt.ofmt(trunk)} trunk.children: ${trunk.children}`);
+                if ('children' in trunk) {
+                    for (const child of trunk.children) {
+                        if (child.xform) child.xform.$regen();
+                        //console.log(`autogen child ${child} of ${trunk} bounds: ${child.xform.bounds} parent bounds ${(trunk.xform) ? trunk.xform.bounds : null}`);
+                    }
                 }
             }
         }});

@@ -21,35 +21,6 @@ class UITest extends Game {
         Sfx.xspec({ tag: 'test.sound', audio: new SfxRef({src: '../media/test.mp3'}) }),
     ];
 
-    /*
-    testToken(cvs, tt, fitter='center', alignx=.5, aligny=.5) {
-        let x = (this.col-Math.round(this.maxCols/2)) * this.size;
-        let y = (this.row-Math.round(this.maxRows/2)) * this.size;
-        let panel = new UiPanel({ fitter: fitter, alignx: alignx, aligny: aligny, sketch: tt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
-        Hierarchy.adopt(cvs, panel)
-        //Hierarchy.adopt(panel, tt);
-        this.col++;
-        if (this.col >= this.maxCols) {
-            this.row++;
-            this.col = 0;
-        }
-    }
-
-    testUiText(cvs, text, fmt, fitter='center', alignx=.5, aligny=.5) {
-        let x = (this.col-Math.round(this.maxCols/2)) * this.size;
-        let y = (this.row-Math.round(this.maxRows/2)) * this.size;
-        if (!fmt) fmt = new TextFormat();
-        let panel = new UiText({ fitter: fitter, alignx: alignx, aligny: aligny, text: text, fmt: fmt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
-        Hierarchy.adopt(cvs, panel)
-        this.col++;
-        if (this.col >= this.maxCols) {
-            this.row++;
-            this.col = 0;
-        }
-        return panel;
-    }
-    */
-
     async prepare() {
         this.size = 150;
         this.maxCols = 6;
@@ -113,7 +84,7 @@ class UITest extends Game {
             createFilter: (gzo) => gzo.tag === 'grid',
             rows: 4,
             cols: 4,
-            bounds: new Bounds(0, 0, 256, 256),
+            bounds: new Bounds({x:0, y:0, width:256, height:256}),
             alignx: 0,
             aligny: 0,
             xform: new XForm({ 

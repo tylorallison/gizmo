@@ -44,7 +44,6 @@ class TextTest extends Game {
         this.maxRows = 4;
         this.col = 0;
         this.row = 0;
-        console.log(`${this} ready`);
 
         let cvs = new UiCanvas({ gctx: this.gctx });
         let panel;
