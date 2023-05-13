@@ -1,13 +1,14 @@
 export { UiGrid };
 
-import { Array2D } from "./array2d.js";
-import { Bounds } from "./bounds.js";
-import { EvtSystem } from "./event.js";
-import { Fmt } from "./fmt.js";
-import { Stats } from "./stats.js";
-import { UiView } from "./uiView.js";
-import { Vect } from "./vect.js";
-import { Util } from "./util.js";
+import { Array2D } from './array2d.js';
+import { Bounds } from './bounds.js';
+import { EvtSystem } from './event.js';
+import { Fmt } from './fmt.js';
+import { Stats } from './stats.js';
+import { UiView } from './uiView.js';
+import { Vect } from './vect.js';
+import { Util } from './util.js';
+import { Direction } from './direction.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
@@ -389,6 +390,24 @@ class UiGrid extends UiView {
         return null;
     }
 
+    *findNeighbors(idx, filter=(v) => true, dirs=Direction.any) {
+        for (const dir of Direction.all) {
+            if (!(dir & dirs)) continue;
+            let oidx = this.idxfromdir(idx, dir);
+            yield *this.findAtIdx(oidx, filter);
+        }
+    }
+
+    firstNeighbors(idx, filter=(v) => true, dirs=Direction.any) {
+        for (const dir of Direction.all) {
+            if (!(dir & dirs)) continue;
+            let oidx = this.idxfromdir(idx, dir);
+            let match = this.firstAtIdx(oidx, filter);
+            if (match) return match;
+        }
+        return null;
+    }
+
     add(gzo) {
         let gidxs = this.getGridIdxs(gzo);
         //console.log(`gzo: ${gzo} bounds: ${this.bounds} dim: ${this.chunks.cols},${this.chunks.rows} loc: ${this.locator(gzo)} gidxs: ${gidxs}`);
@@ -458,7 +477,7 @@ class UiGrid extends UiView {
     }
 
     renderChunk(idx, dx, dy) {
-        // everything from the grid "chunk" is rendered to an offscreen chunk canvas
+        // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
         let tx = this.xfromidx(idx);
         let ty = this.yfromidx(idx);
         //console.log(`d: ${dx},${dy} t: ${tx},${ty}`);

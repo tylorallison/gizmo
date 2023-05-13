@@ -12,6 +12,7 @@ class Direction {
     static northWest =      128;
     static cardinal =       Direction.north|Direction.south|Direction.east|Direction.west;
     static diagonal =       Direction.northWest|Direction.southWest|Direction.northEast|Direction.southEast;
+    static any =            Direction.cardinal|Direction.diagonal;
 
     static all = [
         this.northWest,
