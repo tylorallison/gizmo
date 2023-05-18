@@ -67,7 +67,6 @@ class UiGrid extends UiView {
 
     onChildUpdate(evt) {
         Stats.count('UiGrid.onChildUpdate');
-        //console.log(`onChildUpdate: ${Fmt.ofmt(evt)}`);
         let view = evt.actor;
         let needsUpdate = evt.render;
         // -- keep track of grid indices that need to be rerendered (e.g.: all grid indices associated with updated view before and after rechecking grid)
@@ -83,7 +82,6 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        //console.log(`needs update: ${needsUpdate} this: ${this}`);
         if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
     }
 

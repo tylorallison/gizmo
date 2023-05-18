@@ -12,6 +12,7 @@ import { Generator } from '../js/generator.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { Animator } from '../js/animator.js';
 import { Timer } from '../js/timer.js';
+import { CompositeSprite } from '../js/compositeSprite.js';
 
 
 class TestModel extends UiPanel {
@@ -23,6 +24,9 @@ class TestModel extends UiPanel {
 class AssetTest extends Game {
 
     static assetSpecs = [
+
+        Rect.xspec({ tag: 'rect.one', color: 'rgba(255,0,0,.5)', borderColor: 'red', border: 2, width: 40, height: 40 }),
+        Rect.xspec({ tag: 'rect.two', color: 'rgba(0,255,0,.25)', borderColor: 'yellow', border: 2, width: 40, height: 40 }),
 
         Rect.xspec({ tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
@@ -57,11 +61,15 @@ class AssetTest extends Game {
         let cvs = new UiCanvas({ gctx: this.gctx });
         let r = new Rect(this.assets.get('test.rect'));
         let s = new Sprite(this.assets.get('test.sprite'));
+        let c = new CompositeSprite();
+        c.add('one', Generator.generate(this.assets.get('rect.one')));
+        c.add('two', Generator.generate(this.assets.get('rect.two')));
         let a = Generator.generate(this.assets.get('test.animation'));
         let x = Generator.generate(this.assets.get('test.animator'));
         let p = new TestModel({ 
             gctx: this.gctx, 
-            sketch: x, 
+            //sketch: x, 
+            sketch: c, 
             //xform: new XForm({origx: .5, origy: .5, grip: .5, fixedWidth: 220, fixedHeight: 220}),
             xform: new XForm({origx: .5, origy: .5, grip: .3}),
             fitter: 'stretchRatio',
@@ -70,7 +78,7 @@ class AssetTest extends Game {
         //let sv = new TestSketchView( { gctx: this.gctx, sketch: a, x: 100, y: 100, xform: new XForm({origx: 0, origy: 0})});
         //Hierarchy.adopt(cvs, sv);
 
-        new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
+        //new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
 
 
     }

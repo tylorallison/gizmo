@@ -1,4 +1,4 @@
-export { BaseRef, SfxRef, ImageRef, SheetRef, AssetRef }
+export { BaseRef, SfxRef, ImageRef, SheetRef, AssetRef, resolveImage }
 
 import { Util } from './util.js';
 
