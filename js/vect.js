@@ -120,6 +120,11 @@ class Vect extends GizmoData {
         return ((v1.x||0)*(v2.x||0)) + ((v1.y||0)*(v2.y||0));
     }
 
+    static cross(v1,v2) {
+        if (!v1 || !v2) return NaN;
+        return ((v1.x||0)*(v2.y||0)) - ((v1.y||0)*(v2.x||0));
+    }
+
     static dist(v1, v2) {
         if (!v1 || !v2) return NaN;
         const dx = (v2.x||0)-(v1.x||0);
@@ -292,6 +297,11 @@ class Vect extends GizmoData {
     dot(v2) {
         if (!v2) return NaN;
         return this.x*(v2.x||0) + this.y*(v2.y||0);
+    }
+
+    cross(v2) {
+        if (!v2) return NaN;
+        return this.x*(v2.y||0) - this.y*(v2.x||0);
     }
 
     dist(v2) {

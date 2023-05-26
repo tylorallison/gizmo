@@ -8,6 +8,8 @@ import { GizmoData } from './gizmoData.js';
  * @extends GizmoData
  */
 class Array2D extends GizmoData {
+    static directions = Array.from(Direction.all);
+
     /** @member {string} Array2D#cols=16 - columns in 2d array */
     static { this.schema(this, 'cols', { readonly: true, dflt: 16 }); }
     /** @member {string} Array2D#rows=16 - rows in 2d array */
@@ -211,7 +213,7 @@ class Array2D extends GizmoData {
      * @returns  {boolean}
      */
     idxsAdjacent(idx1, idx2) {
-        for (const dir of Direction.all) {
+        for (const dir of this.constructor.directions) {
             if (this.idxfromdir(idx1, dir) === idx2) return true;
         }
         return false;
@@ -292,6 +294,13 @@ class Array2D extends GizmoData {
         for (let i=0; i<this.length; i++) {
             let v = this.entries[i];
             if (filter(v)) yield [i, v];
+        }
+    }
+
+    *neighborIdxs(idx) {
+        for (const dir of this.constructor.directions) {
+            let oidx = this.idxfromdir(idx, dir);
+            if (oidx !== -1) yield oidx;
         }
     }
 

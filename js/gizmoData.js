@@ -277,12 +277,12 @@ class GizmoData {
             GizmoDataLink.link(target, key, sentry, value);
         }
         target.$values[key] = value;
-        if (sentry) {
-            for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
-        }
+        //if (sentry) {
+        //}
         if (target.$defined) {
             if (sentry) {
                 if (sentry.atUpdate) sentry.atUpdate( target, target, key, storedValue, value );
+                for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
             }
             //console.log(`target: ${target} key: ${key}`);
             const watchers = (target.$link) ? target.$link.watchers : null;

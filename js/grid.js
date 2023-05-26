@@ -2,9 +2,7 @@ export { Grid };
 
 import { Array2D } from './array2d.js';
 import { Bounds } from './bounds.js';
-import { Direction } from './dir.js';
 import { Fmt } from './fmt.js';
-import { Mathf } from './math.js';
 import { Util } from './util.js';
 
 /** ========================================================================
@@ -25,12 +23,7 @@ class Grid extends Array2D {
 
     constructor(spec={}) {
         super(spec);
-        //this.locator = spec.locator || ((v) => v);
-        //this.bounds = spec.bounds || Bounds.zero;
         this.gridSort = spec.gridSort;
-        //this.dbg = spec.dbg;
-        //this.rowSize = this.bounds.height/this.rows;
-        //this.colSize = this.bounds.width/this.cols;
         this.rowHalfSize = this.rowSize * .5;
         this.colHalfSize = this.colSize * .5;
         this.gidxs = new Map();
@@ -301,7 +294,7 @@ class Grid extends Array2D {
         }
     }
 
-    render(ctx, x=0, y=0, color='rgba(0,255,255,.5', occupiedColor='red') {
+    render(ctx, x=0, y=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
                let idx = this.idxfromij(i, j);

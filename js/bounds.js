@@ -4,6 +4,7 @@ import { Vect } from './vect.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
 import { GizmoData } from './gizmoData.js';
+import { Segment } from './segment.js';
 
 // =========================================================================
 class Bounds extends GizmoData {
@@ -193,6 +194,19 @@ class Bounds extends GizmoData {
     }
     get mid() {
         return new Vect({x:this.x + (this.width * .5), y:this.y + (this.height * .5)});
+    }
+
+    get edge1() {
+        return new Segment({p1: new Vect({x:this.x, y:this.y}), p2: new Vect({x:this.x+this.width, y:this.y})});
+    }
+    get edge2() {
+        return new Segment({p1: new Vect({x:this.x+this.width, y:this.y}), p2: new Vect({x:this.x+this.width, y:this.y+this.height})});
+    }
+    get edge3() {
+        return new Segment({p1: new Vect({x:this.x+this.width, y:this.y+this.height}), p2: new Vect({x:this.x, y:this.y+this.height})});
+    }
+    get edge4() {
+        return new Segment({p1: new Vect({x:this.x, y:this.y+this.height}), p2: new Vect({x:this.x, y:this.y})});
     }
 
     // STATIC FUNCTIONS ----------------------------------------------------

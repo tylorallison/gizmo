@@ -25,14 +25,24 @@ class Direction {
         this.west,
     ]
     static strMap = {
-        [this.north]:       "north",
-        [this.northEast]:   "northEast",
-        [this.east]:        "east",
-        [this.southEast]:   "southEast",
-        [this.south]:       "south",
-        [this.southWest]:   "southWest",
-        [this.west]:        "west",
-        [this.northWest]:   "northWest",
+        [this.north]:       'north',
+        [this.northEast]:   'northEast',
+        [this.east]:        'east',
+        [this.southEast]:   'southEast',
+        [this.south]:       'south',
+        [this.southWest]:   'southWest',
+        [this.west]:        'west',
+        [this.northWest]:   'northWest',
+    };
+    static abbrevMap = {
+        [this.north]:       'n',
+        [this.northEast]:   'ne',
+        [this.east]:        'e',
+        [this.southEast]:   'se',
+        [this.south]:       's',
+        [this.southWest]:   'sw',
+        [this.west]:        'w',
+        [this.northWest]:   'nw',
     };
 
     static cardinals = [
@@ -57,7 +67,11 @@ class Direction {
     };
 
     static toString(dir) {
-        return this.strMap[dir] || "invalid";
+        return this.strMap[dir] || 'invalid';
+    }
+
+    static toAbbrev(dir) {
+        return this.abbrevMap[dir] || 'X';
     }
 
     static maskToString(dir) {
@@ -99,8 +113,8 @@ class Direction {
         // slice of the unit circle that each direction occupies
         let cardinalUnit = (2*Math.PI) / this.all.length;
         // to map values of -PI to PI to the direction index, first add PI (to give values in the range of 0 to 2*PI), then
-        // divide by the "cardinalUnit" or size of each directional slice of the unit circle.  Rounding this will give values
-        // in the range from 0 to # of directions + 1.  Mod this by the # of directions to handle the special case of the "west"
+        // divide by the 'cardinalUnit' or size of each directional slice of the unit circle.  Rounding this will give values
+        // in the range from 0 to # of directions + 1.  Mod this by the # of directions to handle the special case of the 'west'
         // direction which occurs at the beginning of the range (-PI) and end of the range (PI) of values.
         let dir_i = (Math.round((heading + Math.PI) / cardinalUnit) + 7) % this.all.length;
         return this.all[dir_i];
@@ -110,8 +124,8 @@ class Direction {
         // slice of the unit circle that each direction occupies
         let cardinalUnit = (2*Math.PI) / this.cardinals.length;
         // to map values of -PI to PI to the direction index, first add PI (to give values in the range of 0 to 2*PI), then
-        // divide by the "cardinalUnit" or size of each directional slice of the unit circle.  Rounding this will give values
-        // in the range from 0 to # of directions + 1.  Mod this by the # of directions to handle the special case of the "west"
+        // divide by the 'cardinalUnit' or size of each directional slice of the unit circle.  Rounding this will give values
+        // in the range from 0 to # of directions + 1.  Mod this by the # of directions to handle the special case of the 'west'
         // direction which occurs at the beginning of the range (-PI) and end of the range (PI) of values.
         let dir_i = (Math.round((heading + Math.PI) / cardinalUnit) + 3) % this.cardinals.length;
         return this.cardinals[dir_i];

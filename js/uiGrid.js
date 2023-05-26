@@ -499,6 +499,18 @@ class UiGrid extends UiView {
         this.gridCtx.drawImage(this.chunkCanvas, tx, ty);
     }
 
+    childrender(ctx) {
+        //let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
+        let dx = this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
+        //let dy = this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        let dy = this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        ctx.translate(dx, dy);
+        for (const child of this.children) {
+            child.render(ctx);
+        }
+        ctx.translate(-dx, -dy);
+    }
+
     subrender(ctx) {
         // compute delta between xform space and grid space
         let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
