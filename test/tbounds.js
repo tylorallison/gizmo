@@ -107,7 +107,6 @@ describe('a bounds', () => {
             const rslt = Bounds.containsXY(b1, test.args[4], test.args[5], test.args[6]);
             expect(rslt).toBe(test.xrslt);
         });
-
     }
 
     // extends

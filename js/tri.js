@@ -1,5 +1,6 @@
 export { Tri };
 
+import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
 import { Segment } from './segment.js';
@@ -18,6 +19,50 @@ class Tri extends GizmoData {
 
     static iTri(obj) {
         return obj && ('p1' in obj) && ('p2' in obj) && ('p3' in obj);
+    }
+
+    static edge1(t) {
+        if (!t) return null;
+        let p1 = t.p1 || Vect.zero;
+        let p2 = t.p2 || Vect.zero;
+        return new Segment({ p1:p1, p2:p2 });
+    }
+
+    static edge2(t) {
+        if (!t) return null;
+        let p2 = t.p2 || Vect.zero;
+        let p3 = t.p3 || Vect.zero;
+        return new Segment({ p1:p2, p2:p3 });
+    }
+
+    static edge3(t) {
+        if (!t) return null;
+        let p3 = t.p3 || Vect.zero;
+        let p1 = t.p1 || Vect.zero;
+        return new Segment({ p1: p3, p2: p1 });
+    }
+
+    static min(t) {
+        if (!t) return null;
+        let p1 = t.p1 || Vect.zero;
+        let p2 = t.p2 || Vect.zero;
+        let p3 = t.p3 || Vect.zero;
+        return Vect.min(p1, p2, p3);
+    }
+
+    static max(t) {
+        if (!t) return null;
+        let p1 = t.p1 || Vect.zero;
+        let p2 = t.p2 || Vect.zero;
+        let p3 = t.p3 || Vect.zero;
+        return Vect.max(p1, p2, p3);
+    }
+
+    static bounds(t) {
+        if (!t) return null;
+        let min = this.min(t);
+        let max = this.max(t);
+        return Bounds.fromMinMax(min.x, min.y, max.x, max.y);
     }
 
     //function ptInTriangle(p, p0, p1, p2) {

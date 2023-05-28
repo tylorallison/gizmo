@@ -1,4 +1,5 @@
 import { Bounds } from './bounds.js';
+import { Hex } from './hex.js';
 import { Mathf } from './math.js';
 import { Segment } from './segment.js';
 import { Tri } from './tri.js';
@@ -48,6 +49,18 @@ class Contains {
                 p.y > b.miny && p.y < b.maxy;
         }
     }
+
+
+    static hex(h, p, inclusive=true) {
+        if (!Hex.iHex(h) || !Vect.iVect(p)) return false;
+        let mid = ('mid' in h) ? h.mid : Hex.mid(h);
+        if (this.bounds(mid, p, inclusive)) return true;
+        let top = ('top' in h) ? h.top : Hex.top(h);
+        if (this.tri(top, p, inclusive)) return true;
+        let bottom = ('bottom' in h) ? h.bottom : Hex.bottom(h);
+        if (this.tri(bottom, p, inclusive)) return true;
+    }
+
 }
 
 class Overlaps {
@@ -126,9 +139,7 @@ class Overlaps {
     static triBounds(tri, b, inclusive=true) {
         if (!Tri.iTri(tri) || !Bounds.iBounds(b)) return false;
         // check bounding box of tri vs given bounds
-        let tmin = ('min' in tri) ? tri.min : Vect.min(tri.p1, tri.p2, tri.p3);
-        let tmax = ('max' in tri) ? tri.max : Vect.max(tri.p1, tri.p2, tri.p3);
-        if (!this.bounds(b, Bounds.fromMinMax(tmin.x, tmin.y, tmax.x, tmax.y), inclusive)) return false;
+        if (!this.bounds(b, Tri.bounds(tri), inclusive)) return false;
         // check if any point of the tri is within the bounds...
         if (Contains.bounds(b, tri.p1, inclusive)) return true;
         if (Contains.bounds(b, tri.p2, inclusive)) return true;
@@ -148,6 +159,54 @@ class Overlaps {
         if (this.segments(tri.edge3, b.edge4, inclusive)) return true;
         // finally check if bounds is entirely within triangle
         if (Contains.tri(tri, b.min, inclusive)) return true;
+        return false;
+    }
+
+    static hexs(h1, h2, inclusive=true) {
+        if (!Hex.iHex(h1) || !Hex.iHex(h2)) return false;
+        let m1 = Hex.mid(h1);
+        let m2 = Hex.mid(h2);
+        let t1 = Hex.top(h1);
+        let t2 = Hex.top(h2);
+        let b1 = Hex.bottom(h1);
+        let b2 = Hex.bottom(h2);
+        if (this.bounds(m1, m2, inclusive)) return true;
+        if (this.triBounds(t2, m1, inclusive)) return true;
+        if (this.triBounds(b2, m1, inclusive)) return true;
+        if (this.triBounds(t1, m2, inclusive)) return true;
+        if (this.triBounds(b1, m2, inclusive)) return true;
+        if (this.tris(t1, b2, inclusive)) return true;
+        if (this.tris(t2, b1, inclusive)) return true;
+        return false;
+    }
+
+    static hexBounds(h, b, inclusive=true) {
+        if (!Hex.iHex(h) || !Bounds.iBounds(b)) return false;
+        // check bounding box of hex vs given bounds
+        if (!this.bounds(b, Hex.bounds(h), inclusive)) return false;
+        // check hex mid vs. bounds
+        let m = Hex.mid(h);
+        if (this.bounds(m, b, inclusive)) return true;
+        // check hex top/bottom vs. bounds
+        let top = Hex.top(h);
+        if (this.triBounds(top, b, inclusive)) return true;
+        let btm = Hex.bottom(h);
+        if (this.triBounds(btm, b, inclusive)) return true;
+        return false;
+    }
+
+    static hexTri(h, t, inclusive=true) {
+        if (!Hex.iHex(h) || !Tri.iTri(t)) return false;
+        // check bounding box of hex vs tri
+        if (!this.bounds(Tri.bounds(t), Hex.bounds(h), inclusive)) return false;
+        // check hex mid vs. tri
+        let m = Hex.mid(h);
+        if (this.triBounds(t, m, inclusive)) return true;
+        // check hex top/bottom vs. tri
+        let top = Hex.top(h);
+        if (this.tris(top, t, inclusive)) return true;
+        let btm = Hex.bottom(h);
+        if (this.tris(btm, t, inclusive)) return true;
         return false;
     }
 
