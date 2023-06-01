@@ -68,8 +68,8 @@ class Array2D extends GizmoData {
      * @returns {int}
      */
     static idxfromij(i, j, cols, rows) {
-        if (i >= cols) return -1;
-        if (j >= rows) return -1;
+        if (i >= cols || i<0) return -1;
+        if (j >= rows || j<0) return -1;
         return i + cols*j;
     }
 
