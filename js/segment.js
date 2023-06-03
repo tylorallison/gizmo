@@ -2,35 +2,85 @@ export { Segment };
 
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Vect } from './vect.js';
 
 class Segment extends GizmoData {
 
+    static _slope(p1x, p1y, p2x, p2y) {
+        return (p2y - p1y)/(p2x-p1x);
+    }
     static slope(s) {
-        if (!s || !s.p1 || !s.p2) return undefined;
-        return (s.p2.y - s.p1.y)/(s.p2.x-s.p1.x);
+        if (!s) return undefined;
+        return this._slope(s.p1.x, s.p1.y, s.p2.x, s.p2.y);
     }
 
+    static _intercept(p1x, p1y, p2x, p2y) {
+        const m = this._slope(p1x, p1y, p2x, p2y);
+        return (p1y-m*p1x);
+    }
     static intercept(s) {
-        if (!s || !s.p1) return undefined;
-        let m = this.slope(s);
-        return (s.p1.y-m*s.p1.x);
+        if (!s) return undefined;
+        return this._intercept(s.p1.x, s.p1.y, s.p2.x, s.p2.y);
+    }
+
+    static _min(p1x, p1y, p2x, p2y) {
+        return {
+            x: (p1x < p2x) ? p1x : p2x,
+            y: (p1y < p2y) ? p1y : p2y,
+        }
+    }
+    static min(s) {
+        if (!s) return null;
+        return this._min(s.p1.x, s.p1.y, s.p2.x, s.p2.y);
+    }
+
+    static _max(p1x, p1y, p2x, p2y) {
+        return {
+            x: (p1x > p2x) ? p1x : p2x,
+            y: (p1y > p2y) ? p1y : p2y,
+        }
+    }
+    static max(s) {
+        if (!s) return null;
+        return this._max(s.p1.x, s.p1.y, s.p2.x, s.p2.y);
+    }
+
+    static _bounds(p1x, p1y, p2x, p2y) {
+        return {
+            minx: Math.min(p1x, p2x),
+            miny: Math.min(p1y, p2y),
+            maxx: Math.max(p1x, p2x),
+            maxy: Math.max(p1y, p2y),
+        };
+    }
+    static bounds(s) {
+        if (!s) return null;
+        return this._bounds(t.p1.x, t.p1.y, t.p2.x, t.p2.y);
     }
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'p1', { dflter: () => Vect.zero });
-        this.schema(this, 'p2', { dflter: () => Vect.zero });
-        this.schema(this, 'min', { autogen: (k) => k === 'p1' || k === 'p2', generator: (o, v) => (Vect.min(o.p1, o.p2))});
-        this.schema(this, 'max', { autogen: (k) => k === 'p1' || k === 'p2', generator: (o, v) => (Vect.max(o.p1, o.p2))});
-        // slope dy/dx
-        this.schema(this, 'm', { autogen: (k) => k === 'p1' || k === 'p2', generator: (o, v) => (o.p1 && o.p2) ? (o.p2.y - o.p1.y)/(o.p2.x-o.p1.x) : undefined});
-        // y intercept y = mx + b
-        this.schema(this, 'b', { autogen: (k) => k === 'p1' || k === 'p2', generator: (o, v) => (o.p1) ? (o.p1.y-o.m*o.p1.x): null});
+        this.schema(this, 'p1', { dflter: () => { return { x:0, y:0 }; }});
+        this.schema(this, 'p2', { dflter: () => { return { x:0, y:0 }; }});
     }
 
     static iSegment(obj) {
         return obj && ('p1' in obj) && ('p2' in obj);
+    }
+
+    get min() {
+        return this.constructor.min(this);
+    }
+    get max() {
+        return this.constructor.max(this);
+    }
+    get slope() {
+        return this.constructor.slope(this);
+    }
+    get intercept() {
+        return this.constructor.intercept(this);
+    }
+    get bounds() {
+        return this.constructor.bounds(this);
     }
 
     toString() {

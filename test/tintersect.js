@@ -30,7 +30,7 @@ describe('segment contains', () => {
           inclusive: false,
           xrslt: true },
     ]) {
-        it(`can test segment ${test.s} contains point ${test.p}`, ()=>{
+        it(`can test segment ${test.s} contains point ${test.p} inc:${test.inclusive}`, ()=>{
             const rslt = Contains.segment(test.s, test.p, test.inclusive);
             expect(rslt).toEqual(test.xrslt);
         });

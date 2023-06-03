@@ -1,92 +1,106 @@
 export { Tri };
 
-import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Segment } from './segment.js';
-import { Vect } from './vect.js';
 
 class Tri extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'p1', { dflter: () => Vect.zero });
-        this.schema(this, 'p2', { dflter: () => Vect.zero });
-        this.schema(this, 'p3', { dflter: () => Vect.zero });
-        this.schema(this, 'min', { autogen: (k) => k === 'p1' || k === 'p2' || k === 'p3', generator: (o, v) => (Vect.min(o.p1, o.p2, o.p3))});
-        this.schema(this, 'max', { autogen: (k) => k === 'p1' || k === 'p2' || k === 'p3', generator: (o, v) => (Vect.max(o.p1, o.p2, o.p3))});
+        this.schema(this, 'p1', { dflter: () => { return {x:0, y:0}; }});
+        this.schema(this, 'p2', { dflter: () => { return {x:0, y:0}; }});
+        this.schema(this, 'p3', { dflter: () => { return {x:0, y:0}; }});
     }
 
     static iTri(obj) {
         return obj && ('p1' in obj) && ('p2' in obj) && ('p3' in obj);
     }
 
+    static _edge1(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return { 
+            p1: {x:p1x, y:p1y},
+            p2: {x:p2x, y:p2y},
+        };
+    }
     static edge1(t) {
         if (!t) return null;
-        let p1 = t.p1 || Vect.zero;
-        let p2 = t.p2 || Vect.zero;
-        return new Segment({ p1:p1, p2:p2 });
+        return this._edge1(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
 
+    static _edge2(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return { 
+            p1: {x:p2x, y:p2y},
+            p2: {x:p3x, y:p3y},
+        };
+    }
     static edge2(t) {
         if (!t) return null;
-        let p2 = t.p2 || Vect.zero;
-        let p3 = t.p3 || Vect.zero;
-        return new Segment({ p1:p2, p2:p3 });
+        return this._edge2(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
 
+    static _edge3(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return { 
+            p1: {x:p3x, y:p3y},
+            p2: {x:p1x, y:p1y},
+        };
+    }
     static edge3(t) {
         if (!t) return null;
-        let p3 = t.p3 || Vect.zero;
-        let p1 = t.p1 || Vect.zero;
-        return new Segment({ p1: p3, p2: p1 });
+        return this._edge3(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
 
+    static _min(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return {
+            x: Math.min(p1x, p2x, p3x),
+            y: Math.min(p1y, p2y, p3y),
+        }
+    }
     static min(t) {
         if (!t) return null;
-        let p1 = t.p1 || Vect.zero;
-        let p2 = t.p2 || Vect.zero;
-        let p3 = t.p3 || Vect.zero;
-        return Vect.min(p1, p2, p3);
+        return this._min(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
 
+    static _max(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return {
+            x: Math.max(p1x, p2x, p3x),
+            y: Math.max(p1y, p2y, p3y),
+        }
+    }
     static max(t) {
         if (!t) return null;
-        let p1 = t.p1 || Vect.zero;
-        let p2 = t.p2 || Vect.zero;
-        let p3 = t.p3 || Vect.zero;
-        return Vect.max(p1, p2, p3);
+        return this._max(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
 
+    static _bounds(p1x, p1y, p2x, p2y, p3x, p3y) {
+        return {
+            minx: Math.min(p1x, p2x, p3x),
+            miny: Math.min(p1y, p2y, p3y),
+            maxx: Math.max(p1x, p2x, p3x),
+            maxy: Math.max(p1y, p2y, p3y),
+        };
+    }
     static bounds(t) {
         if (!t) return null;
-        let min = this.min(t);
-        let max = this.max(t);
-        return Bounds.fromMinMax(min.x, min.y, max.x, max.y);
+        return this._bounds(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
     }
-
-    //function ptInTriangle(p, p0, p1, p2) {
 
     get edge1() {
-        return new Segment({ p1: this.p1, p2: this.p2 });
+        return this.constructor.edge1(this);
     }
     get edge2() {
-        return new Segment({ p1: this.p2, p2: this.p3 });
+        return this.constructor.edge2(this);
     }
     get edge3() {
-        return new Segment({ p1: this.p3, p2: this.p1 });
+        return this.constructor.edge3(this);
     }
-
-    contains(p) {
-        var dX = p.x - this.p3.x;
-        var dY = p.y - this.p3.y;
-        var dX21 = this.p3.x - this.p2.x;
-        var dY12 = this.p2.y - this.p3.y;
-        var D = dY12 * (this.p1.x - this.p3.x) + dX21 * (this.p1.y - this.p3.y);
-        var s = dY12 * dX + dX21 * dY;
-        var t = (this.p3.y - this.p1.y) * dX + (this.p1.x - this.p3.x) * dY;
-        if (D < 0) return s <= 0 && t <= 0 && s + t >= D;
-        return s >= 0 && t >= 0 && s + t <= D;
+    get bounds() {
+        return this.constructor.bounds(this);
+    }
+    get min() {
+        return this.constructor.min(this);
+    }
+    get max() {
+        return this.constructor.max(this);
     }
 
     toString() {

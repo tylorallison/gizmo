@@ -4,7 +4,6 @@ import { Vect } from './vect.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
 import { GizmoData } from './gizmoData.js';
-import { Segment } from './segment.js';
 
 // =========================================================================
 class Bounds extends GizmoData {
@@ -155,6 +154,48 @@ class Bounds extends GizmoData {
         }
     }
 
+    static _edge1(minx, miny, maxx, maxy) {
+        return {
+            p1: {x:minx, y:miny}, 
+            p2: {x:maxx, y:miny},
+        };
+    }
+    static edge1(b) {
+        if (!b) return null;
+        return this._edge1(b.minx, b.miny, b.maxx, b.maxy);
+    }
+
+    static _edge2(minx, miny, maxx, maxy) {
+        return {
+            p1: {x:maxx, y:miny}, 
+            p2: {x:maxx, y:maxy},
+        };
+    }
+    static edge2(b) {
+        if (!b) return null;
+        return this._edge2(b.minx, b.miny, b.maxx, b.maxy);
+    }
+    static _edge3(minx, miny, maxx, maxy) {
+        return {
+            p1: {x:maxx, y:maxy}, 
+            p2: {x:minx, y:maxy},
+        };
+    }
+    static edge3(b) {
+        if (!b) return null;
+        return this._edge3(b.minx, b.miny, b.maxx, b.maxy);
+    }
+    static _edge4(minx, miny, maxx, maxy) {
+        return {
+            p1: {x:minx, y:maxy}, 
+            p2: {x:minx, y:miny},
+        };
+    }
+    static edge4(b) {
+        if (!b) return null;
+        return this._edge4(b.minx, b.miny, b.maxx, b.maxy);
+    }
+
     // STATIC PROPERTIES ---------------------------------------------------
     static get zero() {
         return new Bounds();
@@ -197,16 +238,16 @@ class Bounds extends GizmoData {
     }
 
     get edge1() {
-        return new Segment({p1: new Vect({x:this.x, y:this.y}), p2: new Vect({x:this.x+this.width, y:this.y})});
+        return this.constructor.edge1(this);
     }
     get edge2() {
-        return new Segment({p1: new Vect({x:this.x+this.width, y:this.y}), p2: new Vect({x:this.x+this.width, y:this.y+this.height})});
+        return this.constructor.edge2(this);
     }
     get edge3() {
-        return new Segment({p1: new Vect({x:this.x+this.width, y:this.y+this.height}), p2: new Vect({x:this.x, y:this.y+this.height})});
+        return this.constructor.edge3(this);
     }
     get edge4() {
-        return new Segment({p1: new Vect({x:this.x, y:this.y+this.height}), p2: new Vect({x:this.x, y:this.y})});
+        return this.constructor.edge4(this);
     }
 
     // STATIC FUNCTIONS ----------------------------------------------------

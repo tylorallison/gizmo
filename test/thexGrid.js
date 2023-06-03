@@ -1,26 +1,27 @@
 import { Bounds } from '../js/bounds.js';
+import { Fmt } from '../js/fmt.js';
 import { HexGrid } from '../js/hexgrid.js';
 import { Vect } from '../js/vect.js';
 
 describe('hexgrid implementation', () => {
     for (const test of [
-        { p: new Vect({x:32-15,y:40-15}), xrslt: new Vect({x:0,y:0}) },
-        { p: new Vect({x:32+15,y:40-15}), xrslt: new Vect({x:1,y:0}) },
-        { p: new Vect({x:32-17,y:40}), xrslt: new Vect({x:-1,y:1}) },
-        { p: new Vect({x:32+17,y:40}), xrslt: new Vect({x:1,y:1}) },
-        { p: new Vect({x:32-15,y:40+15}), xrslt: new Vect({x:0,y:2}) },
-        { p: new Vect({x:32+15,y:40+15}), xrslt: new Vect({x:1,y:2}) },
+        { p: {x:32-15,y:40-15}, xrslt: {x:0,y:0} },
+        { p: {x:32+15,y:40-15}, xrslt: {x:1,y:0} },
+        { p: {x:32-17,y:40}, xrslt: {x:0,y:1} },
+        { p: {x:32+17,y:40}, xrslt: {x:1,y:1} },
+        { p: {x:32-15,y:40+15}, xrslt: {x:0,y:2} },
+        { p: {x:32+15,y:40+15}, xrslt: {x:1,y:2} },
 
-        { p: new Vect({x:48-15,y:64-15}), xrslt: new Vect({x:0,y:1}) },
-        { p: new Vect({x:48+15,y:64-15}), xrslt: new Vect({x:1,y:1}) },
-        { p: new Vect({x:48-17,y:64}), xrslt: new Vect({x:0,y:2}) },
-        { p: new Vect({x:48+17,y:64}), xrslt: new Vect({x:2,y:2}) },
-        { p: new Vect({x:48-15,y:64+15}), xrslt: new Vect({x:0,y:3}) },
-        { p: new Vect({x:48+15,y:64+15}), xrslt: new Vect({x:1,y:3}) },
+        { p: {x:48-15,y:64-15}, xrslt: {x:0,y:1} },
+        { p: {x:48+15,y:64-15}, xrslt: {x:1,y:1} },
+        { p: {x:48-17,y:64}, xrslt: {x:0,y:2} },
+        { p: {x:48+17,y:64}, xrslt: {x:2,y:2} },
+        { p: {x:48-15,y:64+15}, xrslt: {x:0,y:3} },
+        { p: {x:48+15,y:64+15}, xrslt: {x:1,y:3} },
 
     ]) {
-        it(`can find i,j from ${test.p}`, ()=>{
-            let rslt = HexGrid.ijfromp(test.p, 32, 0, 0);
+        it(`can find i,j from ${Fmt.ofmt(test.p)}`, ()=>{
+            let rslt = HexGrid.ijFromPoint(test.p, {x:8, y:8}, {x:32, y:32});
             expect(rslt).toEqual(test.xrslt);
         });
     }
@@ -39,7 +40,7 @@ describe('hexgrid implementation', () => {
         { b: new Bounds({x:0,y:8, width: 16, height: 8}), xrslt: [0] },
     ]) {
         it(`can find idx for bounds ${test.b}`, ()=>{
-            let rslt = HexGrid.getgidx(test.b, new Bounds({x:0,y:0, width: 32*8, height: 32*8}), 32, 8, 8);
+            let rslt = HexGrid.idxsFromBounds(test.b, {x:8, y:8}, {x:32, y:32});
             expect(rslt).toEqual(test.xrslt);
         });
     }

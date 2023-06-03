@@ -1,297 +1,238 @@
 export { Grid };
 
-import { Array2D } from './array2d.js';
+import { GridBucketArray } from './gridArray.js';
 import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
+import { Contains, Overlaps } from './intersect.js';
 import { Util } from './util.js';
+
 
 /** ========================================================================
  * A grid-based object (gizmo) storage bucket which allows for quick lookups of game elements based on location.
  */
 
-class Grid extends Array2D {
+class Grid extends GridBucketArray {
     static dfltCols = 8;
     static dfltRows = 8;
 
     static {
-        this.schema(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
+        this.schema(this, 'bounder', { readonly: true, dflt: ((v) => v.xform) });
         this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema(this, 'dbg', { eventable: false, dflt: false });
-        this.schema(this, 'rowSize', { readonly: true, parser: (o,x) => o.bounds.height/o.rows });
-        this.schema(this, 'colSize', { readonly: true, parser: (o,x) => o.bounds.width/o.cols });
+        this.schema(this, 'rowSize', { readonly: true, dflt: 32 });
+        this.schema(this, 'colSize', { readonly: true, dflt: 32 });
     }
 
     constructor(spec={}) {
+        if ('size' in spec) {
+            if (!('rowSize' in spec)) spec.rowSize = spec.size;
+            if (!('colSize' in spec)) spec.colSize = spec.size;
+        }
         super(spec);
         this.gridSort = spec.gridSort;
-        this.rowHalfSize = this.rowSize * .5;
-        this.colHalfSize = this.colSize * .5;
-        this.gidxs = new Map();
+        this.gzoIdxMap = new Map();
     }
 
     // STATIC METHODS ------------------------------------------------------
-    static ifromx(x, colSize, minx=0, cols=undefined) {
-        let i = Math.floor((x-minx)/colSize);
-        if (i < 0) i = 0;
-        if (cols && i >= cols) i = cols-1;
-        return i;
+    static _ijFromPoint(px, py, dimx, dimy, sizex, sizey) {
+        let i = Math.floor(px/sizex);
+        if (i < 0 || i > dimx) i = -1;
+        let j = Math.floor(py/sizey);
+        if (j < 0 || j > dimy) j = -1;
+        return {x:i, y:j};
     }
-    static jfromy(y, rowSize, miny=0, rows=undefined) {
-        let j = Math.floor((y-miny)/rowSize);
-        if (j < 0) j = 0;
-        if (rows && j >= rows) j = rows-1;
-        return j;
-    }
-
-    static xfromidx(idx, cols, colSize, minx=0, center=false) {
-        return minx + (((idx % cols) * colSize) + ((center) ? colSize*.5 : 0));
+    static ijFromPoint(p, dim, size) {
+        if (!p || !dim || !size) return { x:-1, y:-1 };
+        return this._ijFromPoint(p.x, p.y, dim.x, dim.y, size.x, size.y);
     }
 
-    static yfromidx(idx, cols, rowSize, miny=0, center=false) {
-        return miny + ((Math.floor(idx/cols) * rowSize) + ((center) ? rowSize*.5 : 0));
+    static _pointFromIJ(i, j, dimx, dimy, sizex, sizey, center=false) {
+        if (i<0 || i>=dimx || j<0 || j>=dimy) return {x:-1, y:-1}
+        let x = (i * sizex) + (center) ? sizex*.5 : 0;
+        let y = (j * sizey) + (center) ? sizey*.5 : 0;
+        return {x:x, y:y};
+    }
+    static pointFromIJ(ij, dim, size, center=false) {
+        if (!ij || !dim || !size) return { x:-1, y:-1 };
+        return this._pointFromIJ(ij.x, ij.y, dim.x, dim.y, size.x, size.y, center);
     }
 
-    static getgidx(gzo, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
-        // check that object overlaps w/ grid
-        if (!gbounds.overlaps(gzo)) return null;
-        // check if object has bounds...
-        let minx = 0, miny = 0, maxx = 0, maxy = 0;
-        if (('minx' in gzo) && ('miny' in gzo) && ('maxx' in gzo) && ('maxy' in gzo)) {
-            minx = gzo.minx;
-            miny = gzo.miny;
-            maxx = Math.max(gzo.minx,gzo.maxx-1);
-            maxy = Math.max(gzo.miny,gzo.maxy-1);
-        // if object only has position...
-        } else if (('x' in gzo) && ('y' in gzo)) {
-            minx = gzo.x;
-            miny = gzo.y;
-            maxx = gzo.x;
-            maxy = gzo.y;
-        // object doesn't have dimensions or position, so cannot be tracked in grid...
-        } else {
-            return null;
-        }
-        let gidx = [];
-        let maxi = this.ifromx(maxx, colSize, gbounds.minx, cols);
-        let maxj = this.jfromy(maxy, rowSize, gbounds.miny, rows);
-        for (let i=this.ifromx(minx, colSize, gbounds.minx, cols); i<=maxi; i++) {
-            for (let j=this.jfromy(miny, rowSize, gbounds.miny, rows); j<=maxj; j++) {
-                // compute grid index
-                let idx = this.idxfromij(i,j,cols,rows);
-                // track object gidx
-                gidx.push(idx);
+    static _pointFromIdx(idx, dimx, dimy, sizex, sizey, center=false) {
+        if (idx<0 || idx>(dimx*dimy)) return 
+        let x = ((idx % dimx) * sizex) + (center) ? sizex*.5 : 0;
+        let y = (Math.floor(idx/dimx) * sizey) + (center) ? sizey*.5 : 0;
+        return {x:x, y:y};
+    }
+    static pointFromIdx(idx, dim, size, center=false) {
+        if (!dim || !size) return { x:-1, y:-1 };
+        return this._pointFromIdx(idx, dim.x, dim.y, size.x, size.y, center);
+    }
+
+    static _idxsFromBounds(bminx, bminy, bmaxx, bmaxy, dimx, dimy, sizex, sizey) {
+        let minij = this._ijFromPoint(bminx, bminy, dimx, dimy, sizex, sizey);
+        let maxij = this._ijFromPoint(Math.max(bminx, bmaxx-1), Math.max(bminy, bmaxy-1), dimx, dimy, sizex, sizey);
+        let gidxs = [];
+        for (let i=Math.max(0, minij.x); i<=Math.min(dimx-1, maxij.x); i++) {
+            for (let j=Math.max(0, minij.y); j<=Math.min(dimy-1, maxij.y); j++) {
+                let idx = this._idxFromIJ(i, j, dimx, dimy);
+                gidxs.push(idx);
             }
         }
-        return gidx;
+        return gidxs;
+    }
+    static idxsFromBounds(b, dim, size) {
+        if (!b || !dim || !size) return [];
+        return this._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, dim.x, dim.y, size.x, size.y);
+    }
+
+    static _idxFromPoint(px, py, dimx, dimy, sizex, sizey) {
+        let ij = this._ijFromPoint(px, py, dimx, dimy, sizex, sizey);
+        return this._idxFromIJ(ij.x, ij.y, dimx, dimy);
+    }
+    static idxFromPoint(p, dim, size) {
+        if (!p || !dim || !size) return -1;
+        return this._idxFromPoint(p.x, p.y, dim.x, dim.y, size.x, size.y);
     }
 
     // METHODS -------------------------------------------------------------
-    ifromx(x) {
-        let i = Math.floor((x-this.bounds.minx)/this.colSize);
-        if (i < 0) i = 0;
-        if (i >= this.cols) i = this.cols-1;
-        return i;
+    _ijFromPoint(px, py) {
+        return this.constructor._ijFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
     }
-    jfromy(y) {
-        let j = Math.floor((y-this.bounds.miny)/this.rowSize);
-        if (j < 0) j = 0;
-        if (j >= this.rows) j = this.rows-1;
-        return j;
+    ijFromPoint(p) {
+        if (!p) return {x:-1,y:-1};
+        return this.constructor._ijFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
-    idxfromxy(x,y) {
-        let i = Math.floor(x/this.colSize);
-        let j = Math.floor(y/this.rowSize);
-        if (i < 0) i = 0;
-        if (j < 0) j = 0;
-        if (i >= this.cols) i = this.cols-1;
-        if (j >= this.rows) j = this.rows-1;
-        return i + this.cols*j;
+    _idxFromPoint(px, py) {
+        return this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+    idxFromPoint(p) {
+        if (!p) return -1;
+        return this.constructor._idxFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
-    xfromidx(idx, center=false) {
-        return this.bounds.minx + (((idx % this.cols) * this.colSize) + ((center) ? this.colHalfSize : 0));
+    pointFromIdx(idx, center=false) {
+        return this.constructor._pointFromIdx(idx, this.cols, this.rows, this.colSize, this.rowSize, center);
     }
-    yfromidx(idx, center=false) {
-        return this.bounds.miny + ((Math.floor(idx/this.cols) * this.rowSize) + ((center) ? this.rowHalfSize : 0));
+
+    _pointFromIJ(i, j, center=false) {
+        return this.constructor._pointFromIJ(i, j, this.cols, this.rows, this.colSize, this.rowSize, center);
+    }
+    pointFromIJ(ij, center=false) {
+        if (!ij) return {x:-1, y:-1};
+        return this.constructor._pointFromIJ(ij.x, ij.y, this.cols, this.rows, this.colSize, this.rowSize, center);
     }
 
     idxof(gzo) {
-        let gidx = this.gidxs.get(gzo.gid) || [];
+        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
         return gidx.slice();
     }
 
-    resize(bounds, cols, rows) {
-        // array/grid resize
-        if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
-        // bounds resize
-        this.bounds = bounds;
-        this.colSize = this.bounds.width/this.cols;
-        this.rowSize = this.bounds.height/this.rows;
-        this.rowHalfSize = this.rowSize * .5;
-        this.colHalfSize = this.colSize * .5;
-        // recheck position of all assigned objects
-        for (const gzo of this) this.recheck(gzo);
+    includes(gzo) {
+        return this.gzoIdxMap.has(gzo.gid);
     }
 
-    contains(gzo) {
-        return this.gidxs.has(gzo.gid);
+    idxsFromGzo(gzo) {
+        let b = this.bounder(gzo);
+        return this.constructor._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, this.cols, this.rows, this.colSize, this.rowSize);
     }
 
-    getgidx(gzo) {
-        let loc = this.locator(gzo);
-        return this.constructor.getgidx(loc, this.bounds, this.colSize, this.rowSize, this.cols, this.rows)
-    }
-
-    *[Symbol.iterator]() {
-        for (let i=0; i<this.nentries; i++) {
-            if (this.grid[i]) {
-                yield *Array.from(this.grid[i]);
-            }
+    *_findForPoint(px, py, filter=(v) => true) {
+        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findForIdx(gidx, filter)) {
+            let ob = this.bounder(gzo);
+            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) yield gzo;
         }
     }
-
-    *keys() {
-        for (let i=0; i<this.nentries; i++) {
-            if (this.grid[i]) yield i;
-        }
+    *findForPoint(p, filter=(v) => true) {
+        if (!p) return;
+        yield *this._findForPoint(p.x, p.y, filter);
     }
 
-    *getij(i, j) {
-        let idx = this.idxfromij(i, j);
-        if (this.grid[idx]) {
-            yield *Array.from(this.grid[idx]);
+    _firstForPoint(px, py, filter=(v) => true) {
+        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findForIdx(gidx, filter)) {
+            let ob = this.bounder(gzo);
+            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
         }
     }
-
-    *getidx(idx) {
-        if (this.grid[idx]) {
-            yield *Array.from(this.grid[idx]);
-        }
+    firstForPoint(p, filter=(v) => true) {
+        if (!p) return null;
+        return this._firstForPoint(p.x, p.y, filter);
     }
 
-    *find(filter=(v) => true) {
-        let found = new Set();
-        for (let i=0; i<this.nentries; i++) {
-            if (this.grid[i]) {
-                let entries = Array.from(this.grid[i]);
-                for (const gzo of entries) {
-                    if (found.has(gzo.gid)) continue;
-                    if (filter(gzo)) {
-                        found.add(gzo.gid);
-                        yield gzo;
-                    }
-                }
-            }
+    *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
+        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findgidx(gidxs, filter)) {
+            let ob = this.bounder(gzo);
+            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) yield gzo;
         }
     }
-
-    first(filter=(v) => true) {
-        for (let i=0; i<this.nentries; i++) {
-            if (this.grid[i]) {
-                let entries = Array.from(this.grid[i]);
-                for (const gzo of entries) {
-                    if (filter(gzo)) return gzo;
-                }
-            }
-        }
-        return null;
+    *findForBounds(bounds, filter=(v) => true) {
+        if (!bounds) return;
+        yield *this._findForBounds(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy, filter);
     }
 
-    *findgidx(gidx, filter=(v) => true) {
-        if (!Util.iterable(gidx)) gidx = [gidx];
-        let found = new Set();
-        for (const idx of gidx) {
-            let entries = this.grid[idx] || [];
-            if (entries) {
-                for (const gzo of Array.from(entries)) {
-                    if (found.has(gzo.gid)) continue;
-                    if (filter(gzo)) {
-                        found.add(gzo.gid);
-                        yield gzo;
-                    }
-                }
-            }
+    _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
+        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findgidx(gidxs, filter)) {
+            let ob = this.bounder(gzo);
+            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
         }
     }
-
-    *findContains(x, y, filter=(v) => true) {
-        let gidx = this.constructor.getgidx({x: x, y:y}, this.bounds, this.colSize, this.rowSize, this.cols, this.rows)
-        for (const gzo of this.findgidx(gidx, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.containsXY(otherBounds, x, y)) yield gzo;
-        }
-    }
-
-    *findOverlaps(bounds, filter=(v) => true) {
-        let gidx = this.constructor.getgidx(bounds, this.bounds, this.colSize, this.rowSize, this.cols, this.rows)
-        for (const gzo of this.findgidx(gidx, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.overlaps(otherBounds, bounds)) yield gzo;
-        }
-    }
-
-    *idxsBetween(idx1, idx2) {
-        let i1 = this.ifromidx(idx1);
-        let j1 = this.jfromidx(idx1);
-        let i2 = this.ifromidx(idx2);
-        let j2 = this.jfromidx(idx2);
-        for (const [i,j] of Util.pixelsInSegment(i1, j1, i2, j2)) {
-            yield this.idxfromij(i,j);
-        }
+    firstForBounds(bounds, filter=(v) => true) {
+        if (!bounds) return null;
+        return this._firstForBounds(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy, filter);
     }
 
     add(gzo) {
-        let gidx = this.getgidx(gzo);
+        let gidx = this.idxsFromGzo(gzo);
         if (!gidx) return;
         // assign object to grid
-        for (const idx of gidx) {
-            if (!this.grid[idx]) this.grid[idx] = [];
-            this.grid[idx].push(gzo);
-            if (this.gridSort) this.grid[idx].sort(this.gridSort);
-        }
+        for (const idx of gidx) this.setidx(idx, gzo);
         // assign gizmo gidx
-        this.gidxs.set(gzo.gid, gidx);
+        this.gzoIdxMap.set(gzo.gid, gidx);
         if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidx}`);
     }
 
     remove(gzo) {
         if (!gzo) return;
-        let gidx = this.gidxs.get(gzo.gid) || [];
-        this.gidxs.delete(gzo.gid);
-        for (const idx of gidx) {
-            let entries = this.grid[idx] || [];
-            let i = entries.indexOf(gzo);
-            if (i >= 0) entries.splice(i, 1);
-        }
+        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
+        this.gzoIdxMap.delete(gzo.gid);
+        // remove object from grid
+        for (const idx of gidx) this.delidx(idx, gzo);
     }
 
     recheck(gzo) {
         if (!gzo) return;
-        let ogidx = this.gidxs.get(gzo.gid) || [];
-        let gidx = this.getgidx(gzo) || [];
+        let ogidx = this.gzoIdxMap.get(gzo.gid) || [];
+        let gidx = this.idxsFromGzo(gzo) || [];
         if (!Util.arraysEqual(ogidx, gidx)) {
             if (this.dbg) console.log(`----- Grid.recheck: ${gzo} old ${ogidx} new ${gidx}`);
             // remove old
-            for (const idx of ogidx) {
-                let entries = this.grid[idx] || [];
-                let i = entries.indexOf(gzo);
-                if (i >= 0) entries.splice(i, 1);
-            }
+            for (const idx of ogidx) this.delidx(idx, gzo);
             // add new
-            for (const idx of gidx) {
-                if (!this.grid[idx]) this.grid[idx] = [];
-                this.grid[idx].push(gzo);
-                if (this.gridSort) this.grid[idx].sort(this.gridSort);
-            }
+            for (const idx of gidx) this.setidx(idx, gzo);
             // assign new gidx
-            this.gidxs.set(gzo.gid, gidx);
+            this.gzoIdxMap.set(gzo.gid, gidx);
+            return true;
         } else {
             // resort
             for (const idx of gidx) {
-                if (this.gridSort) this.grid[idx].sort(this.gridSort);
+                if (this.bucketSort) this.entries[idx].sort(this.bucketSort);
             }
+            return false;
         }
+    }
+
+    resize(bounds, cols, rows) {
+        // FIXME
+        // array/grid resize
+        if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
+        // bounds resize
+        this.bounds = bounds;
+        // recheck position of all assigned objects
+        for (const gzo of this) this.recheck(gzo);
     }
 
     render(ctx, x=0, y=0, color='rgba(0,255,255,.5)', occupiedColor='red') {

@@ -1,40 +1,107 @@
 export { HexGrid };
 
-import { Bounds } from './bounds.js';
-import { HexArray } from './hexArray.js';
+import { HexBucketArray } from './hexArray.js';
 import { Contains, Overlaps } from './intersect.js';
-import { Tri } from './tri.js';
+import { Mathf } from './math.js';
 import { Vect } from './vect.js';
 
-
-class HexGrid extends HexArray {
+class HexGrid extends HexBucketArray {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'locator', { readonly: true, dflt: ((v) => v.xform) });
+        this.schema(this, 'bounder', { readonly: true, dflt: ((v) => v.xform) });
         //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema(this, 'dbg', { eventable: false, dflt: false });
-        this.schema(this, 'tileSize', { readonly: true, dflt: 32 });
+        this.schema(this, 'rowSize', { readonly: true, dflt: 32 });
+        this.schema(this, 'colSize', { readonly: true, dflt: 32 });
+    }
+
+    // CONSTRUCTOR ---------------------------------------------------------
+    constructor(spec={}) {
+        if ('size' in spec) {
+            if (!('rowSize' in spec)) spec.rowSize = spec.size;
+            if (!('colSize' in spec)) spec.colSize = spec.size;
+        }
+        super(spec);
     }
 
     // STATIC METHODS ------------------------------------------------------
-    static getgidx(objBounds, gridBounds=Bounds.zero, tileSize=0, cols=0, rows=0) {
+    static _ijFromPoint(px, py, dimx, dimy, sizex, sizey) {
+        let qtry = sizey*.25;
+        let halfx = sizex*.5;
+        let rsize = sizey*.75;
+        // if point is within mid section of hex, use i/j derived from column/row sizes
+        let j = Mathf.clampInt(Math.floor(py/rsize), 0, dimy-1);
+        let offx = (j%2) ? halfx : 0;
+        let i = Mathf.clampInt(Math.floor((px-offx)/sizex), 0, dimx-1);
+        let xm = (px-offx) % sizex;
+        let ym = py % rsize;
+        // if point lies within top section/bounds of hex... it could belong to one of three hex regions
+        // check left half
+        if (ym < qtry) {
+            if (xm < halfx) {
+                // check if it belongs to hex to northwest
+                if ((halfx-xm) > 2*ym) {
+                    if (!offx) i -= 1;
+                    j -= 1;
+                }
+            // check right half
+            } else {
+                // check if it belongs to hex to northeast
+                if (xm-halfx > (2*ym)) {
+                    if (offx) i += 1;
+                    j -= 1;
+                }
+            }
+        }
+        if (i < 0 || i>=dimx) i = -1;
+        if (j < 0 || j>=dimy) j = -1;
+        return {x:i, y:j};
+    }
+    static ijFromPoint(p, dim, size) {
+        if (!p || !dim || !size) return {x:-1, y:-1};
+        return this._ijFromPoint(p.x, p.y, dim.x, dim.y, size.x, size.y);
+    }
+
+    static _pointFromIJ(i, j, dimx, dimy, sizex, sizey, center=false) {
+        let halfx = sizex*.5;
+        let x = 32*sizex + (center) ? halfx : 0 + (j%2) ? halfx : 0;
+        let rsize = sizey * .75;
+        let halfy = sizey*.5;
+        let y = rsize*j + (center) ? halfy : 0;
+        return new Vect({x:x, y:y});
+    }
+    static pointFromIJ(ij, dim, size, center=false) {
+        if (!ij || !dim || !size) return null;
+        return this._pointFromIJ(i.x, i.y, dim.x, dim.y, size.x, size.y, center);
+    }
+
+    static _pointFromIdx(idx, dimx, dimy, sizex, sizey, center=false) {
+        let ij = this.ijFromIdx(idx);
+        return this._pointFromIJ(ij.x, ij.y, dimx, dimy, sizex, sizey, center);
+    }
+    static pointFromIdx(idx, dim, size) {
+        if (!ij || !dim || !size) return null;
+        return this._PointFromIdx(idx, dim.x, dim.y, sizex, sizey, minx, miny)
+    }
+
+    static _idxsFromBounds(bminx, bminy, bmaxx, bmaxy, dimx, dimy, sizex, sizey) {
         //console.log(`objBounds: ${objBounds} gridBounds: ${gridBounds}`);
-        if (!Overlaps.bounds(gridBounds, objBounds)) return null;
-        let qtr = tileSize*.25;
-        let half = tileSize*.5;
-        let rsize = qtr+half;
-        let qmini = Math.floor(objBounds.minx/half);
-        let qminj = Math.floor(objBounds.miny/qtr);
-        let mminx = objBounds.minx%half;
-        let mminy = objBounds.miny%qtr;
-        let qmaxi = Math.floor((objBounds.maxx-1)/half);
-        let qmaxj = Math.floor((objBounds.maxy-1)/qtr);
-        let mmaxx = (objBounds.maxx-1)%half;
-        let mmaxy = (objBounds.maxy-1)%qtr;
+        //if (!Overlaps.bounds(gridBounds, objBounds)) return null;
+        let qtry = sizey*.25;
+        let halfx = sizex*.5;
+        let rsize = sizey*.75;
+        let qmini = Math.floor(bminx/halfx);
+        let qminj = Math.floor(bminy/qtry);
+        let mminx = bminx%halfx;
+        let mminy = bminy%qtry;
+        let qmaxi = Math.floor((bmaxx-1)/halfx);
+        let qmaxj = Math.floor((bmaxy-1)/qtry);
+        let mmaxx = (bmaxx-1)%halfx;
+        let mmaxy = (bmaxy-1)%qtry;
         let idxs = [];
         //console.log(`======= qmin: ${qmini},${qminj} qmax: ${qmaxi},${qmaxj} qtr: ${qtr} half: ${half}`);
-        let j = Math.floor((objBounds.miny)/rsize);
+        let j = Math.floor((bminy)/rsize);
         for ( let qj=qminj; qj<=qmaxj; qj++) {
             let mqj = (qj%3);
             let ioff = (qj%6) > 2;
@@ -42,33 +109,33 @@ class HexGrid extends HexArray {
             let idx;
             for (let qi=qmini; qi<=qmaxi; qi++) {
                 let mqi = (!ioff) ? (qi%2) : ((qi+1)%2);
-                idx = this.idxfromij(i,j,cols,rows);
+                idx = this._idxFromIJ(i,j,dimx,dimy);
                 //console.log(`-- q ${qi},${qj} ioff: ${ioff} mq: ${mqi},${mqj} i,j: ${i},${j} idx: ${idx}`);
                 // hex top left
                 if (mqi === 0 && mqj === 0) {
                     // along the top most row
                     if (qj === qminj) {
-                        if ((half-mminx) > 2*mminy) {
-                            idx = this.idxfromij((ioff) ? i : i-1, j-1, cols, rows);
+                        if ((halfx-mminx) > 2*mminy) {
+                            idx = this._idxFromIJ((ioff) ? i : i-1, j-1, dimx, dimy);
                             //console.log(`>> TTL ${(ioff) ? i : i-1},${j-1} idx: ${idx}`);
                             if (idx !== -1) idxs.push(idx);
                         }
                     } else if (qj === qmaxj && qi === qmaxi) {
-                        if ((half-mmaxx) <= 2*mmaxy) {
-                            idx = this.idxfromij(i, j, cols, rows);
+                        if ((halfx-mmaxx) <= 2*mmaxy) {
+                            idx = this._idxFromIJ(i, j, dimx, dimy);
                             //console.log(`>> BRTL ${(ioff) ? i+1 : i},${j+1} idx: ${idx}`);
                             if (idx !== -1) idxs.push(idx);
                         }
                     }
                     // we have more quadrants to the right or below...
                     if (qi !== qmaxi || qj !== qmaxj) {
-                        idx = this.idxfromij(i,j,cols,rows);
+                        idx = this._idxFromIJ(i,j,dimx,dimy);
                         //console.log(`>> TL ${i},${j} idx: ${idx}`);
                         if (idx !== -1) idxs.push(idx);
                     // special case... check if bounds is within one quadrant
                     } else {
-                        if ((half-mmaxx) <= (2*mminy)) {
-                            idx = this.idxfromij(i,j,cols,rows);
+                        if ((halfx-mmaxx) <= (2*mminy)) {
+                            idx = this._idxFromIJ(i,j,dimx,dimy);
                             //console.log(`>> TLSC ${i},${j} idx: ${idx}`);
                             if (idx !== -1) idxs.push(idx);
                         }
@@ -79,21 +146,21 @@ class HexGrid extends HexArray {
                     if (qi === qmaxi && qj === qminj) {
                         //console.log(`TR HERE2 mmaxx: ${mmaxx} vs ${mminy}`);
                         if (mmaxx > (2*mminy)) {
-                            idx = this.idxfromij((ioff) ? i+1 : i,j-1,cols,rows);
+                            idx = this._idxFromIJ((ioff) ? i+1 : i,j-1,dimx,dimy);
                             //console.log(`>> TTR ${(ioff) ? i+1 : i},${j-1} idx: ${idx}`);
                             if (idx !== -1) idxs.push(idx);
                         }
                     }
                     // at left edge w/ tiles below
                     if (qi === qmini && qi !== qmaxi) {
-                        idx = this.idxfromij(i,j,cols,rows);
+                        idx = this._idxFromIJ(i,j,dimx,dimy);
                         //console.log(`>> TR ${i},${j} idx: ${idx}`);
                         if (idx !== -1) idxs.push(idx);
                     // special case... check if bounds is within one quadrant
                     } else if (qi === qmini && qj === qmaxj) {
                         //console.log(`TR HERE mminx: ${mminx} vs ${2*mmaxy}`);
                         if (mminx <= (2*mmaxy)) {
-                            idx = this.idxfromij(i,j,cols,rows);
+                            idx = this._idxFromIJ(i,j,dimx,dimy);
                             //console.log(`>> TRSC ${i},${j} idx: ${idx}`);
                             if (idx !== -1) idxs.push(idx);
                         }
@@ -102,7 +169,7 @@ class HexGrid extends HexArray {
                 } else {
                     // top row is mid
                     if (qj === qminj) {
-                        idx = this.idxfromij(i,j,cols,rows);
+                        idx = this._idxFromIJ(i,j,dimx,dimy);
                         //console.log(`>> M ${i},${j} idx: ${idx}`);
                         if (idx !== -1) idxs.push(idx);
                     }
@@ -115,85 +182,160 @@ class HexGrid extends HexArray {
         //console.log(`idxs: ${idxs}`);
         return idxs;
     }
+    static idxsFromBounds(b, dim, size) {
+        if (!b || !dim || !size) return [];
+        return this._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, dim.x, dim.y, size.x, size.y);
+    }
 
-    static ijfromp(p, tileSize, minx=0, miny=0) {
+    static _idxFromPoint(px, py, dimx, dimy, sizex, sizey) {
+        let ij = this._ijFromPoint(px, py, dimx, dimy, sizex, sizey);
+        return this._idxFromIJ(ij.x, ij.y, dimx, dimy);
+    }
+    static idxFromPoint(p, dim, size) {
+        if (!p || !dim || !size) return -1;
+        return this._idxFromPoint(p.x, p.y, dim.x, dim.y, size.x, size.y);
+    }
+
+    // METHODS -------------------------------------------------------------
+    _ijFromPoint(px, py) {
+        return this.constructor._ijFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+    ijFromPoint(p) {
+        if (!p) return {x:-1,y:-1};
+        return this.constructor._ijFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+
+    _idxFromPoint(px, py) {
+        return this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+    idxFromPoint(p) {
+        if (!p) return -1;
+        return this.constructor._idxFromPoint(p.x, p.y, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+
+    pointFromIdx(idx, center=false) {
+        return this.constructor._pointFromIdx(idx, this.cols, this.rows, this.colSize, this.rowSize, center);
+    }
+
+    _pointFromIJ(i, j, center=false) {
+        return this.constructor._pointFromIJ(i, j, this.cols, this.rows, this.colSize, this.rowSize, center);
+    }
+    pointFromIJ(ij, center=false) {
+        if (!ij) return {x:-1, y:-1};
+        return this.constructor._pointFromIJ(ij.x, ij.y, this.cols, this.rows, this.colSize, this.rowSize, center);
+    }
+
+    idxof(gzo) {
+        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
+        return gidx.slice();
+    }
+
+    includes(gzo) {
+        return this.gzoIdxMap.has(gzo.gid);
+    }
+
+    idxsFromGzo(gzo) {
+        let b = this.bounder(gzo);
+        return this.constructor._idxsFromBounds(b.minx, b.miny, b.maxx, b.maxy, this.cols, this.rows, this.colSize, this.rowSize);
+    }
+
+
+    *_findForPoint(px, py, filter=(v) => true) {
+        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findForIdx(gidx, filter)) {
+            let ob = this.bounder(gzo);
+            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) yield gzo;
+        }
+    }
+    *findForPoint(p, filter=(v) => true) {
+        if (!p) return;
+        yield *this._findForPoint(p.x, p.y, filter);
+    }
+
+    _firstForPoint(px, py, filter=(v) => true) {
+        let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findForIdx(gidx, filter)) {
+            let ob = this.bounder(gzo);
+            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
+        }
+    }
+    firstForPoint(p, filter=(v) => true) {
         if (!p) return null;
-        let qtr = tileSize*.25;
-        let half = tileSize*.5;
-        let rsize = qtr+half;
-        let j = Math.floor((p.y-miny)/rsize);
-        let xoff = (j%2) ? half : 0;
-        let i = Math.floor((p.x-xoff-minx)/tileSize);
-        let xm = (p.x-xoff) % tileSize;
-        let ym = p.y % rsize;
-        // check if point within mid bounds of hex...
-        if (ym >= qtr) {
-            return new Vect({x:i, y:j});
-        // check if point is within top tri of test hex
-        } else if (Contains.tri(new Tri({p1: {x:0, y:qtr}, p2: {x:half, y:0}, p3: {x:tileSize, y:qtr}}), {x:xm, y:ym})) {
-            return new Vect({x:i, y:j});
-        } else if (xm < half) {
-            return new Vect({x: (j%2) ? i : i-1, y:j-1});
+        return this._firstForPoint(p.x, p.y, filter);
+    }
+
+    *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
+        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findgidx(gidxs, filter)) {
+            let ob = this.bounder(gzo);
+            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) yield gzo;
         }
-        return new Vect({x: (j%2) ? i+1 : i, y:j-1});
     }
-    /*
-    static jfromy(y, rowSize, miny=0, rows=undefined) {
-        let j = Math.floor((y-miny)/rowSize);
-        if (j < 0) j = 0;
-        if (rows && j >= rows) j = rows-1;
-        return j;
+    *findForBounds(bounds, filter=(v) => true) {
+        if (!bounds) return;
+        yield *this._findForBounds(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy, filter);
     }
 
-    static xfromidx(idx, cols, colSize, minx=0, center=false) {
-        return minx + (((idx % cols) * colSize) + ((center) ? colSize*.5 : 0));
+    _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
+        let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
+        for (const gzo of this.findgidx(gidxs, filter)) {
+            let ob = this.bounder(gzo);
+            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
+        }
+    }
+    firstForBounds(bounds, filter=(v) => true) {
+        if (!bounds) return null;
+        return this._firstForBounds(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy, filter);
     }
 
-    static yfromidx(idx, cols, rowSize, miny=0, center=false) {
-        return miny + ((Math.floor(idx/cols) * rowSize) + ((center) ? rowSize*.5 : 0));
+    add(gzo) {
+        let gidx = this.idxsFromGzo(gzo);
+        if (!gidx) return;
+        // assign object to grid
+        for (const idx of gidx) this.setidx(idx, gzo);
+        // assign gizmo gidx
+        this.gzoIdxMap.set(gzo.gid, gidx);
+        if (this.dbg) console.log(`grid add ${gzo} w/ idx: ${gidx}`);
     }
 
-    static getgidx(gzo, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
-        // check that object overlaps w/ grid
-        if (!gbounds.overlaps(gzo)) return null;
-        // check if object has bounds...
-        let minx = 0, miny = 0, maxx = 0, maxy = 0;
-        if (('minx' in gzo) && ('miny' in gzo) && ('maxx' in gzo) && ('maxy' in gzo)) {
-            minx = gzo.minx;
-            miny = gzo.miny;
-            maxx = Math.max(gzo.minx,gzo.maxx-1);
-            maxy = Math.max(gzo.miny,gzo.maxy-1);
-        // if object only has position...
-        } else if (('x' in gzo) && ('y' in gzo)) {
-            minx = gzo.x;
-            miny = gzo.y;
-            maxx = gzo.x;
-            maxy = gzo.y;
-        // object doesn't have dimensions or position, so cannot be tracked in grid...
+    remove(gzo) {
+        if (!gzo) return;
+        let gidx = this.gzoIdxMap.get(gzo.gid) || [];
+        this.gzoIdxMap.delete(gzo.gid);
+        // remove object from grid
+        for (const idx of gidx) this.delidx(idx, gzo);
+    }
+
+    recheck(gzo) {
+        if (!gzo) return;
+        let ogidx = this.gzoIdxMap.get(gzo.gid) || [];
+        let gidx = this.idxsFromGzo(gzo) || [];
+        if (!Util.arraysEqual(ogidx, gidx)) {
+            if (this.dbg) console.log(`----- Grid.recheck: ${gzo} old ${ogidx} new ${gidx}`);
+            // remove old
+            for (const idx of ogidx) this.delidx(idx, gzo);
+            // add new
+            for (const idx of gidx) this.setidx(idx, gzo);
+            // assign new gidx
+            this.gzoIdxMap.set(gzo.gid, gidx);
+            return true;
         } else {
-            return null;
-        }
-
-        let gidx = [];
-        let maxi = this.ifromx(maxx, colSize, gbounds.minx, cols);
-        let maxj = this.jfromy(maxy, rowSize, gbounds.miny, rows);
-        for (let i=this.ifromx(minx, colSize, gbounds.minx, cols); i<=maxi; i++) {
-            for (let j=this.jfromy(miny, rowSize, gbounds.miny, rows); j<=maxj; j++) {
-                // compute grid index
-                let idx = this.idxfromij(i,j,cols,rows);
-                // track object gidx
-                gidx.push(idx);
+            // resort
+            for (const idx of gidx) {
+                if (this.bucketSort) this.entries[idx].sort(this.bucketSort);
             }
+            return false;
         }
-        return gidx;
-
     }
-    */
+
+    resize(bounds, cols, rows) {
+        // FIXME
+    }
 
     render(ctx, x=0, y=0, width=0, height=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
-        let half = Math.round(this.tileSize*.5);
-        let qtr = Math.round(this.tileSize*.25);
-        let rowSize = Math.round(this.tileSize*.75);
+        let half = Math.round(this.colSize*.5);
+        let qtr = Math.round(this.rowSize*.25);
+        let rowSize = Math.round(this.rowSize*.75);
         //console.log(`half: ${half} qtr: ${qtr} rowSize: ${rowSize}`);
         //console.log(`render cols: ${this.cols} rows: ${this.rows}`);
         let path = new Path2D();
@@ -208,7 +350,7 @@ class HexGrid extends HexArray {
 
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
-                let dx = this.tileSize*i + half + ((j%2) ? half : 0);
+                let dx = this.colSize*i + half + ((j%2) ? half : 0);
                 let dy = rowSize*j + half;
                 let idx = this.idxfromij(i, j);
                 let entries = this.entries[idx] || [];
@@ -221,5 +363,8 @@ class HexGrid extends HexArray {
         }
     }
 
+    toString() {
+        return Fmt.toString(this.constructor.name, this.cols, this.rows);
+    }
     
 }

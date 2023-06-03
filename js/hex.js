@@ -1,16 +1,13 @@
 export { Hex };
 
-import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
 import { GizmoData } from './gizmoData.js';
-import { Tri } from './tri.js';
-import { Vect } from './vect.js';
 
 class Hex extends GizmoData {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'p', { dflter: () => Vect.zero });
+        this.schema(this, 'p', { dflter: () => { return {x:0,y:0}; }});
         this.schema(this, 'size', { dflt: 32 });
     }
 
@@ -18,75 +15,80 @@ class Hex extends GizmoData {
         return obj && ('p' in obj) && ('size' in obj);
     }
 
+    static _top(px, py, size) {
+        const half = size*.5;
+        const qtr = size*.25;
+        return {
+            p1: {x:px-half, y:py-qtr}, 
+            p2: {x:px, y:py-half}, 
+            p3: {x:px+half, y:py-qtr},
+        };
+    }
     static top(h) {
         if (!h) return null;
-        let size = h.size || 0;
-        let p = h.p || Vect.zero;
-        let half = size*.5;
-        let qtr = size*.25;
-        return new Tri({p1: new Vect({x:p.x-half, y:p.y-qtr}), p2: new Vect({x:p.x, y:p.y-half}), p3: new Vect({x:p.x+half, y:p.y-qtr})});
+        return this._top(h.p.x, h.p.y, h.size);
+    }
+
+    static _mid(px, py, size) {
+        const half = size*.5;
+        const qtr = size*.25;
+        return {
+            minx: px-half, 
+            miny: py-qtr, 
+            maxx: px+half, 
+            maxy: py+qtr
+        };
     }
 
     static mid(h) {
         if (!h) return null;
-        let size = h.size || 0;
-        let p = h.p || Vect.zero;
-        let half = size*.5;
-        let qtr = size*.25;
-        return new Bounds({x:p.x-half, y:p.y-qtr, width:size, height:half});
+        return this._mid(h.p.x, h.p.y, h.size);
+    }
+
+    static _bottom(px, py, size) {
+        const half = size*.5;
+        const qtr = size*.25;
+        return {
+            p1: {x:px+half, y:py+qtr}, 
+            p2: {x:px, y:py+half}, 
+            p3: {x:px-half, y:py+qtr},
+        };
     }
 
     static bottom(h) {
         if (!h) return null;
-        let size = h.size || 0;
-        let p = h.p || Vect.zero;
-        let half = size*.5;
-        let qtr = size*.25;
-        return new Tri({p1: new Vect({x:p.x+half, y:p.y+qtr}), p2: new Vect({x:p.x, y:p.y+half}), p3: new Vect({x:p.x-half, y:p.y+qtr})});
+        return this._bottom(h.p.x, h.p.y, h.size);
     }
 
+    static _bounds(px, py, size) {
+        const half = size*.5;
+        return {
+            minx: px-half, 
+            miny: py-half, 
+            maxx: px+half, 
+            maxy: py+half, 
+        };
+    }
     static bounds(h) {
         if (!h) return null;
-        let size = h.size || 0;
-        let p = h.p || Vect.zero;
-        let half = size*.5;
-        return new Bounds({x: p-half, y: p.y-half, width: size, height: size});
+        return this._bounds(h.p.x, h.p.y, h.size);
     }
 
     get top() {
-        let half = this.size*.5;
-        let qtr = this.size*.25;
-        return new Tri({p1: new Vect({x:this.p.x-half, y:this.p.y-qtr}), p2: new Vect({x:this.p.x, y:this.p.y-half}), p3: new Vect({x:this.p.x+half, y:this.p.y-qtr})});
+        return this.constructor.top(this);
     }
 
     get mid() {
-        let half = this.size*.5;
-        let qtr = this.size*.25;
-        return new Bounds({x:this.p.x-half, y:this.p.y-qtr, width:size, height:half});
+        return this.constructor.mid(this);
     }
 
     get bottom() {
-        let half = this.size*.5;
-        let qtr = this.size*.25;
-        return new Tri({p1: new Vect({x:this.p.x+half, y:this.p.y+qtr}), p2: new Vect({x:this.p.x, y:this.p.y+half}), p3: new Vect({x:this.p.x-half, y:this.p.y+qtr})});
+        return this.constructor.bottom(this);
     }
 
     get bounds() {
-        let half = this.size*.5;
-        return new Bounds({x: this.p-half, y: this.p.y-half, width: this.size, height: this.size});
+        return this.constructor.bounds(this);
     }
-
-    /*
-    get edge1() {
-        return new Segment({ p1: this.p1, p2: this.p2 });
-    }
-    get edge2() {
-        return new Segment({ p1: this.p2, p2: this.p3 });
-    }
-    get edge3() {
-        return new Segment({ p1: this.p3, p2: this.p1 });
-    }
-    */
 
     toString() {
         return Fmt.toString(this.constructor.name, 

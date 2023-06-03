@@ -1,14 +1,12 @@
 export { UiGrid };
 
-import { Array2D } from './array2d.js';
 import { Bounds } from './bounds.js';
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
 import { UiView } from './uiView.js';
-import { Vect } from './vect.js';
-import { Util } from './util.js';
 import { Direction } from './direction.js';
+import { Grid } from './grid.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
@@ -22,7 +20,12 @@ class UiGrid extends UiView {
         this.schema(this, 'optimizeRender', { eventable: false, dflt: true });
         this.schema(this, 'chunks', { link: false, parser: (o,x) => {
             if (x.chunks) return x.chunks;
-            return new Array2D({rows: x.rows || 8, cols: x.cols || 8});
+            return new Grid({
+                rows: x.rows || 8, 
+                cols: x.cols || 8, 
+                rowSize: x.rowSize || x.size || 32,
+                colSize: x.colSize || x.size || 32,
+            });
         }});
         this.schema(this, 'gzoIdxMap', { link: false, readonly: true, parser: (o,x) => new Map() });
         this.schema(this, 'rerender', { parser: (o,x) => true });
@@ -70,13 +73,13 @@ class UiGrid extends UiView {
         let view = evt.actor;
         let needsUpdate = evt.render;
         // -- keep track of grid indices that need to be rerendered (e.g.: all grid indices associated with updated view before and after rechecking grid)
-        let gidxs = this.idxof(view);
+        let gidxs = this.chunks.idxof(view);
         for (const idx of gidxs) {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
         // -- recheck grid to update grid position
-        this.recheck(view);
+        this.chunks.recheck(view);
         gidxs = this.idxof(view);
         for (const idx of gidxs) {
             needsUpdate = true;
@@ -91,105 +94,42 @@ class UiGrid extends UiView {
     }
 
     // STATIC METHODS ------------------------------------------------------
-    static ifromx(x, colSize, minx=0, cols=undefined) {
-        let i = Math.floor((x-minx)/colSize);
-        if (i < 0) i = 0;
-        if (cols && i >= cols) i = cols-1;
-        return i;
-    }
-    static jfromy(y, rowSize, miny=0, rows=undefined) {
-        let j = Math.floor((y-miny)/rowSize);
-        if (j < 0) j = 0;
-        if (rows && j >= rows) j = rows-1;
-        return j;
-    }
-
-    static xfromidx(idx, cols, colSize, minx=0, center=false) {
-        return minx + (((idx % cols) * colSize) + ((center) ? colSize*.5 : 0));
-    }
-
-    static yfromidx(idx, cols, rowSize, miny=0, center=false) {
-        return miny + ((Math.floor(idx/cols) * rowSize) + ((center) ? rowSize*.5 : 0));
-    }
-
-    static vfromidx(idx, cols, colSize, rowSize, minx=0, miny=0, center=false) {
-        return new Vect({
-            x:this.xfromidx(idx, cols, colSize, minx, center),
-            y:this.yfromidx(idx, cols, rowSize, miny, center)
-        });
-    }
-
-    static getGridIdxs(loc, gbounds=Bounds.zero, colSize=0, rowSize=0, cols=0, rows=0) {
-        // check that object overlaps w/ grid
-        // check if object has bounds...
-        let minx = 0, miny = 0, maxx = 0, maxy = 0;
-        if (Bounds.iBounds(loc)) {
-            minx = loc.minx;
-            miny = loc.miny;
-            maxx = Math.max(loc.minx,loc.maxx-1);
-            maxy = Math.max(loc.miny,loc.maxy-1);
-        // if object only has position...
-        } else if (Vect.iVect(loc)) {
-            minx = loc.x;
-            miny = loc.y;
-            maxx = loc.x;
-            maxy = loc.y;
-        // object doesn't have dimensions or position, so cannot be tracked in grid...
-        } else {
-            return [];
-        }
-        if (!Bounds._overlaps(gbounds.minx, gbounds.miny, gbounds.maxx, gbounds.maxy, minx, miny, maxx, maxy, true)) {
-            return [];
-        }
-        let gidx = [];
-        let maxi = this.ifromx(maxx, colSize, gbounds.minx, cols);
-        let maxj = this.jfromy(maxy, rowSize, gbounds.miny, rows);
-        for (let i=this.ifromx(minx, colSize, gbounds.minx, cols); i<=maxi; i++) {
-            for (let j=this.jfromy(miny, rowSize, gbounds.miny, rows); j<=maxj; j++) {
-                // compute grid index
-                let idx = Array2D.idxfromij(i,j,cols,rows);
-                // track object gidx
-                gidx.push(idx);
-            }
-        }
-        return gidx;
-    }
 
     // METHODS -------------------------------------------------------------
-    has(gzo) {
-        return this.gzoIdxMap.has(gzo.gid);
-    }
 
-    recheck(gzo) {
-        if (!gzo) return;
-        let ogidxs = this.gzoIdxMap.get(gzo.gid) || [];
-        let ngidxs = this.getGridIdxs(gzo);
-        if (!Util.arraysEqual(ogidxs, ngidxs)) {
-            // remove old
-            for (const idx of ogidxs) {
-                if (!ngidxs.includes(idx)) {
-                    let entries = this.chunks[idx] || [];
-                    let i = entries.indexOf(gzo);
-                    if (i >= 0) entries.splice(i, 1);
-                }
-            }
-            // add new
-            for (const idx of ngidxs) {
-                if (!ogidxs.includes(idx)) {
-                    if (!this.chunks[idx]) this.chunks[idx] = [];
-                    this.chunks[idx].push(gzo);
-                }
-                if (this.gridSort) this.chunks[idx].sort(this.gridSort);
-            }
-            // assign new gidxs
-            this.gzoIdxMap.set(gzo.gid, ngidxs);
-        } else {
-            // resort
-            for (const idx of ngidxs) {
-                if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
-            }
-        }
-    }
+    // grid proxy functions
+    includes(gzo) { return this.chunks.includes(gzo); }
+    idxsFromGzo(gzo) { return this.chunks.idxsFromGzo(gzo); }
+    _ijFromPoint(x, y) { return this.chunks._ijFromPoint(x,y); }
+    ijFromPoint(p) { return this.chunks.ijFromPoint(p); }
+    pointFromIdx(idx, center=false) { return this.chunks.pointFromIdx(idx, center); }
+    ijFromIdx(idx) { return this.chunks.ijFromIdx(idx); }
+    _idxFromIJ(i,j) { return this.chunks._idxFromIJ(i,j); }
+    idxFromIJ(ij) { return this.chunks.idxFromIJ(ij); }
+    _idxFromPoint(x, y) { return this.chunks._idxFromPoint() }
+    idxfromxy(x,y) { return this.chunks.idxfromij(this.ifromx(x),this.jfromy(y)); }
+    idxFromDir(idx, dir) { return this.chunks.idxFromDir(idx, dir); }
+    idxsAdjacent(idx1, idx2) { return this.chunks.idxsAdjacent(idx1, idx2); }
+    *idxsBetween(idx1, idx2) { yield *this.chunks.idxsBetween(idx1, idx2); }
+    idxof(gzo) { return this.chunks.idxof(gzo); }
+    *[Symbol.iterator]() { yield *this.chunks; }
+    *keys() { yield *this.chunks.keys(); }
+    *getij(i, j) { yield *this.chunks.getij(i,j); }
+    *getidx(idx) { yield *this.chunks.getidx(i,j); }
+    *find(filter=(v) => true) { yield *this.chunks.find(filter); }
+    first(filter=(v) => true) { return this.chunks.first(filter); }
+    *findForIdx(gidxs, filter=(v) => true) { yield *this.chunks.findForIdx(gidxs, filter); }
+    firstForIdx(gidxs, filter=(v) => true) { return this.chunks.firstForIdx(gidxs, filter); }
+    *_findForPoint(x, y, filter=(v) => true) { yield *this.chunks._findForPoint(x, y, filter); }
+    *findForPoint(p, filter=(v) => true) { yield *this.chunks.findForPoint(p, filter); }
+    _firstForPoint(x, y, filter=(v) => true) { return this.chunks._firstForPoint(x, y, filter); }
+    firstForPoint(p, filter=(v) => true) { return this.chunks.firstForPoint(p, filter); }
+    *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { yield *this.chunks._findForBounds(bminx, bminy, bmaxx, bmaxy, filter); }
+    *findForBounds(b, filter=(v) => true) { yield *this.chunks.findForBounds(b, filter); }
+    _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) { return this.chunks._firstForBounds(bminx, bminy, bmaxx, bmaxy, filter); }
+    firstForBounds(b, filter=(v) => true) { return this.chunks.firstForBounds(b, filter); }
+    *findForNeighbors(idx, filter=(v) => true, dirs=Direction.any) { yield *this.chunks.findForNeighbors(idx, filter, dirs); }
+    firstForNeighbors(idx, filter=(v) => true, dirs=Direction.any) { return this.chunks.firstForNeighbors(idx, filter, dirs); }
 
     getLocal(worldPos, chain=true) {
         let localPos = this.xform.getLocal(worldPos, chain);
@@ -198,229 +138,18 @@ class UiGrid extends UiView {
         return localPos;
     }
 
-    getGridIdxs(gzo) {
-        let loc = this.locator(gzo);
-        return this.constructor.getGridIdxs(loc, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows)
-    }
-
-    ifromx(x) {
-        let i = Math.floor((x-this.bounds.minx)/this.colSize);
-        if (i < 0) i = 0;
-        if (i >= this.chunks.cols) i = this.chunks.cols-1;
-        return i;
-    }
-
-    jfromy(y) {
-        let j = Math.floor((y-this.bounds.miny)/this.rowSize);
-        if (j < 0) j = 0;
-        if (j >= this.chunks.rows) j = this.chunks.rows-1;
-        return j;
-    }
-
-    xfromidx(idx, center=false) {
-        return (((idx % this.chunks.cols) * this.colSize) + ((center) ? this.colSize/2 : 0));
-    }
-    yfromidx(idx, center=false) {
-        return ((Math.floor(idx/this.chunks.cols) * this.rowSize) + ((center) ? this.rowSize/2 : 0));
-    }
-
-    vfromidx(idx, center=false) {
-        return new Vect({x:this.xfromidx(idx, center), y:this.yfromidx(idx, center)});
-    }
-
-    ifromidx(idx) {
-        return this.chunks.ifromidx(idx);
-    }
-
-    jfromidx(idx) {
-        return this.chunks.jfromidx(idx);
-    }
-
-    ijfromidx(idx) {
-        return this.chunks.ijfromidx(idx);
-    }
-
-    idxfromij(i,j) {
-        return this.chunks.idxfromij(i,j);
-    }
-
-    idxfromxy(x,y) {
-        return this.chunks.idxfromij(this.ifromx(x),this.jfromy(y));
-    }
-
-    idxfromdir(idx, dir) {
-        return this.chunks.idxfromdir(idx, dir);
-    }
-
-    idxsAdjacent(idx1, idx2) {
-        return this.chunks.idxsAdjacent(idx1, idx2);
-    }
-
-    *idxsBetween(idx1, idx2) {
-        yield *this.chunks.idxsBetween(idx1, idx2);
-    }
-
-    idxof(gzo) {
-        let gidxs = this.gzoIdxMap.get(gzo.gid) || [];
-        return gidxs.slice();
-    }
-
-    *[Symbol.iterator]() {
-        let found = new Set();
-        for (let idx=0; idx<this.chunks.length; idx++) {
-            if (this.chunks[idx]) {
-                let entries = Array.from(this.chunks[idx]);
-                for (const gzo of entries) {
-                    if (found.has(gzo.gid)) continue;
-                    found.add(gzo.gid);
-                    yield gzo;
-                }
-            }
-        }
-    }
-
-    *keys() {
-        for (let i=0; i<this.chunks.length; i++) {
-            if (this.chunks[i]) yield i;
-        }
-    }
-
-    *getij(i, j) {
-        let idx = this.chunks.idxfromij(i, j);
-        if (this.chunks[idx]) {
-            yield *Array.from(this.chunks[idx]);
-        }
-    }
-
-    *getidx(idx) {
-        if (this.chunks[idx]) {
-            yield *Array.from(this.chunks[idx]);
-        }
-    }
-
-    *find(filter=(v) => true) {
-        let found = new Set();
-        for (let i=0; i<this.chunks.length; i++) {
-            if (this.chunks[i]) {
-                let entries = Array.from(this.chunks[i]);
-                for (const gzo of entries) {
-                    if (found.has(gzo.gid)) continue;
-                    if (filter(gzo)) {
-                        found.add(gzo.gid);
-                        yield gzo;
-                    }
-                }
-            }
-        }
-    }
-
-    first(filter=(v) => true) {
-        for (let i=0; i<this.chunks.length; i++) {
-            if (this.chunks[i]) {
-                let entries = Array.from(this.chunks[i]);
-                for (const gzo of entries) {
-                    if (filter(gzo)) return gzo;
-                }
-            }
-        }
-        return null;
-    }
-
-    *findAtIdx(gidxs, filter=(v) => true) {
-        if (!Util.iterable(gidxs)) gidxs = [gidxs];
-        let found = new Set();
-        for (const idx of gidxs) {
-            let entries = this.chunks[idx] || [];
-            for (const gzo of Array.from(entries)) {
-                if (found.has(gzo.gid)) continue;
-                if (filter(gzo)) {
-                    found.add(gzo.gid);
-                    yield gzo;
-                }
-            }
-        }
-    }
-
-    firstAtIdx(gidxs, filter=(v) => true) {
-        if (!Util.iterable(gidxs)) gidxs = [gidxs];
-        for (const idx of gidxs) {
-            let entries = this.chunks[idx] || [];
-            for (const gzo of Array.from(entries)) {
-                if (filter(gzo)) {
-                    return gzo;
-                }
-            }
-        }
-        return null;
-    }
-
-    *findAtPos(x, y, filter=(v) => true) {
-        let gidxs = this.constructor.getGridIdxs({ x:x, y:y }, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
-        for (const gzo of this.findAtIdx(gidxs, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.containsXY(otherBounds, x, y)) yield gzo;
-        }
-    }
-
-    firstAtPos(x, y, filter=(v) => true) {
-        let gidxs = this.constructor.getGridIdxs({ x:x, y:y }, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
-        for (const gzo of this.findAtIdx(gidxs, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.containsXY(otherBounds, x, y)) return gzo;
-        }
-        return null;
-    }
-
-    *findAtBounds(bounds, filter=(v) => true) {
-        let gidxs = this.constructor.getGridIdxs(bounds, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
-        for (const gzo of this.findAtIdx(gidxs, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.overlaps(otherBounds, bounds)) yield gzo;
-        }
-    }
-
-    firstAtBounds(bounds, filter=(v) => true) {
-        let gidxs = this.constructor.getGridIdxs(bounds, this.bounds, this.colSize, this.rowSize, this.chunks.cols, this.chunks.rows);
-        for (const gzo of this.findAtIdx(gidxs, filter)) {
-            let otherBounds = this.locator(gzo);
-            if (Bounds.overlaps(otherBounds, bounds)) return gzo;
-        }
-        return null;
-    }
-
-    *findNeighbors(idx, filter=(v) => true, dirs=Direction.any) {
-        for (const dir of Direction.all) {
-            if (!(dir & dirs)) continue;
-            let oidx = this.idxfromdir(idx, dir);
-            yield *this.findAtIdx(oidx, filter);
-        }
-    }
-
-    firstNeighbors(idx, filter=(v) => true, dirs=Direction.any) {
-        for (const dir of Direction.all) {
-            if (!(dir & dirs)) continue;
-            let oidx = this.idxfromdir(idx, dir);
-            let match = this.firstAtIdx(oidx, filter);
-            if (match) return match;
-        }
-        return null;
-    }
-
     add(gzo) {
-        let gidxs = this.getGridIdxs(gzo);
-        //console.log(`gzo: ${gzo} bounds: ${this.bounds} dim: ${this.chunks.cols},${this.chunks.rows} loc: ${this.locator(gzo)} gidxs: ${gidxs}`);
+        // add to grid
+        this.chunks.add(gzo);
+        // retrieve idxs
+        let gidxs = this.chunks.idxof(gzo);
         let needsUpdate = false;
         // assign object to grid
         for (const idx of gidxs) {
             needsUpdate = true;
-            if (!this.chunks[idx]) this.chunks[idx] = [];
-            this.chunks[idx].push(gzo);
-            if (this.chunkSort) this.chunks[idx].sort(this.chunkSort);
             // update list of updated chunks
             this.chunkUpdates.add(idx);
         }
-        // assign gizmo gidx
-        this.gzoIdxMap.set(gzo.gid, gidxs);
         // listen for gizmo events
         EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
@@ -430,24 +159,23 @@ class UiGrid extends UiView {
 
     remove(gzo) {
         if (!gzo) return;
+        // retrieve idxs for gzo
+        const gidxs = this.chunks.idxof(gzo);
+        // remove from grid
+        this.chunks.remove(gzo);
         // ignore gizmo events
         EvtSystem.ignore(gzo, this, 'gizmo.updated', this.onChildUpdate);
         EvtSystem.ignore(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
-        let gidxs = this.gzoIdxMap.get(gzo.gid);
-        this.gzoIdxMap.delete(gzo.gid);
         let needsUpdate = false;
         for (const idx of gidxs) {
             needsUpdate = true;
-            let entries = this.chunks[idx] || [];
-            let i = entries.indexOf(gzo);
-            if (i >= 0) entries.splice(i, 1);
-            //console.log(`remove adding idx to update: ${idx}`);
             this.chunkUpdates.add(idx);
         }
         if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
     }
 
     resize() {
+        // FIXME
         if ((this.bounds.width !== this.gridCanvas.width) || (this.bounds.height !== this.gridCanvas.height)) {
             this.rowSize = this.bounds.height/this.chunks.rows;
             this.colSize = this.bounds.width/this.chunks.cols;
@@ -458,7 +186,7 @@ class UiGrid extends UiView {
             let gzos = Array.from(this);
             this.chunks.clear();
             for (const gzo of gzos) {
-                let gidxs = this.getGridIdxs(gzo);
+                let gidxs = this.chunks.idxof(gzo);
                 for (const idx of gidxs) {
                     if (!this.chunks[idx]) this.chunks[idx] = [];
                     this.chunks[idx].push(gzo);
