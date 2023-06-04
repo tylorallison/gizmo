@@ -117,8 +117,9 @@ class UiGrid extends UiView {
     idxof(gzo) { return this.chunks.idxof(gzo); }
     *[Symbol.iterator]() { yield *this.chunks; }
     *keys() { yield *this.chunks.keys(); }
-    *getij(i, j) { yield *this.chunks.getij(i,j); }
-    *getidx(idx) { yield *this.chunks.getidx(i,j); }
+    *_getij(i, j) { yield *this.chunks._getij(i,j); }
+    *getij(ij) { yield *this.chunks.getij(ij); }
+    *getidx(idx) { yield *this.chunks.getidx(idx); }
     *find(filter=(v) => true) { yield *this.chunks.find(filter); }
     first(filter=(v) => true) { return this.chunks.first(filter); }
     *findForIdx(gidxs, filter=(v) => true) { yield *this.chunks.findForIdx(gidxs, filter); }
@@ -207,27 +208,28 @@ class UiGrid extends UiView {
 
     renderChunk(idx, dx, dy) {
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
-        let tx = this.xfromidx(idx);
-        let ty = this.yfromidx(idx);
+        let t = this.pointFromIdx(idx);
+        //let tx = this.xfromidx(idx);
+        //let ty = this.yfromidx(idx);
         //console.log(`d: ${dx},${dy} t: ${tx},${ty}`);
         if (this.optimizeRender) {
-            if (!this.xform.bounds.overlaps(new Bounds({x:dx+tx, y:dy+ty, width:this.colSize, height:this.rowSize}))) {
-                if (this.dbg) console.log(`-- chunk: ${idx} ${dx+tx},${dy+ty} is out of bounds against ${this.xform.bounds}`);
+            if (!this.xform.bounds.overlaps(new Bounds({x:dx+t.x, y:dy+t.y, width:this.colSize, height:this.rowSize}))) {
+                if (this.dbg) console.log(`-- chunk: ${idx} ${dx+t.x},${dy+t.y} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }
         this.chunkCtx.clearRect( 0, 0, this.colSize, this.rowSize );
-        this.chunkCtx.translate(-tx, -ty);
+        this.chunkCtx.translate(-t.x, -t.y);
         // iterate through all views at given idx
         let rendered = false;
         for (const view of this.getidx(idx)) {
             rendered = true;
             if (this.renderFilter(idx, view)) view.render(this.chunkCtx);
         }
-        this.chunkCtx.translate(tx, ty);
+        this.chunkCtx.translate(t.x, t.y);
         // -- resulting chunk is rendered to grid canvas
-        this.gridCtx.clearRect(tx, ty, this.colSize, this.rowSize);
-        this.gridCtx.drawImage(this.chunkCanvas, tx, ty);
+        this.gridCtx.clearRect(t.x, t.y, this.colSize, this.rowSize);
+        this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
     }
 
     childrender(ctx) {

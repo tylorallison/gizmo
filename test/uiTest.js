@@ -105,7 +105,7 @@ class UITest extends Game {
                 panel.xform.x = 128; 
                 panel.xform.y = 64; 
                 new Timer({ ttl: 2000, cb: () => { 
-                    grid.bounds.x = 32;
+                    grid.xform.x = 32;
                     grid.rerender = true;
                     //console.log(`setting bounds width => ${grid.bounds.width}`);
                 }});
