@@ -13,18 +13,22 @@ class UiGrid extends UiView {
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        this.schema(this, 'locator', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
-        this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
+        this.schema(this, 'bounder', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
+        //this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
         this.schema(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
         this.schema(this, 'renderFilter', { eventable: false, dflt: ((idx, view) => true) });
         this.schema(this, 'optimizeRender', { eventable: false, dflt: true });
         this.schema(this, 'chunks', { link: false, parser: (o,x) => {
             if (x.chunks) return x.chunks;
+            const rows = x.rows || 8;
+            const cols = x.cols || 8;
             return new Grid({
-                rows: x.rows || 8, 
-                cols: x.cols || 8, 
-                rowSize: x.rowSize || x.size || 32,
-                colSize: x.colSize || x.size || 32,
+                rows: rows,
+                cols: cols,
+                colSize: o.xform.width/cols,
+                rowSize: o.xform.height/rows,
+                bounder: o.bounder,
+                bucketSort: x.bucketSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z),
             });
         }});
         this.schema(this, 'gzoIdxMap', { link: false, readonly: true, parser: (o,x) => new Map() });
@@ -34,11 +38,10 @@ class UiGrid extends UiView {
         this.schema(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
         this.schema(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
         this.schema(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
-        this.schema(this, 'chunkSort', { readonly: true, parser: (o,x) => x.chunkSort || ((a, b) => (a.z === b.z) ? a.xform.y-b.xform.y : a.z-b.z) });
         this.schema(this, 'alignx', { dflt: .5 });
         this.schema(this, 'aligny', { dflt: .5 });
-        this.schema(this, 'rowSize', { parser: (o,x) => o.bounds.height/o.chunks.rows });
-        this.schema(this, 'colSize', { parser: (o,x) => o.bounds.width/o.chunks.cols });
+        this.schema(this, 'rowSize', { parser: (o,x) => o.xform.height/o.chunks.rows });
+        this.schema(this, 'colSize', { parser: (o,x) => o.xform.width/o.chunks.cols });
         this.schema(this, 'length', { getter: (o,x) => o.chunks.length });
     }
 
@@ -52,8 +55,8 @@ class UiGrid extends UiView {
     cpost(spec) {
         super.cpost(spec);
         // -- resize offscreen canvases
-        this.gridCanvas.width = this.bounds.width;
-        this.gridCanvas.height = this.bounds.height;
+        this.gridCanvas.width = this.xform.width;
+        this.gridCanvas.height = this.xform.height;
         this.chunkCanvas.width = this.colSize;
         this.chunkCanvas.height = this.rowSize;
         // handle view creation event handling
@@ -133,8 +136,8 @@ class UiGrid extends UiView {
 
     getLocal(worldPos, chain=true) {
         let localPos = this.xform.getLocal(worldPos, chain);
-        localPos.x -= this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
-        localPos.y -= this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        localPos.x -= this.xform.minx + Math.round((this.xform.width)*this.alignx);
+        localPos.y -= this.xform.miny + Math.round((this.xform.height)*this.aligny);
         return localPos;
     }
 
@@ -229,9 +232,9 @@ class UiGrid extends UiView {
 
     childrender(ctx) {
         //let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
-        let dx = this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
+        let dx = Math.round((this.xform.width)*this.alignx);
         //let dy = this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
-        let dy = this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        let dy = Math.round((this.xform.height)*this.aligny);
         ctx.translate(dx, dy);
         for (const child of this.children) {
             child.render(ctx);
@@ -241,8 +244,8 @@ class UiGrid extends UiView {
 
     subrender(ctx) {
         // compute delta between xform space and grid space
-        let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
-        let dy = this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
+        let dx = this.xform.minx + Math.round((this.xform.width)*this.alignx);
+        let dy = this.xform.miny + Math.round((this.xform.height)*this.aligny);
         // render any updated chunks
         if (this.rerender) {
             this.chunkUpdates.clear();
@@ -265,14 +268,14 @@ class UiGrid extends UiView {
                 ctx.strokeStyle = 'rgba(0,255,0,.5)';
                 ctx.beginPath();
                 ctx.moveTo(dx+i*this.colSize, dy);
-                ctx.lineTo(dx+i*this.colSize, dy+this.bounds.height);
+                ctx.lineTo(dx+i*this.colSize, dy+this.xform.height);
                 ctx.stroke();
             }
             for (let j=0; j<=this.chunks.rows; j++) {
                 ctx.strokeStyle = 'rgba(0,255,0,.5)';
                 ctx.beginPath();
                 ctx.moveTo(dx, dy+this.rowSize*j);
-                ctx.lineTo(dx+this.bounds.width, dy+this.rowSize*j);
+                ctx.lineTo(dx+this.xform.width, dy+this.rowSize*j);
                 ctx.stroke();
             }
         }

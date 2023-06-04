@@ -13,7 +13,7 @@ describe('a UI grid', () => {
     let g1, g2, g3, g4;
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
-        grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, bounds: new Bounds({x:0,y:0,width:128,height:128}), xform: new XForm({fixedWidth: 64, fixedHeight: 64, grip: .5})});
+        grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
         sys = new UpdateSystem( { gctx: gctx, dbg: false });
         receiver = ExtEvtReceiver.gen();
         tevts = [];
@@ -58,7 +58,8 @@ describe('a UI grid', () => {
             [2, [g4,g3]],
             [3, [g4]],
         ]) {
-            let gzos = Array.from(grid.findAtIdx(idx, (v) => true));
+            let gzos = Array.from(grid.findForIdx(idx, (v) => true));
+            console.log(`idx: ${idx} gzos: ${gzos}`);
             expect(gzos).toEqual(rslt);
         }
     });
@@ -71,7 +72,7 @@ describe('a UI grid', () => {
             [2, g4],
             [3, g4],
         ]) {
-            let gzo = grid.firstAtIdx(idx, (v) => true);
+            let gzo = grid.firstForIdx(idx, (v) => true);
             expect(gzo).toEqual(rslt);
         }
     });
@@ -85,7 +86,7 @@ describe('a UI grid', () => {
             [96, 96, []],
             [64, 64, [g4]],
         ]) {
-            let gzos = Array.from(grid.findAtPos(x, y, (v) => true));
+            let gzos = Array.from(grid._findForPoint(x, y, (v) => true));
             expect(gzos).toEqual(rslt);
         }
     });
@@ -99,7 +100,7 @@ describe('a UI grid', () => {
             [96, 96, null],
             [64, 64, g4],
         ]) {
-            let gzo = grid.firstAtPos(x, y, (v) => true);
+            let gzo = grid._firstForPoint(x, y, (v) => true);
             expect(gzo).toEqual(rslt);
         }
     });
@@ -113,7 +114,7 @@ describe('a UI grid', () => {
             [new Bounds({x:92,y:92,width:4,height:4}), []],
             [new Bounds({x:62,y:62,width:4,height:4}), [g4]],
         ]) {
-            let gzos = Array.from(grid.findAtBounds(bounds, (v) => true));
+            let gzos = Array.from(grid.findForBounds(bounds, (v) => true));
             expect(gzos).toEqual(rslt);
         }
     });
@@ -127,7 +128,7 @@ describe('a UI grid', () => {
             [new Bounds({x:92,y:92,width:4,height:4}), null],
             [new Bounds({x:62,y:62,width:4,height:4}), g4],
         ]) {
-            let gzos = grid.firstAtBounds(bounds, (v) => true);
+            let gzos = grid.firstForBounds(bounds, (v) => true);
             expect(gzos).toEqual(rslt);
         }
     });

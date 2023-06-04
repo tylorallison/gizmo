@@ -2,6 +2,7 @@ export { GridArray, GridBucketArray };
 
 import { Direction } from './direction.js';
 import { GizmoData } from './gizmoData.js';
+import { Util } from './util.js';
 
 /**
  * Implements a 2-dimensional grid array and methods for indexing and accessing data within
@@ -305,6 +306,9 @@ class GridArray extends GizmoData {
  * @extends GridArray
  */
 class GridBucketArray extends GridArray {
+    static {
+        this.schema(this, 'bucketSort', { readonly: true });
+    }
 
     *_getij(i, j) {
         let idx = this._idxFromIJ(i, j);
@@ -359,7 +363,7 @@ class GridBucketArray extends GridArray {
     }
 
     delidx(idx, v) {
-        entries = this.entries[idx];
+        const entries = this.entries[idx];
         if (entries) {
             let i = entries.indexOf(v);
             if (i !== -1) entries.splice(i, 1);
@@ -370,9 +374,15 @@ class GridBucketArray extends GridArray {
     }
 
     *[Symbol.iterator]() {
+        let found = new Set();
         for (let i=0; i<this.length; i++) {
             if (this.entries[i]) {
-                yield *Array.from(this.entries[i]);
+                let entries = Array.from(this.entries[i]);
+                for (const gzo of entries) {
+                    if (found.has(gzo.gid)) continue;
+                    found.add(gzo.gid);
+                    yield gzo;
+                }
             }
         }
     }
@@ -381,7 +391,7 @@ class GridBucketArray extends GridArray {
         let found = new Set();
         for (let i=0; i<this.length; i++) {
             if (this.entries[i]) {
-                let entries = Array.from(this.grid[i]);
+                let entries = Array.from(this.entries[i]);
                 for (const gzo of entries) {
                     if (found.has(gzo.gid)) continue;
                     if (filter(gzo)) {

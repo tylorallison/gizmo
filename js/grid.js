@@ -17,7 +17,7 @@ class Grid extends GridBucketArray {
 
     static {
         this.schema(this, 'bounder', { readonly: true, dflt: ((v) => v.xform) });
-        this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
+        //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema(this, 'dbg', { eventable: false, dflt: false });
         this.schema(this, 'rowSize', { readonly: true, dflt: 32 });
         this.schema(this, 'colSize', { readonly: true, dflt: 32 });
@@ -139,9 +139,13 @@ class Grid extends GridBucketArray {
 
     *_findForPoint(px, py, filter=(v) => true) {
         let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        let found = new Set();
         for (const gzo of this.findForIdx(gidx, filter)) {
             let ob = this.bounder(gzo);
-            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) yield gzo;
+            if (!found.has(gzo) && Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) {
+                found.add(gzo);
+                yield gzo;
+            }
         }
     }
     *findForPoint(p, filter=(v) => true) {
@@ -155,6 +159,7 @@ class Grid extends GridBucketArray {
             let ob = this.bounder(gzo);
             if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
         }
+        return null;
     }
     firstForPoint(p, filter=(v) => true) {
         if (!p) return null;
@@ -163,9 +168,13 @@ class Grid extends GridBucketArray {
 
     *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
-        for (const gzo of this.findgidx(gidxs, filter)) {
+        let found = new Set();
+        for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.bounder(gzo);
-            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) yield gzo;
+            if (!found.has(gzo) && Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) {
+                found.add(gzo);
+                yield gzo;
+            }
         }
     }
     *findForBounds(bounds, filter=(v) => true) {
@@ -175,10 +184,11 @@ class Grid extends GridBucketArray {
 
     _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
-        for (const gzo of this.findgidx(gidxs, filter)) {
+        for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.bounder(gzo);
             if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
         }
+        return null;
     }
     firstForBounds(bounds, filter=(v) => true) {
         if (!bounds) return null;
@@ -230,7 +240,7 @@ class Grid extends GridBucketArray {
         // array/grid resize
         if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
         // bounds resize
-        this.bounds = bounds;
+        //this.bounds = bounds;
         // recheck position of all assigned objects
         for (const gzo of this) this.recheck(gzo);
     }

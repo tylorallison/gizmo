@@ -242,9 +242,13 @@ class HexGrid extends HexBucketArray {
 
     *_findForPoint(px, py, filter=(v) => true) {
         let gidx = this.constructor._idxFromPoint(px, py, this.cols, this.rows, this.colSize, this.rowSize);
+        let found = new Set();
         for (const gzo of this.findForIdx(gidx, filter)) {
             let ob = this.bounder(gzo);
-            if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) yield gzo;
+            if (!found.has(gzo) && Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) {
+                found.add(gzo);
+                yield gzo;
+            }
         }
     }
     *findForPoint(p, filter=(v) => true) {
@@ -258,6 +262,7 @@ class HexGrid extends HexBucketArray {
             let ob = this.bounder(gzo);
             if (Contains._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, px, py)) return gzo;
         }
+        return null;
     }
     firstForPoint(p, filter=(v) => true) {
         if (!p) return null;
@@ -266,9 +271,13 @@ class HexGrid extends HexBucketArray {
 
     *_findForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
-        for (const gzo of this.findgidx(gidxs, filter)) {
+        let found = new Set();
+        for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.bounder(gzo);
-            if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) yield gzo;
+            if (!found.has(gzo) && Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) {
+                found.add(gzo);
+                yield gzo;
+            }
         }
     }
     *findForBounds(bounds, filter=(v) => true) {
@@ -278,10 +287,11 @@ class HexGrid extends HexBucketArray {
 
     _firstForBounds(bminx, bminy, bmaxx, bmaxy, filter=(v) => true) {
         let gidxs = this.constructor._idxsFromBounds(bminx, bminy, bmaxx, bmaxy, this.cols, this.rows, this.colSize, this.rowSize);
-        for (const gzo of this.findgidx(gidxs, filter)) {
+        for (const gzo of this.findForIdx(gidxs, filter)) {
             let ob = this.bounder(gzo);
             if (Overlaps._bounds(ob.minx, ob.miny, ob.maxx, ob.maxy, bminx, bminy, bmaxx, bmaxy)) return gzo;
         }
+        return null;
     }
     firstForBounds(bounds, filter=(v) => true) {
         if (!bounds) return null;
