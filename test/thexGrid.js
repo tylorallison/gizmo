@@ -21,7 +21,21 @@ describe('hexgrid implementation', () => {
 
     ]) {
         it(`can find i,j from ${Fmt.ofmt(test.p)}`, ()=>{
-            let rslt = HexGrid.ijFromPoint(test.p, {x:8, y:8}, {x:32, y:32});
+            let rslt = HexGrid.ijFromPoint(test.p, {x:8, y:8}, {x:32, y:24});
+            expect(rslt).toEqual(test.xrslt);
+        });
+    }
+
+    for (const test of [
+        { i:0, j:0, center:false, xrslt:{x:0,y:0} },
+        { i:0, j:0, center:true, xrslt:{x:16,y:16} },
+        { i:1, j:0, center:false, xrslt:{x:32,y:0} },
+        { i:1, j:0, center:true, xrslt:{x:48,y:16} },
+        { i:1, j:1, center:false, xrslt:{x:48,y:24} },
+        { i:1, j:1, center:true, xrslt:{x:64,y:40} },
+    ]) {
+        it(`can find point from ${test.i},${test.j} c:${test.center}`, ()=>{
+            let rslt = HexGrid.pointFromIJ({x:test.i,y:test.j}, {x:8, y:8}, {x:32, y:24}, test.center);
             expect(rslt).toEqual(test.xrslt);
         });
     }
@@ -40,7 +54,7 @@ describe('hexgrid implementation', () => {
         { b: new Bounds({x:0,y:8, width: 16, height: 8}), xrslt: [0] },
     ]) {
         it(`can find idx for bounds ${test.b}`, ()=>{
-            let rslt = HexGrid.idxsFromBounds(test.b, {x:8, y:8}, {x:32, y:32});
+            let rslt = HexGrid.idxsFromBounds(test.b, {x:8, y:8}, {x:32, y:24});
             expect(rslt).toEqual(test.xrslt);
         });
     }

@@ -80,30 +80,32 @@ class UITest extends Game {
         Hierarchy.adopt(cvs, input)
 
         let grid = new UiGrid({
+            hex: true,
             dbg: { xform: true, grid: true },
             createFilter: (gzo) => gzo.tag === 'grid',
             rows: 4,
             cols: 4,
-            bounds: new Bounds({x:0, y:0, width:256, height:256}),
             alignx: 0,
             aligny: 0,
             xform: new XForm({ 
                 grip: .5, 
                 x: 0, 
-                y: 150, 
-                fixedWidth: this.size, 
-                fixedHeight: this.size,
+                y: 75+128, 
+                fixedWidth: 256, 
+                fixedHeight: 256*.75,
             }),
         });
         Hierarchy.adopt(cvs, grid)
 
-        let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 16, y: 48, fixedWidth: 16, fixedHeight: 16, origx: 0, origy: 0})});
+        let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 32, y: 32, fixedWidth: 16, fixedHeight: 16})});
+
+        console.log(`panel: ${panel} size: ${panel.xform.width},${panel.xform.height} idxs: ${grid.idxof(panel)}`);
 
         new Timer({ ttl: 2000, cb: () => { 
-            panel.xform.x = 60; 
+            panel.xform.x = 64; 
             new Timer({ ttl: 2000, cb: () => { 
                 panel.xform.x = 128; 
-                panel.xform.y = 64; 
+                panel.xform.y = 48; 
                 new Timer({ ttl: 2000, cb: () => { 
                     grid.xform.x = 32;
                     grid.rerender = true;

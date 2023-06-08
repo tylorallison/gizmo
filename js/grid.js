@@ -48,8 +48,8 @@ class Grid extends GridBucketArray {
 
     static _pointFromIJ(i, j, dimx, dimy, sizex, sizey, center=false) {
         if (i<0 || i>=dimx || j<0 || j>=dimy) return {x:-1, y:-1}
-        let x = (i * sizex) + (center) ? sizex*.5 : 0;
-        let y = (j * sizey) + (center) ? sizey*.5 : 0;
+        let x = (i * sizex) + ((center) ? sizex*.5 : 0);
+        let y = (j * sizey) + ((center) ? sizey*.5 : 0);
         return {x:x, y:y};
     }
     static pointFromIJ(ij, dim, size, center=false) {
@@ -58,9 +58,10 @@ class Grid extends GridBucketArray {
     }
 
     static _pointFromIdx(idx, dimx, dimy, sizex, sizey, center=false) {
+        //console.log(`${idx} dim: ${dimx},${dimy} size: ${sizex},${sizey}`)
         if (idx<0 || idx>(dimx*dimy)) return 
-        let x = ((idx % dimx) * sizex) + (center) ? sizex*.5 : 0;
-        let y = (Math.floor(idx/dimx) * sizey) + (center) ? sizey*.5 : 0;
+        let x = ((idx % dimx) * sizex) + ((center) ? sizex*.5 : 0);
+        let y = (Math.floor(idx/dimy) * sizey) + ((center) ? sizey*.5 : 0);
         return {x:x, y:y};
     }
     static pointFromIdx(idx, dim, size, center=false) {
@@ -248,13 +249,13 @@ class Grid extends GridBucketArray {
     render(ctx, x=0, y=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
-               let idx = this.idxfromij(i, j);
-                let entries = this.grid[idx] || [];
+               let idx = this._idxFromIJ(i, j);
+                let entries = this.entries[idx] || [];
                 ctx.strokeStyle = (entries.length) ? occupiedColor : color;
-                ctx.setLineDash([5,5]);
-                ctx.lineWidth = 3;
+                //ctx.setLineDash([5,5]);
+                ctx.lineWidth = 1;
                 ctx.strokeRect(x + i*this.colSize, y + j*this.rowSize, this.colSize, this.rowSize);
-                ctx.setLineDash([]);
+                //ctx.setLineDash([]);
             }
         }
     }

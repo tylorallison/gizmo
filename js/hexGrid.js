@@ -1,9 +1,10 @@
 export { HexGrid };
 
+import { Fmt } from './fmt.js';
 import { HexBucketArray } from './hexArray.js';
 import { Contains, Overlaps } from './intersect.js';
 import { Mathf } from './math.js';
-import { Vect } from './vect.js';
+import { Util } from './util.js';
 
 class HexGrid extends HexBucketArray {
 
@@ -23,19 +24,21 @@ class HexGrid extends HexBucketArray {
             if (!('colSize' in spec)) spec.colSize = spec.size;
         }
         super(spec);
+        this.gridSort = spec.gridSort;
+        this.gzoIdxMap = new Map();
     }
 
     // STATIC METHODS ------------------------------------------------------
     static _ijFromPoint(px, py, dimx, dimy, sizex, sizey) {
         let qtry = sizey*.25;
         let halfx = sizex*.5;
-        let rsize = sizey*.75;
         // if point is within mid section of hex, use i/j derived from column/row sizes
-        let j = Mathf.clampInt(Math.floor(py/rsize), 0, dimy-1);
+        let j = Mathf.clampInt(Math.floor(py/sizey), 0, dimy-1);
         let offx = (j%2) ? halfx : 0;
         let i = Mathf.clampInt(Math.floor((px-offx)/sizex), 0, dimx-1);
         let xm = (px-offx) % sizex;
-        let ym = py % rsize;
+        let ym = py % sizey;
+        //let ym = py % rsize;
         // if point lies within top section/bounds of hex... it could belong to one of three hex regions
         // check left half
         if (ym < qtry) {
@@ -65,19 +68,17 @@ class HexGrid extends HexBucketArray {
 
     static _pointFromIJ(i, j, dimx, dimy, sizex, sizey, center=false) {
         let halfx = sizex*.5;
-        let x = 32*sizex + (center) ? halfx : 0 + (j%2) ? halfx : 0;
-        let rsize = sizey * .75;
-        let halfy = sizey*.5;
-        let y = rsize*j + (center) ? halfy : 0;
-        return new Vect({x:x, y:y});
+        let x = sizex*i + ((center) ? halfx : 0) + ((j%2) ? halfx : 0);
+        let y = sizey*j + ((center) ? (sizey*2/3) : 0);
+        return {x:x, y:y};
     }
     static pointFromIJ(ij, dim, size, center=false) {
         if (!ij || !dim || !size) return null;
-        return this._pointFromIJ(i.x, i.y, dim.x, dim.y, size.x, size.y, center);
+        return this._pointFromIJ(ij.x, ij.y, dim.x, dim.y, size.x, size.y, center);
     }
 
     static _pointFromIdx(idx, dimx, dimy, sizex, sizey, center=false) {
-        let ij = this.ijFromIdx(idx);
+        let ij = this._ijFromIdx(idx, dimx, dimy);
         return this._pointFromIJ(ij.x, ij.y, dimx, dimy, sizex, sizey, center);
     }
     static pointFromIdx(idx, dim, size) {
@@ -88,9 +89,11 @@ class HexGrid extends HexBucketArray {
     static _idxsFromBounds(bminx, bminy, bmaxx, bmaxy, dimx, dimy, sizex, sizey) {
         //console.log(`objBounds: ${objBounds} gridBounds: ${gridBounds}`);
         //if (!Overlaps.bounds(gridBounds, objBounds)) return null;
-        let qtry = sizey*.25;
+        //let qtry = sizey*.25;
+        let qtry = sizey/3;
         let halfx = sizex*.5;
-        let rsize = sizey*.75;
+        //let rsize = sizey*.75;
+        //console.log(`rsize: ${rsize}`);
         let qmini = Math.floor(bminx/halfx);
         let qminj = Math.floor(bminy/qtry);
         let mminx = bminx%halfx;
@@ -101,7 +104,7 @@ class HexGrid extends HexBucketArray {
         let mmaxy = (bmaxy-1)%qtry;
         let idxs = [];
         //console.log(`======= qmin: ${qmini},${qminj} qmax: ${qmaxi},${qmaxj} qtr: ${qtr} half: ${half}`);
-        let j = Math.floor((bminy)/rsize);
+        let j = Math.floor((bminy)/sizey);
         for ( let qj=qminj; qj<=qmaxj; qj++) {
             let mqj = (qj%3);
             let ioff = (qj%6) > 2;
@@ -343,32 +346,30 @@ class HexGrid extends HexBucketArray {
     }
 
     render(ctx, x=0, y=0, width=0, height=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
-        let half = Math.round(this.colSize*.5);
-        let qtr = Math.round(this.rowSize*.25);
-        let rowSize = Math.round(this.rowSize*.75);
-        //console.log(`half: ${half} qtr: ${qtr} rowSize: ${rowSize}`);
+        let halfx = Math.round(this.colSize*.5);
+        let halfy = Math.round(this.rowSize*2/3);
+        let qtry = Math.round(this.rowSize/3);
         //console.log(`render cols: ${this.cols} rows: ${this.rows}`);
         let path = new Path2D();
-        path.moveTo(-half, -qtr);
-        path.lineTo(0, -half);
-        path.lineTo(half, -qtr);
-        path.lineTo(half, qtr);
-        path.lineTo(0, half);
-        path.lineTo(-half, qtr);
-        //ctx.moveTo(-half, -qtr);
+        path.moveTo(-halfx, -qtry);
+        path.lineTo(0, -halfy);
+        path.lineTo(halfx, -qtry);
+        path.lineTo(halfx, qtry);
+        path.lineTo(0, halfy);
+        path.lineTo(-halfx, qtry);
         path.closePath();
 
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
-                let dx = this.colSize*i + half + ((j%2) ? half : 0);
-                let dy = rowSize*j + half;
-                let idx = this.idxfromij(i, j);
+                let d = this._pointFromIJ(i, j, true);
+                //console.log(`${i},${j} d: ${Fmt.ofmt(d)}`);
+                let idx = this._idxFromIJ(i, j);
                 let entries = this.entries[idx] || [];
-                ctx.translate(x+dx, y+dy);
+                ctx.translate(x+d.x, y+d.y);
                 ctx.strokeStyle = (entries.length) ? occupiedColor : color;
                 ctx.lineWidth = 1;
                 ctx.stroke(path);
-                ctx.translate(-(x+dx), -(y+dy));
+                ctx.translate(-(x+d.x), -(y+d.y));
             }
         }
     }
