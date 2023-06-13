@@ -8,6 +8,8 @@ import { UiView } from './uiView.js';
 import { Direction } from './direction.js';
 import { Grid } from './grid.js';
 import { HexGrid } from './hexgrid.js';
+import { Vect } from './vect.js';
+import { Overlaps } from './intersect.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
@@ -113,11 +115,13 @@ class UiGrid extends UiView {
     _ijFromPoint(x, y) { return this.chunks._ijFromPoint(x,y); }
     ijFromPoint(p) { return this.chunks.ijFromPoint(p); }
     pointFromIdx(idx, center=false) { return this.chunks.pointFromIdx(idx, center); }
+    _pointFromIJ(i, j, center=false) { return this.chunks._pointFromIJ(i, j, center); }
+    pointFromIJ(ij, center=false) { return this.chunks.pointFromIJ(ij, center); }
     ijFromIdx(idx) { return this.chunks.ijFromIdx(idx); }
     _idxFromIJ(i,j) { return this.chunks._idxFromIJ(i,j); }
     idxFromIJ(ij) { return this.chunks.idxFromIJ(ij); }
     _idxFromPoint(x, y) { return this.chunks._idxFromPoint() }
-    idxfromxy(x,y) { return this.chunks.idxfromij(this.ifromx(x),this.jfromy(y)); }
+    idxFromPoint(xy) { return this.chunks.idxFromPoint(xy); }
     idxFromDir(idx, dir) { return this.chunks.idxFromDir(idx, dir); }
     idxsAdjacent(idx1, idx2) { return this.chunks.idxsAdjacent(idx1, idx2); }
     *idxsBetween(idx1, idx2) { yield *this.chunks.idxsBetween(idx1, idx2); }
@@ -144,8 +148,10 @@ class UiGrid extends UiView {
 
     getLocal(worldPos, chain=true) {
         let localPos = this.xform.getLocal(worldPos, chain);
-        localPos.x -= this.xform.minx + Math.round((this.xform.width)*this.alignx);
-        localPos.y -= this.xform.miny + Math.round((this.xform.height)*this.aligny);
+        //localPos.x -= this.xform.minx + Math.round((this.xform.width)*this.alignx);
+        //localPos.y -= this.xform.miny + Math.round((this.xform.height)*this.aligny);
+        localPos.x -= this.xform.minx;
+        localPos.y -= this.xform.miny;
         return localPos;
     }
 
@@ -218,9 +224,11 @@ class UiGrid extends UiView {
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
         let t = this.pointFromIdx(idx);
         //console.log(`idx: ${idx} d: ${dx},${dy} t: ${t.x},${t.y}`);
-        if (this.optimizeRender) {
-            if (!this.xform.bounds.overlaps(new Bounds({x:dx+t.x, y:dy+t.y, width:this.colSize, height:this.rowSize}))) {
-                if (this.dbg) console.log(`-- chunk: ${idx} ${dx+t.x},${dy+t.y} is out of bounds against ${this.xform.bounds}`);
+        if (this.parent && this.optimizeRender) {
+            const min = this.xform.getWorld({x:t.x+dx, y:t.y+dy}, false);
+            const max = this.xform.getWorld({x:t.x+dx+this.colSize, y:t.y+dy+this.rowSize}, false);
+            if (!Overlaps.bounds(this.parent.xform.bounds, {minx:min.x, miny:min.y, maxx: max.x, maxy:max.y})) {
+                if (this.dbg) console.log(`-- chunk: ${idx} ${t.x},${t.y} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }
@@ -241,22 +249,14 @@ class UiGrid extends UiView {
         this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
     }
 
-    childrender(ctx) {
-        //let dx = this.xform.minx + this.bounds.x + Math.round((this.xform.width - this.bounds.width)*this.alignx);
-        let dx = Math.round((this.xform.width)*this.alignx);
-        //let dy = this.xform.miny + this.bounds.y + Math.round((this.xform.height - this.bounds.height)*this.aligny);
-        let dy = Math.round((this.xform.height)*this.aligny);
-        ctx.translate(dx, dy);
-        for (const child of this.children) {
-            child.render(ctx);
-        }
-        ctx.translate(-dx, -dy);
-    }
-
     subrender(ctx) {
         // compute delta between xform space and grid space
-        let dx = this.xform.minx + Math.round((this.xform.width)*this.alignx);
-        let dy = this.xform.miny + Math.round((this.xform.height)*this.aligny);
+        let dx = this.xform.minx;
+        let dy = this.xform.miny;
+        //let p = { x:0, y:0 };
+        //let wp = this.xform.getWorld(p, false);
+        //wp = this.xform.parent.getWorld(wp, false);
+        //console.log(`delta: ${this.xform.x},${this.xform.y} wp: ${wp}`);
         // render any updated chunks
         if (this.rerender) {
             this.chunkUpdates.clear();
@@ -276,22 +276,6 @@ class UiGrid extends UiView {
         // overlay grid
         if (this.dbg && this.dbg.grid) {
             this.chunks.render(ctx, dx, dy);
-            /*
-            for (let i=0; i<=this.chunks.cols; i++) {
-                ctx.strokeStyle = 'rgba(0,255,0,.5)';
-                ctx.beginPath();
-                ctx.moveTo(dx+i*this.colSize, dy);
-                ctx.lineTo(dx+i*this.colSize, dy+this.xform.height);
-                ctx.stroke();
-            }
-            for (let j=0; j<=this.chunks.rows; j++) {
-                ctx.strokeStyle = 'rgba(0,255,0,.5)';
-                ctx.beginPath();
-                ctx.moveTo(dx, dy+this.rowSize*j);
-                ctx.lineTo(dx+this.xform.width, dy+this.rowSize*j);
-                ctx.stroke();
-            }
-            */
         }
 
 

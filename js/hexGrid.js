@@ -32,10 +32,11 @@ class HexGrid extends HexBucketArray {
     static _ijFromPoint(px, py, dimx, dimy, sizex, sizey) {
         let qtry = sizey*.25;
         let halfx = sizex*.5;
+
         // if point is within mid section of hex, use i/j derived from column/row sizes
-        let j = Mathf.clampInt(Math.floor(py/sizey), 0, dimy-1);
+        let j = Math.floor(py/sizey);
         let offx = (j%2) ? halfx : 0;
-        let i = Mathf.clampInt(Math.floor((px-offx)/sizex), 0, dimx-1);
+        let i = Math.floor((px-offx)/sizex);
         let xm = (px-offx) % sizex;
         let ym = py % sizey;
         //let ym = py % rsize;
