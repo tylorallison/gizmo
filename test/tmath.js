@@ -108,3 +108,23 @@ describe("a rounding function", () => {
         });
     }
 });
+
+describe("a angle normalization function", () => {
+    // intersects
+    for (const test of [
+        {args: [90, 0, false], xrslt: 90},
+        {args: [-90, 0, false], xrslt: 270},
+        {args: [-90, -180, false], xrslt: -90},
+        {args: [-360, -180, false], xrslt: 0},
+        {args: [270, -180, false], xrslt: -90},
+        {args: [180, -180, false], xrslt: -180},
+        {args: [-360, 0, false], xrslt: 0},
+        {args: [-450, 0, false], xrslt: 270},
+        {args: [-450, -180, false], xrslt: -90},
+    ]) {
+        it(`can normalize ${test.args}`, ()=>{
+            const rslt = Mathf.normalizeAngle(...test.args);
+            expect(rslt).toBeCloseTo(test.xrslt);
+        });
+    }
+});

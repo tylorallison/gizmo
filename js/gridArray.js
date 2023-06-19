@@ -103,6 +103,40 @@ class GridArray extends GizmoData {
     }
 
     /**
+     * Determines if the given two indices are adjacent to each other.
+     * @param {int} idx1 - index 1
+     * @param {int} idx2 - index 2
+     * @returns  {boolean}
+     */
+    static _idxsAdjacent(idx1, idx2, dimx, dimy) {
+        for (const dir of this.constructor.directions) {
+            if (this._idxFromDir(idx1, dir, dimx, dimy) === idx2) return true;
+        }
+        return false;
+    }
+    static idxsAdjacent(idx1, idx2, dim) {
+        if (!dim) return false;
+        return this._idxsAdjacent(idx1, idx2, dim.x, dim.y);
+    }
+
+    /**
+     * Determines if the given two ij points are adjacent to each other.
+     * @param {int} ij1 - indexed ij
+     * @param {int} ij2 - indexed ij
+     * @returns  {boolean}
+     */
+    static _ijAdjacent(i1, j1, i2, j2) {
+        if (i1 === i2 && j1 === j2) return false;
+        let di = Math.abs(i1-i2);
+        let dj = Math.abs(j1-j2);
+        return di<=1 && dj <=1;
+    }
+    static ijAdjacent(ij1, ij2) {
+        if (!ij1 || !ij2) return false;
+        return this._ijAdjacent(ij1.x, ij1.y, ij2.x, ij2.y);
+    }
+
+    /**
      * Resizes the given grid array and creates a new grid array and optionally shifts array entries based on given offsets.  Any out-of-bounds data is lost.
      * @param {GridArray} ga - grid array to resize
      * @param {ArrayDimension} dim - dimensions for the array
@@ -185,6 +219,20 @@ class GridArray extends GizmoData {
             if (this.idxFromDir(idx1, dir) === idx2) return true;
         }
         return false;
+    }
+
+    /**
+     * Determines if the given two ij points are adjacent to each other.
+     * @param {int} ij1 - indexed ij
+     * @param {int} ij2 - indexed ij
+     * @returns  {boolean}
+     */
+    _ijAdjacent(i1, j1, i2, j2) {
+        return this.constructor._ijAdjacent(i1, j1, i2, j2)
+    }
+    ijAdjacent(ij1, ij2) {
+        if (!ij1 || !ij2) return false;
+        return this.constructor.ijAdjacent(ij1, ij2)
     }
 
     // -- accessor methods

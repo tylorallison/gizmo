@@ -143,14 +143,14 @@ class Vect extends GizmoData {
         return new Vect({x:(v1.x||0)/m, y:(v1.y||0)/m});
     }
 
-    static heading(v1, rad=false) {
+    static heading(v1, rad=true) {
         if (!v1) return NaN;
         let a = Math.atan2(v1.y||0, v1.x||0);
         if (rad) return a;
         return a*180/Math.PI;
     }
 
-    static rotate(v1, angle, rad=false) {
+    static rotate(v1, angle, rad=true) {
         if (!v1) return null;
         let ra = (rad) ? angle : angle*Math.PI/180;
         ra += this.heading(v1, true);
@@ -158,7 +158,7 @@ class Vect extends GizmoData {
         return new Vect({x: Math.cos(ra)*m, y: Math.sin(ra)*m});
     }
 
-    static angle(v1, v2, rad=false) {
+    static angle(v1, v2, rad=true) {
         if (!v1 || !v2) return NaN;
         let a1 = Math.atan2(v1.y||0, v1.x||0);
         let a2 = Math.atan2(v2.y||0, v2.x||0);
@@ -335,13 +335,13 @@ class Vect extends GizmoData {
         return this;
     }
 
-    heading(rad=false) {
+    heading(rad=true) {
         let a = Math.atan2(this.y, this.x);
         if (rad) return a;
         return a*180/Math.PI;
     }
 
-    rotate(angle, rad=false) {
+    rotate(angle, rad=true) {
         let ra = (rad) ? angle : angle*Math.PI/180;
         ra += this.heading(true);
         let m = this.mag;
@@ -350,7 +350,7 @@ class Vect extends GizmoData {
         return this;
     }
 
-    angle(v2, rad=false) {
+    angle(v2, rad=true) {
         if (!v2) return NaN;
         let a1 = Math.atan2(this.y, this.x);
         let a2 = Math.atan2(v2.y||0, v2.x||0);

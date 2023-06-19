@@ -38,6 +38,21 @@ class HexArray extends GridArray {
         return this._idxFromIJ(ij.x+oi, ij.y+oj, dimx, dimy);
     }
 
+    static _ijAdjacent(i1, j1, i2, j2) {
+        if (i1 === i2 && j1 === j2) return false;
+        let di = Math.abs(i1-i2);
+        let dj = Math.abs(j1-j2);
+        if (dj === 0 && di<=1) return true;
+        if (dj <= 1) {
+            if (j1%2) {
+                return ((i1===i2) || (i1===i2-1));
+            } else {
+                return ((i1===i2+1) || (i1===i2));
+            }
+        }
+        return false;
+    }
+
 }
 
 class HexBucketArray extends GridBucketArray {
@@ -74,4 +89,20 @@ class HexBucketArray extends GridBucketArray {
         }
         return this._idxFromIJ(ij.x+oi, ij.y+oj, dimx, dimy);
     }
+
+    static _ijAdjacent(i1, j1, i2, j2) {
+        if (i1 === i2 && j1 === j2) return false;
+        let di = Math.abs(i1-i2);
+        let dj = Math.abs(j1-j2);
+        if (dj === 0 && di<=1) return true;
+        if (dj <= 1) {
+            if (j1%2) {
+                return ((i1===i2) || (i1===i2-1));
+            } else {
+                return ((i1===i2+1) || (i1===i2));
+            }
+        }
+        return false;
+    }
+
 }

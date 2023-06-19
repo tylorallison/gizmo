@@ -29,7 +29,7 @@ class Mathf {
         return +(Math.round(val + "e+" + places) + "e-" + places);
     }
 
-    static angle(cx, cy, ex, ey, rad=false) {
+    static angle(cx, cy, ex, ey, rad=true) {
         let dx = ex - cx;
         let dy = ey - cy;
         let theta = Math.atan2(dy, dx);     // range (-PI, PI]
@@ -39,7 +39,27 @@ class Mathf {
         return theta;
     }
 
-    static angleBetween(a, b, rad=false) {
+    static modulo(number, divisor) {
+        if (number < 0) {
+            return ((number % divisor) + divisor) % divisor;
+        }
+        return number % divisor;
+    }
+
+    /**
+     * normalize the given angle expressed in radians or degrees to be either within -PI to PI (half)
+     * or 0 to 2*PI
+     * @param {float} angle 
+     * @param {bool} [rad=true] - angle is expressed in radians (true) or degrees (false)
+     * @param {float} [min=-Math.PI] - starting angle for normalization
+     */
+    static normalizeAngle(angle, min=-Math.PI, rad=true) {
+        angle -= min;
+        angle = this.modulo(angle, (rad) ? Math.PI*2 : 360);
+        return angle + min;
+    }
+
+    static angleBetween(a, b, rad=true) {
         let d = a - b;
         if (rad) {
             d += (d > Math.PI) ? -Math.PI*2 : (d < -Math.PI) ? Math.PI*2 : 0;

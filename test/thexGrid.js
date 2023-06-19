@@ -7,7 +7,7 @@ describe('hexgrid implementation', () => {
     for (const test of [
         { p: {x:32-15,y:40-15}, xrslt: {x:0,y:0} },
         { p: {x:32+15,y:40-15}, xrslt: {x:1,y:0} },
-        { p: {x:32-17,y:40}, xrslt: {x:0,y:1} },
+        { p: {x:32-17,y:40}, xrslt: {x:-1,y:1} },
         { p: {x:32+17,y:40}, xrslt: {x:1,y:1} },
         { p: {x:32-15,y:40+15}, xrslt: {x:0,y:2} },
         { p: {x:32+15,y:40+15}, xrslt: {x:1,y:2} },
@@ -55,6 +55,32 @@ describe('hexgrid implementation', () => {
     ]) {
         it(`can find idx for bounds ${test.b}`, ()=>{
             let rslt = HexGrid.idxsFromBounds(test.b, {x:8, y:8}, {x:32, y:24});
+            expect(rslt).toEqual(test.xrslt);
+        });
+    }
+
+    for (const test of [
+        { i1:0, j1:0, i2:0, j2:0, xrslt:false },
+        { i1:1, j1:1, i2:0, j2:0, xrslt:false },
+        { i1:1, j1:1, i2:1, j2:0, xrslt:true },
+        { i1:1, j1:1, i2:2, j2:0, xrslt:true },
+        { i1:1, j1:1, i2:3, j2:0, xrslt:false },
+        { i1:1, j1:1, i2:0, j2:1, xrslt:true },
+        { i1:1, j1:1, i2:1, j2:1, xrslt:false },
+        { i1:1, j1:1, i2:2, j2:1, xrslt:true },
+        { i1:1, j1:1, i2:3, j2:1, xrslt:false },
+        { i1:1, j1:1, i2:0, j2:2, xrslt:false },
+        { i1:1, j1:1, i2:1, j2:2, xrslt:true },
+        { i1:1, j1:1, i2:2, j2:2, xrslt:true },
+        { i1:1, j1:1, i2:3, j2:2, xrslt:false },
+        { i1:1, j1:2, i2:0, j2:1, xrslt:true },
+        { i1:1, j1:2, i2:1, j2:1, xrslt:true },
+        { i1:1, j1:2, i2:2, j2:1, xrslt:false },
+        { i1:1, j1:2, i2:3, j2:1, xrslt:false },
+
+    ]) {
+        it(`can test adjacent ij ${test.i1},${test.j1} ${test.i2},${test.j2}`, ()=>{
+            let rslt = HexGrid._ijAdjacent(test.i1, test.j1, test.i2, test.j2);
             expect(rslt).toEqual(test.xrslt);
         });
     }
