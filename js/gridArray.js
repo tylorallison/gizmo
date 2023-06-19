@@ -3,6 +3,7 @@ export { GridArray, GridBucketArray };
 import { Direction } from './direction.js';
 import { GizmoData } from './gizmoData.js';
 import { Util } from './util.js';
+import { Vect } from './vect.js';
 
 /**
  * Implements a 2-dimensional grid array and methods for indexing and accessing data within
@@ -100,6 +101,26 @@ class GridArray extends GizmoData {
         for (const [i,j] of Util.pixelsInSegment(ij1.x, ij1.y, ij2.x, ij2.y)) {
             yield this.idxFromIJ(i, j, dim);
         }
+    }
+
+    static *_idxsInRange(idx, range, dimx, dimy) {
+        let cij = this._ijFromIdx(idx, dimx, dimy);
+        let mini = Math.max(cij.x-range, 0);
+        let maxi = Math.min(cij.x+range, dimx);
+        let minj = Math.max(cij.y-range, 0);
+        let maxj = Math.min(cij.y+range, dimy);
+        for (let i=mini; i<=maxi; i++) {
+            for (let j=minj; j<=maxj; j++) {
+                let d = Vect._dist(cij.x, cij.y, i, j)
+                if (d<=range) {
+                    yield this._idxFromIJ(i, j, dimx, dimy);
+                }
+            }
+        }
+    }
+    static *idxsInRange(idx, range, dim) {
+        if (!dim) return;
+        yield *this._idxsInRange(idx, range, dim.x, dim.y)
     }
 
     /**
@@ -206,6 +227,10 @@ class GridArray extends GizmoData {
      */
     *idxsBetween(idx1, idx2) {
         yield *this.constructor.idxsBetween(idx1, idx2, {x: this.cols, y:this.rows});
+    }
+
+    *idxsInRange(idx, range) {
+        yield *this.constructor._idxsInRange(idx, range, this.cols, this.rows)
     }
 
     /**

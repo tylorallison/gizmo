@@ -125,11 +125,14 @@ class Vect extends GizmoData {
         return ((v1.x||0)*(v2.y||0)) - ((v1.y||0)*(v2.x||0));
     }
 
+    static _dist(v1x, v1y, v2x, v2y) {
+        const dx = (v2x||0)-(v1x||0);
+        const dy = (v2y||0)-(v1y||0);
+        return Math.sqrt(dx*dx + dy*dy);
+    }
     static dist(v1, v2) {
         if (!v1 || !v2) return NaN;
-        const dx = (v2.x||0)-(v1.x||0);
-        const dy = (v2.y||0)-(v1.y||0);
-        return Math.sqrt(dx*dx + dy*dy);
+        return this._dist(v1.x, v1.y, v2.x, v2.y);
     }
 
     static mag(v1) {
