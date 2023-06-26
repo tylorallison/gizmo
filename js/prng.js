@@ -13,6 +13,9 @@ class Prng {
     static seed(v) {
         return this.main.seed(v);
     }
+    static mix(v) {
+        return this.main.mix(v);
+    }
     static random() {
         return this.main.random();
     }
@@ -46,8 +49,6 @@ class Prng {
         this.state = seed;
     }
 
-    //static _seed = 1;
-
     /**
      * Creates a pseudo-random value generator. The seed must be an integer.
      *
@@ -57,6 +58,18 @@ class Prng {
     seed(v) {
         const last = this.state;
         this.state = v % 2147483647;
+        if (this.state <= 0) this.state += 2147483646;
+        return last;
+    }
+
+    /**
+     * Mix in a seed value to the current PRNG state
+     * @param {*} v 
+     * @returns 
+     */
+    mix(v) {
+        const last = this.state;
+        this.state = (this.state + v) % 2147483647;
         if (this.state <= 0) this.state += 2147483646;
         return last;
     }

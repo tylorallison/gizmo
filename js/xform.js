@@ -379,8 +379,8 @@ class XForm extends GizmoData {
     }
 
     toString() {
-        //return Fmt.toString(this.constructor.name, this.minx, this.miny, this.width, this.height);
-        return Fmt.toString(this.constructor.name);
+        return Fmt.toString(this.constructor.name, this.minx, this.miny, this.width, this.height);
+        //return Fmt.toString(this.constructor.name);
     }
 
 }
