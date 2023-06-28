@@ -1,6 +1,7 @@
 export { UiView };
 
 import { EvtSystem } from './event.js';
+import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Hierarchy } from './hierarchy.js';
 import { SfxSystem } from './sfxSystem.js';

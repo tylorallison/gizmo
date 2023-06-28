@@ -245,8 +245,10 @@ class UiGrid extends UiView {
         }
         this.chunkCtx.translate(t.x, t.y);
         // -- resulting chunk is rendered to grid canvas
-        this.gridCtx.clearRect(t.x, t.y, this.colSize, this.rowSize);
-        this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
+        if (rendered) {
+            this.gridCtx.clearRect(t.x, t.y, this.colSize, this.rowSize);
+            this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
+        }
     }
 
     subrender(ctx) {
