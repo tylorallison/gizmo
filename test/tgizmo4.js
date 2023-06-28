@@ -1,18 +1,18 @@
 
 import { Fmt } from '../js/fmt.js';
-import { Gizmo } from '../js/gizmo4.js';
+import { Gadget } from '../js/gizmo4.js';
 
 describe('gizmo4', () => {
 
     it('playground', ()=>{
-        class Test extends Gizmo {
+        class Test extends Gadget {
             static {
                 this.schema('foo', {dflter: () => 3});
             }
             cparse(foo) {
                 super.cparse();
                 console.log(`test cparse`);
-                this.constructor.xparse(this, 'foo', foo);
+                this.constructor.kvparse(this, 'foo', foo);
             }
         }
         let g = new Test();

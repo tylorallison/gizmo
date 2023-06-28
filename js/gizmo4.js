@@ -1,4 +1,4 @@
-export { Gizmo };
+export { Gadget, Gizmo };
 
 import { Fmt } from './fmt.js';
 
@@ -55,30 +55,71 @@ class GizmoSchema {
     }
 }
 
-class Gizmo {
+class GadgetLink {
+    constructor(gdt) {
+        this.gdt = gdt;
+        this.leafs = [];
+        this.trunk;
+    }
+}
+
+class Gadget {
 
     static $registry = new Map();
     static register() {
-        console.log(`register ${this.name}`);
         if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
     }
 
+    /*
+    static link(trunk, key, sentry, target) {
+        if (!trunk || !target) return false;
+        if (trunk === target || this.findInPath(trunk.$link, (n) => n === target)) {
+            console.error(`hierarchy loop detected ${target} already in path: ${trunk}`);
+            throw(`hierarchy loop detected ${target} already in path: ${trunk}`);
+        }
+        //if (!trunk.$link) trunk.$link = new GizmoDataLink( trunk );
+        if (!trunk.$link) this.assignLinkProperty(trunk, new GizmoDataLink( trunk ));
+        //if (!target.$link) target.$link = new GizmoDataLink( target );
+        if (!target.$link) this.assignLinkProperty(target, new GizmoDataLink( target ));
+        if (!trunk.$link.leafs) {
+            trunk.$link.leafs = [ target.$link ];
+        } else {
+            trunk.$link.leafs.push(target.$link);
+        }
+        target.$link.trunk = trunk.$link;
+        target.$link.sentry = sentry;
+        target.$link.key = key;
+        //console.log(`== link ${trunk} to ${target} key: ${key} cname: ${target.constructor.name} schema: ${target.$schema}`);
+        if (target.$schema) {
+            //console.log(`-- link ${trunk}.${key} to ${target} deps: ${Array.from(target.constructor.$schema.trunkGenDeps)}`);
+            for (const agk of target.$schema.trunkGenDeps) {
+                //console.log(`XXX set autogen ${target}.${agk}`);
+                GizmoData.set(target, agk, '#autogen#');
+            }
+        }
+        this.linkUpdate(target, target);
+        if ('atLink' in target) target.atLink(trunk);
+    }
+    */
+
+    /*
     static get(target, key, sentry=null) {
         if (!target) return undefined;
         if (!sentry) sentry = (target.$schema) ? target.$schema.map[key] : null;
         if (sentry && sentry.getter) return sentry.getter(target);
-        return (target.$values) ? target.$values[key] : undefined;
+        return (target.#values) ? target.#values[key] : undefined;
     }
+    */
 
     static set(target, key, value, sentry=null) {
-        if (!target || !target.$values) return false;
+        if (!target || !target.#values) return false;
         if (!sentry) sentry = (target.$schema) ? target.$schema.get(key) : null;
         //if (sentry && sentry.generator) value = sentry.generator(target, value);
         let storedValue;
         if (target.$defined) {
-            storedValue = target.$values[key];
+            storedValue = target.#values[key];
             if (Object.is(storedValue, value)) return true;
-            //if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
+            if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
         }
         //console.log(`== set ${target} ${key}=>${value} sentry: ${sentry}`);
         // FIXME: link
@@ -90,32 +131,31 @@ class Gizmo {
             //console.log(`set linking ${target}.${key} to ${value}`);
             //GizmoDataLink.link(target, key, sentry, value);
         //}
-        target.$values[key] = value;
-        /*
-        if (target.$defined) {
-            if (sentry) {
-                if (sentry.atUpdate) sentry.atUpdate( target, target, key, storedValue, value );
-                for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
-            }
+        target.#values[key] = value;
+        //if (target.$defined) {
+            //if (sentry) {
+                //if (sentry.atUpdate) sentry.atUpdate( target, target, key, storedValue, value );
+                //for (const agk of sentry.autogendeps) this.set(target, agk, '#autogen#');
+            //}
             //console.log(`target: ${target} key: ${key}`);
-            const watchers = (target.$link) ? target.$link.watchers : null;
-            if (watchers) {
-                for (const watcher of watchers) {
-                    //console.log(`-- target: ${target} key: ${key} watcher`);
-                    watcher.watcher(target, key, storedValue, value);
-                }
-            }
-            if (!target.$link || !target.$link.trunk) {
-                if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
-                    EvtSystem.trigger(target, 'gizmo.set', { 'set': { [key]: value }});
-                }
-            }
-        }
-        */
-        return true;
+            //const watchers = (target.$link) ? target.$link.watchers : null;
+            //if (watchers) {
+                //for (const watcher of watchers) {
+                    ////console.log(`-- target: ${target} key: ${key} watcher`);
+                    //watcher.watcher(target, key, storedValue, value);
+                //}
+            //}
+            //if (!target.$link || !target.$link.trunk) {
+                //if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
+                    //EvtSystem.trigger(target, 'gizmo.set', { 'set': { [key]: value }});
+                //}
+            //}
+        //}
+        //return true;
     }
 
     static schema(key, spec={}) {
+        /*
         this.register();
         let schema;
         let clsp = this.prototype;
@@ -139,38 +179,44 @@ class Gizmo {
             }
         }
         Object.defineProperty(clsp, key, property);
+        */
     }
 
-    static parser(o, spec) {
+    /*
+    static xparse(o, spec) {
         const schema = o.$schema;
-        console.log(`schema: ${schema}`);
         if (schema) {
             for (const sentry of schema.entries) {
-                console.log(`sentry: ${sentry}`);
                 this.set(o, sentry.key, sentry.parser(o, spec), sentry);
             }
         }
         o.$defined = true;
     }
+    */
 
-    static xparse(o, key, value) {
+    static kvparse(o, key, value) {
         const sentry = (o.$schema) ? o.$schema.get(key): null;
         if (sentry && value === undefined) value = (sentry.dflter) ? sentry.dflter(o) : undefined;
-        console.log(`key: ${key} value: ${value}`);
         this.set(o, key, value, sentry);
     }
 
+    //#trunk = null;
+    //#leafs = [];
+    #values = {};
+    //#values;
+
+
     constructor(...args) {
-        this.$values = {};
+        //this.$values = {};
         this.cparse(...args);
     }
 
     cparse(spec) {
         if (spec) {
-            this.constructor.parser(this, spec);
+            this.constructor.xparse(this, spec);
         }
     }
 }
 
-class Gadget {
+class Gizmo extends Gadget {
 }

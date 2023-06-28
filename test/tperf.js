@@ -1,23 +1,45 @@
 import { Fmt } from '../js/fmt.js';
-import { GizmoData } from '../js/gizmoData.js';
-import { Schema } from '../js/schema.js';
+//import { GizmoData } from '../js/gizmoData.js';
+//import { Schema } from '../js/schema.js';
 
-class tVect1 extends GizmoData { 
-    static {
-        GizmoData.schema(this, 'x', { dflt: 0 });
-        GizmoData.schema(this, 'y', { dflt: 0 });
-    }
-    constructor(x,y) {
-        super({x:x, y:y});
-    }
-}
+import { Gadget } from '../js/gizmo4.js';
 
-class tVect2 {
+class baseVect {
     constructor(x,y) {
         this.x = x;
         this.y = y;
     }
 }
+
+class base {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+class subVect extends base {
+}
+
+class tVect1 extends Gadget { 
+    static {
+        this.schema('x', { dflter: () => 0 });
+        this.schema('y', { dflter: () => 0 });
+    }
+    cparse(x, y) {
+        //this.$values.x = x;
+        //this.$values.y = y;
+        //this.$values['x'] = x;
+        //this.$values['y'] = y;
+        //let key = 'x';
+        //this.$values[key] = x;
+        //key = 'y';
+        //this.$values[key] = y;
+        this.constructor.kvparse(this, 'x', x);
+        this.constructor.kvparse(this, 'y', y);
+    }
+}
+
+/*
 
 class tVect3 {
     static {
@@ -93,29 +115,32 @@ class tVect5 {
         return proxy;
     }
 }
-
-function defp(o,k) {
-    Object.defineProperty(o, k, {
-        enumerable: true,
-        get() {
-            return (this.$values) ? this.$values.get(k) : undefined;
-        },
-        set(v) {
-            if (this.$values) this.$values.set(k,v);
-        },
-    });
-}
+*/
 
 class tVect6 {
+
+    static defp(o,k) {
+        Object.defineProperty(o, k, {
+            enumerable: true,
+            get() {
+                return (this.#values) ? this.#values[k] : undefined;
+            },
+            set(v) {
+                if (this.#values) this.#values[k] = v;
+            },
+        });
+    }
+
     static registry = new Map();
     static init() {
         if (!this.registry.has(this.name)) this.registry.set(this.name, this);
     }
     static {
         //console.log(`static this.prototype: ${this.prototype}`);
-        defp(this.prototype, 'x');
-        defp(this.prototype, 'y');
+        this.defp(this.prototype, 'x');
+        this.defp(this.prototype, 'y');
     }
+    #values = {};
     constructor(x,y) {
         this.$values = new Map();
         this.x = x;
@@ -124,7 +149,11 @@ class tVect6 {
 }
 
 const clss = [
+    baseVect,
+    subVect,
     tVect1,
+    subVect,
+    baseVect,
     //tVect2,
     //tVect3,
     //tVect4,
@@ -132,20 +161,7 @@ const clss = [
     //tVect5,
 ]
 
-//const iterations = 250000;
-const iterations = 1000000;
-//const iterations = 2;
-//const iterations = 2500000;
-
-describe('dp test', () => {
-    it('is it functional', ()=>{
-        let v = new tVect6(1,2);
-        let v2 = new tVect6(3,4);
-        v2.y = 55;
-        //console.log(`v.constructor.x: ${v.constructor.x}`);
-    });
-});
-
+const iterations = 3000000;
 
 describe('perf tests', () => {
 
@@ -160,7 +176,7 @@ describe('perf tests', () => {
         }
     });
 
-    it(`performance to get property`, ()=>{
+    xit(`performance to get property`, ()=>{
         for (const cls of clss) {
             let tag = `get test:${cls.name}`;
             let v = new cls(1,2);
@@ -174,7 +190,7 @@ describe('perf tests', () => {
         }
     });
 
-    it('performance to set property', ()=>{
+    xit('performance to set property', ()=>{
         for (const cls of clss) {
             let tag = `set test:${cls.name}`;
             let v = new cls(1,2);
