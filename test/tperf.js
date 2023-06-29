@@ -12,12 +12,17 @@ class baseVect {
 }
 
 class base {
-    constructor(x,y) {
-        this.x = x;
-        this.y = y;
+    cparse() {
+    }
+    constructor(...args) {
+        this.cparse(...args);
     }
 }
 class subVect extends base {
+    cparse(x,y) {
+        this.x = x;
+        this.y = y;
+    }
 }
 
 class tVect1 extends Gadget { 
@@ -34,8 +39,10 @@ class tVect1 extends Gadget {
         //this.$values[key] = x;
         //key = 'y';
         //this.$values[key] = y;
-        this.constructor.kvparse(this, 'x', x);
-        this.constructor.kvparse(this, 'y', y);
+        //this.constructor.kvparse(this, 'x', x);
+        //this.constructor.kvparse(this, 'y', y);
+        this.x = x;
+        this.y = y;
     }
 }
 
@@ -136,13 +143,11 @@ class tVect6 {
         if (!this.registry.has(this.name)) this.registry.set(this.name, this);
     }
     static {
-        //console.log(`static this.prototype: ${this.prototype}`);
         this.defp(this.prototype, 'x');
         this.defp(this.prototype, 'y');
     }
     #values = {};
     constructor(x,y) {
-        this.$values = new Map();
         this.x = x;
         this.y = y;
     }

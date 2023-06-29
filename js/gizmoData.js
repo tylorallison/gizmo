@@ -128,7 +128,6 @@ class GizmoDataLink {
                 }
             }
         }
-
         if (link.leafs) {
             for (const llink of link.leafs) {
                 //console.log(`>>>> linkUpdate dive: ${llink} ${trunk},${llink.node}`);
