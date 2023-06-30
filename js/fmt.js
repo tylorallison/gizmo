@@ -6,7 +6,10 @@ import { GizmoData } from './gizmoData.js';
 class Fmt {
     // STATIC METHODS ------------------------------------------------------
     static toString(name, ...args) {
-        return `{${name}:${args.join('|')}}`;
+        if (args.length) {
+            return `{${name}:${args.join('|')}}`;
+        }
+        return `{${name}}`;
     }
 
     static ofmt(obj, seen=new WeakSet()) {
