@@ -72,6 +72,7 @@ describe('gizmo4', () => {
         console.log(`r.arr.$proxy: ${r.arr.$proxy}`);
         console.log(`r.arr.$target: ${r.arr.$target}`);
         console.log(`r.arr[0]: ${r.arr[0]}`);
+        //console.log(`r.arr[0].$dbg: ${r.arr[0].$dbg}`);
         let v = { foo: 'bar', hello: 'world'};
         for (const el of r.arr) {
             console.log(`el: ${el}`);

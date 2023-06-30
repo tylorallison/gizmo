@@ -79,6 +79,19 @@ class Gadget {
         return null;
     }
 
+    static {
+        Object.defineProperty(this.prototype, '$trunk', {
+            enumerable: false,
+            get() {
+                console.log(`this: ${this}`);
+                return this.#trunk;
+            },
+            set(value) {
+                this.#trunk = value;
+            },
+        });
+    }
+
     static *eachInPath(gadget, filter=() => true) {
         for (; gadget; gadget=gadget.#trunk) {
             if (filter(gadget)) yield gadget;
@@ -99,7 +112,13 @@ class Gadget {
             throw(`hierarchy loop detected ${target} already in path: ${trunk}`);
         }
         trunk.#leafs.push(target);
-        target.#trunk = trunk;
+        console.log(`target: ${target} proxy: ${target.$proxy} target.$trunk: ${target.$trunk}`);
+        if (target.$target) {
+            target.$target.#trunk = trunk;
+        } else {
+            target.#trunk = trunk;
+        }
+        console.log(`target: ${target} proxy: ${target.$proxy} target.$trunk: ${target.$trunk}`);
         target.#trunkKey = key;
         target.#trunkSentry = sentry;
         target.#path = (trunk.#path) ? `${trunk.#path}.${key}` : key;
@@ -153,6 +172,7 @@ class Gadget {
     }
 
     static $get(target, key, sentry=null) {
+        if (target.$target) target = target.$target;
         if (sentry.getter) return sentry.getter(target);
         if (sentry.generator) {
             let value;
@@ -175,6 +195,8 @@ class Gadget {
     }
 
     static $set(target, key, value, sentry) {
+        console.log(`== target: ${target} target.$target: ${target.$target}`);
+        if (target.$target) target = target.$target;
         let storedValue;
         if (target.#flags & FDEFINED) {
             storedValue = target.#values[key];
@@ -185,6 +207,7 @@ class Gadget {
             this.$link(target, key, sentry, value);
         } else if (sentry.link && Array.isArray(value)) {
             value = new GadgetArray(value);
+            this.$link(target, key, sentry, value);
         }
         target.#values[key] = value;
         if (target.#flags & FDEFINED) {
@@ -476,6 +499,7 @@ class GadgetArray extends Gadget {
                 if (key === '$target') return target;
                 const value = target[key];
                 if (value instanceof Function) {
+                    console.log(`returning gadget function for ${key.toString()}`);
                     return function (...args) {
                         return value.apply(this === receiver ? target : this, args);
                     };
@@ -484,7 +508,11 @@ class GadgetArray extends Gadget {
                 return target.constructor.$get(target, key, target.esentry);
             },
             set(target, key, value, receiver) {
-                target.constructor.$set(target, key, value, target.esentry);
+                if (Number.isInteger(key)) {
+                    target.constructor.$set(target, key, value, target.esentry);
+                } else {
+                    target[key] = value;
+                }
                 return true;
             },
             deleteProperty(target, key) {
@@ -612,144 +640,4 @@ class GadgetArray extends Gadget {
                 }
                 */
 
-    static $wrapArray(trunk, key, array, sentry) {
-        let defined = false;
-        const setter = this.$set;
-        let target = new class GadgetArray extends Gadget {
-            cparse(arr=[]) {
-                console.log(`-- arr: ${arr}`);
-            }
-        }(array);
-        console.log(`target: ${target}`);
-        console.log(`wrapping: ${array}`);
-        const proxy = new Proxy(target, {
-            get(target, key, receiver) {
-                if (key === '$proxy') return receiver;
-                if (key === '$target') return target;
-                /*
-                if (key === '$values') return target;
-                if (key === '$defined') return defined;
-                */
-                if (target.$link) {
-                    switch (key) {
-                        /*
-                        case 'destroy': 
-                            return () => {
-                                if (target.$link) target.$link.destroy();
-                                delete target['$link'];
-                                if (target.destroy) target.destroy();
-                            }
-                            */
-                        case 'push':
-                            return (...v) => {
-                                let i=target.length;
-                                for (const el of v) {
-                                    this.$set(receiver, i++, el, sentry);
-                                    //this.$set(o, sentry.key, sentry.parser(o, spec), sentry);
-                                }
-                                return target.length;
-                            }
-                            /*
-                        case 'unshift':
-                            return (...v) => {
-                                let i=0;
-                                for (const el of v) {
-                                    target.splice(i, 0, undefined);
-                                    GizmoData.set(receiver, i++, el);
-                                }
-                                return target.length;
-                            }
-                        case 'pop': return () => {
-                            let idx = target.length-1;
-                            if (idx < 0) return undefined;
-                            const v = target[idx];
-                            GizmoData.set(receiver, idx, undefined);
-                            target.pop();
-                            return v;
-                        }
-                        case 'shift': return () => {
-                            if (target.length < 0) return undefined;
-                            const v = target[0];
-                            GizmoData.set(receiver, 0, undefined);
-                            target.shift();
-                            return v;
-                        }
-                        case 'splice': return (start, deleteCount=0, ...avs) => {
-                            let tidx = start;
-                            let aidx = 0;
-                            let dvs = [];
-                            // splice out values to delete, replace w/ items to add (if any)
-                            for (let i=0; i<deleteCount; i++ ) {
-                                dvs.push(target[tidx])
-                                if (aidx < avs.length) {
-                                    GizmoData.set(receiver, tidx++, avs[aidx++]);
-                                } else {
-                                    GizmoData.set(receiver, tidx, undefined);
-                                    target.splice(tidx++, 1);
-                                }
-                            }
-                            // splice in any remainder of items to add
-                            for ( ; aidx<avs.length; aidx++ ) {
-                                target.splice(tidx, 0, undefined);
-                                GizmoData.set(receiver, tidx++, avs[aidx]);
-                            }
-                            return dvs;
-                        }
-                        */
-                    }
-                }
-                const value = target.constructor.$get(target, key, esentry);
-                if (value instanceof Function) {
-                    return function (...args) {
-                        return value.apply(this === receiver ? target : this, args);
-                    };
-                }
-                return value;
-            },
-            set(target, key, value, receiver) {
-                /*
-                if (key.startsWith('$')) {
-                    target[key] = value;
-                } else {
-                    GizmoData.set(receiver, key, value);
-                }
-                */
-                return true;
-            },
-            deleteProperty(target, key) {
-                /*
-                if (key in target) {
-                    //console.log(`target: ${target} link: ${target.$link}`);
-                    const storedValue = target[key];
-                    if (storedValue && typeof storedValue === 'object') GizmoDataLink.unlink(target, storedValue);
-                    delete target[key];
-                    const watchers = (target.$link) ? target.$link.watchers : null;
-                    if (watchers) {
-                        for (const watcher of watchers) {
-                            //console.log(`trigger delete watcher for node: ${watcher.node}`);
-                            watcher.watcher(target, key, storedValue, undefined);
-                        }
-                    }
-                    if (!target.$link || !target.$link.trunk) {
-                        //console.log(`trigger delete`);
-                        if (EvtSystem.isEmitter(target) && (!sentry || sentry.eventable)) {
-                            //console.log(`target: ${target} sentry: ${sentry} emit delete: ${key}:${value}`);
-                            EvtSystem.trigger(target, 'gizmo.delete', { 'set': { [key]: undefined }});
-                        }
-                    }
-                }
-                */
-                return true;
-            }
-        });
-        /*
-        let i = 0;
-        for (const v of array) {
-            //console.log(`---- array[${i} v: ${v}`);
-            GizmoData.set(proxy, i++, v);
-        }
-        */
-        defined = true;
-        return proxy;
-    }
 }
