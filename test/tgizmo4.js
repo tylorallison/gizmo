@@ -2,6 +2,7 @@
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { Gadget, Gizmo } from '../js/gizmo4.js';
+import { SerialData } from '../js/serializer.js';
 
 describe('gizmo4', () => {
 
@@ -56,6 +57,8 @@ describe('gizmo4', () => {
     it('array', ()=>{
         class Root extends Gadget {
             static { this.schema('arr', {dflter: () => []}); };
+            static { this.schema('evtCounts', { link: false, serializable: false, parser: () =>  new Map() }); }
+            static { this.schema('evtEmitterLinks', { link: false, serializable: false, parser: () => new Map() }); }
         }
         class Elem extends Gadget {
             static { this.schema('val', {dflter: () => 1}); };
@@ -72,11 +75,39 @@ describe('gizmo4', () => {
         console.log(`r.arr.$proxy: ${r.arr.$proxy}`);
         console.log(`r.arr.$target: ${r.arr.$target}`);
         console.log(`r.arr[0]: ${r.arr[0]}`);
-        //console.log(`r.arr[0].$dbg: ${r.arr[0].$dbg}`);
+        console.log(`r.arr[0].$dbg: ${r.arr[0].$dbg}`);
         let v = { foo: 'bar', hello: 'world'};
         for (const el of r.arr) {
             console.log(`el: ${el}`);
         }
+
+        let rcv = ExtEvtReceiver.gen();
+        EvtSystem.listen(r, rcv, 'gizmo.set', (evt) => {
+            console.log(`evt: ${Fmt.ofmt(evt)}`);
+        });
+
+        r.arr.push(42);
+        let el = r.arr.pop();
+        console.log(`popped: ${el}`);
+
+        r.arr.unshift(99);
+
+        el = r.arr.shift();
+        console.log(`shifted: ${el}`);
+
+        delete r.arr[1];
+
+        for (const el of r.arr) {
+            console.log(`el: ${el}`);
+        }
+
+        let sdata = new SerialData();
+
+        let xr = r.xify(sdata);
+        console.log(`xr: ${Fmt.ofmt(xr)}`);
+
+
+
     });
 
 });

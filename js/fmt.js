@@ -15,7 +15,7 @@ class Fmt {
     static ofmt(obj, seen=new WeakSet()) {
         if (!obj) return '';
         if (seen.has(obj)) return '<circular data>';
-        seen.add(obj);
+        if (typeof obj === 'object') seen.add(obj);
         if (obj instanceof GizmoData) {
             return `${obj}`;
         }
