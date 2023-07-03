@@ -6,7 +6,7 @@ import { System } from './system.js';
 class KeySystem extends System {
 
     static {
-        this.schema(this, 'pressed', { readonly: true, parser: () => new Map()});
+        this.schema('pressed', { link: false, readonly: true, parser: () => new Map()});
     }
 
     cpre(spec) {

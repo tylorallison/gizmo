@@ -1,7 +1,7 @@
 import { Bounds } from '../js/bounds.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { UpdateSystem } from '../js/updateSystem.js';

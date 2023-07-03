@@ -1,7 +1,7 @@
 export { PathGraph, Pathfinder };
 
 import { Fmt } from "./fmt.js";
-import { GizmoData } from "./gizmoData.js";
+import { Gadget } from "./gizmo.js";
 import { PriorityQueue } from "./priq.js";
 
 class PathGraph {
@@ -22,11 +22,11 @@ class PathGraph {
     }
 }
 
-class Pathfinder extends GizmoData {
+class Pathfinder extends Gadget {
     static {
-        this.schema(this, 'graph', { eventable: false, parser: (o,x) => x.graph || new PathGraph()});
-        this.schema(this, 'dbg', { dflt: false });
-        this.schema(this, 'maxTries', { dflt: 1000 });
+        this.schema('graph', { eventable: false, parser: (o,x) => x.graph || new PathGraph()});
+        this.schema('dbg', { dflt: false });
+        this.schema('maxTries', { dflt: 1000 });
     }
 
     find(e, from, to, equalizer) {

@@ -1,7 +1,6 @@
 export { ExtEvtEmitter, ExtEvtReceiver, EvtLink, EvtSystem, Evt };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
 
 class EvtLink {
     constructor(tag, emitter, receiver, fcn, opts={}) {
@@ -37,11 +36,11 @@ class EvtSystem {
      */
 
     static isEmitter(obj) {
-        return obj && ('evtEmitterLinks' in obj) && ('evtCounts' in obj);
+        return obj && ('evtEmitterLinks' in obj);
     }
     static isEmitterCls(cls) {
         let schema = (cls && cls.prototype) ? cls.prototype.$schema : null;
-        return schema && schema.map.hasOwnProperty('evtEmitterLinks') && schema.map.hasOwnProperty('evtCounts');
+        return schema && schema.map.hasOwnProperty('evtEmitterLinks');
     }
     static isReceiver(obj) {
         return obj && ('evtReceiverLinks' in obj);
@@ -49,21 +48,6 @@ class EvtSystem {
     static isReceiverCls(cls) {
         let schema = (cls && cls.prototype) ? cls.prototype.$schema : null;
         return schema && schema.map.hasOwnProperty('evtReceiverLinks');
-    }
-
-    static addCount(emitter, tag) {
-        if (emitter.evtCounts.has(tag)) {
-            emitter.evtCounts.set(tag, emitter.evtCounts.get(tag)+1);
-        } else {
-            emitter.evtCounts.set(tag, 1);
-        }
-    }
-
-    static getCount(emitter, tag) {
-        if (emitter.evtCounts.has(tag)) {
-            return emitter.evtCounts.get(tag);
-        }
-        return 0;
     }
 
     static addEmitterLink(emitter, link) {
@@ -122,8 +106,6 @@ class EvtSystem {
     static trigger(emitter, tag, atts) {
         // build event
         let evt = new Evt(tag, Object.assign({ actor: emitter }, atts));
-        // update event counts
-        this.addCount(emitter, tag);
         // get listeners for event
         let links = [];
         // -- emitter listeners
@@ -163,6 +145,7 @@ class EvtSystem {
             }
         }
     }
+
 }
 
 
@@ -188,18 +171,10 @@ class Evt {
  */
 class ExtEvtEmitter {
 
-    /** @member {Map} ExtEvtEmitter#evtCounts - a map of event to integer count of event triggers for that event */
     /** @member {Map} ExtEvtEmitter#evtEmitterLinks - a map of event to emitter links for that event */
     static apply(cls, spec={}) {
         // data
-        GizmoData.schema(cls, 'evtCounts', { link: false, serializable: false, parser: () =>  new Map() });
-        GizmoData.schema(cls, 'evtEmitterLinks', { link: false, serializable: false, parser: () => new Map() });
-    }
-
-    static gen(spec={}) {
-        let cls = class extends GizmoData {}
-        this.apply(cls);
-        return new cls(spec);
+        cls.schema('evtEmitterLinks', { link: false, serializable: false, parser: () => new Map() });
     }
 
 }
@@ -208,22 +183,7 @@ class ExtEvtReceiver {
 
     static apply(cls, spec={}) {
         // -- data
-        GizmoData.schema(cls, 'evtReceiverLinks', { link: false, serializable: false, parser: () => [] });
-    }
-
-    static gen(spec={}) {
-        let cls = class extends GizmoData {}
-        this.apply(cls);
-        /*
-        let cls = class {
-            constructor() {
-                GizmoData.parser(this, {});
-                //for (const [key, schema] of Object.entries(this.constructor.schema)) GizmoData.applySchema(schema, this, spec);
-            }
-        }
-        */
-        //this.apply(cls);
-        return new cls(spec);
+        cls.schema('evtReceiverLinks', { link: false, serializable: false, parser: () => [] });
     }
 
 }

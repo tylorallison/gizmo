@@ -1,24 +1,23 @@
 export { StateMgr };
 
-import { GizmoContext } from './gizmoContext.js';
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { GameState } from './gameState.js';
-import { Gizmo } from './gizmo.js';
+import { Gizmo, GizmoContext } from './gizmo.js';
 import { Timer } from './timer.js';
 
 class StateMgr extends Gizmo {
 
     static start(state, data, gctx) {
-        if (!gctx) gctx = GizmoContext.main;
+        if (!gctx) gctx = GizmoContext.dflt;
         EvtSystem.trigger(gctx, 'state.wanted', { state: state, data: data });
     }
         
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'dbg', { dflt: false });
-        this.schema(this, 'states', { readonly: true, parser: () => ({}) });
-        this.schema(this, 'current');
+        this.schema('dbg', { dflt: false });
+        this.schema('states', { readonly: true, parser: () => ({}) });
+        this.schema('current');
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

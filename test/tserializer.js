@@ -1,25 +1,23 @@
 import { Assets } from '../js/assets.js';
 import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
-import { Gizmo } from '../js/gizmo.js';
-import { GizmoContext } from '../js/gizmoContext.js';
-import { GizmoData } from '../js/gizmoData.js';
+import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
 import { Rect } from '../js/rect.js';
 import { SerialData, Serializer } from '../js/serializer.js';
 import { XForm } from '../js/xform.js';
 
-class TSerializerSub extends GizmoData {
-    static { this.schema(this, 'value'); };
+class TSerializerSub extends Gadget {
+    static { this.schema('value'); };
 };
-class TSerializerData extends GizmoData {
+class TSerializerData extends Gadget {
     static { 
-        this.schema(this, 'sub', { link: true });
+        this.schema('sub', { link: true });
     };
 };
 class TSerializerGizmo extends Gizmo {
     static { 
-        this.schema(this, 'data', { link: true });
-        this.schema(this, 'asset', { link: true });
+        this.schema('data', { link: true });
+        this.schema('asset', { link: true });
     };
 }
 

@@ -1,7 +1,7 @@
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
-import { Gizmo } from '../js/gizmo.js';
-import { Gadget } from '../js/gizmo4.js';
-import { GizmoContext } from '../js/gizmoContext.js';
+import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
+import { Fmt } from '../js/fmt.js';
+import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
+import { Helpers } from '../js/helpers.js';
 
 const gadgetClass = Gadget;
 const gSetter = (o, k, v) => o[k] = v;
@@ -16,14 +16,14 @@ describe('gadgets', () => {
 
     it('can have schema applied/redefined', ()=>{
         class TCls1 extends gadgetClass {
-            static { this.schema('var1', { dflter: () => 'foo'} ); }
-            static { this.schema('var2', { dflter: () => 'bar'} ); }
+            static { this.schema('var1', { dflt: 'foo'} ); }
+            static { this.schema('var2', { dflt: 'bar'} ); }
         };
         class TCls2 extends TCls1 {
-            static { this.schema('var3', { dflter: () => 'hello', readonly: true} ); }
+            static { this.schema('var3', { dflt: 'hello', readonly: true} ); }
         };
         class TCls3 extends TCls1 {
-            static { this.schema('var1', { dflter: () => 'there'} ); }
+            static { this.schema('var1', { dflt: 'there'} ); }
             static { this.prototype.$schema.clear('var2'); }
         };
         let o = new TCls1();
@@ -108,7 +108,9 @@ describe('gadgets', () => {
             static { this.schema('leaf', { link: true }); }
         };
         class TSubUpdate extends gadgetClass {
-            static { this.schema('leaf', { atUpdate: (o,k,ov,nv) => subUpdate = { ov: ov, nv: nv }, link: true }); }
+            static { this.schema('leaf', { atUpdate: (o,k,ov,nv) => {
+                subUpdate = { ov: ov, nv: nv };
+            }, link: true }); }
         };
         class TRoot extends gadgetClass {
             static { this.schema('sub', { atUpdate: (o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
@@ -171,25 +173,137 @@ describe('gadgets', () => {
         expect(rootUpdate).toEqual({});
     });
 
+    it('base generator updates on gadget change', ()=>{
+        class TBase extends gadgetClass {
+            static { this.schema('el'); }
+            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+        };
+        let b = new TBase();
+        expect(b.g).toEqual(2);
+        expect(b.g).toEqual(2);
+        b.el = 'v1';
+        expect(b.g).toEqual(4);
+        expect(b.g).toEqual(4);
+        b.el = 'v2';
+        expect(b.g).toEqual(8);
+        expect(b.g).toEqual(8);
+        b.el = 'v2';
+        expect(b.g).toEqual(8);
+    });
+
+    it('root generator updates on leaf change', ()=>{
+        class TLeaf extends gadgetClass {
+            static { this.schema('el'); }
+        };
+        class TBase extends gadgetClass {
+            static { this.schema('el'); }
+            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+        };
+        let b = new TBase({el: new TLeaf()});
+        expect(b.g).toEqual(2);
+        expect(b.g).toEqual(2);
+        b.el.el = 'v1';
+        expect(b.g).toEqual(4);
+        expect(b.g).toEqual(4);
+        b.el.el = 'v2';
+        expect(b.g).toEqual(8);
+        expect(b.g).toEqual(8);
+        b.el.el = 'v2';
+        expect(b.g).toEqual(8);
+    });
+
+    it('leaf generator updates on link change', ()=>{
+        class TLeaf extends gadgetClass {
+            static { this.schema('el'); }
+            static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
+        };
+        class TBase extends gadgetClass {
+            static { this.schema('el'); }
+        };
+        let b = new TBase();
+        let l = new TLeaf();
+        expect(l.g).toEqual(2);
+        b.el = l;
+        expect(l.g).toEqual(4);
+        b.el = null;
+        expect(l.g).toEqual(8);
+    });
+
+    it('root changes trigger events', ()=>{
+        class TRoot extends gadgetClass {
+            static { this.schema('data'); }
+            static { this.schema('ndata', { eventable: false }); }
+            static { ExtEvtEmitter.apply(this) }
+        };
+        let o = new TRoot({data: 'foo', ndata: 'ok'});
+        expect(o.data).toEqual('foo');
+        let receiver = Helpers.genEvtReceiver();
+        let tevt;
+        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
+        gSetter(o, 'data', 'bar');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(o);
+        expect(tevt.set['data']).toEqual('bar');
+        tevt = undefined;
+        gSetter(o, 'ndata', 'bar');
+        expect(tevt).toBeFalsy();
+        expect(o.ndata).toEqual('bar');
+    });
+
+    it('leaf changes trigger events', ()=>{
+        class TLeaf extends gadgetClass {
+            static { this.schema('data'); };
+            static { this.schema('ndata', { eventable: false }); };
+        };
+        class TRoot extends gadgetClass {
+            static { this.schema('sub', { link: true }); }
+            static { this.schema('nsub', { link: true, eventable: false }); }
+            static { ExtEvtEmitter.apply(this); }
+        };
+        let o = new TRoot({sub: new TLeaf({data: 'foo', ndata: 'nfoo'}), nsub: new TLeaf({data: 'nfoo'})});
+        expect(o.sub.data).toEqual('foo');
+        expect(o.sub.ndata).toEqual('nfoo');
+        let receiver = Helpers.genEvtReceiver();
+        let tevt = {};
+        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
+        gSetter(o.sub, 'data', 'bar');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(o);
+        expect(tevt.set['sub.data']).toEqual('bar');
+        tevt = {};
+        gSetter(o.sub, 'ndata', 'bar');
+        expect(tevt).toEqual({});
+        gSetter(o.nsub, 'data', 'nv2');
+        expect(tevt).toEqual({});
+        let l = o.sub;
+        gSetter(o, 'sub', null);
+        tevt = {};
+        l.data = 'v2';
+        gSetter(l, 'data', 'v2');
+        expect(tevt).toEqual({});
+        expect(l.data).toEqual('v2');
+    });
+
 });
 
 describe('gizmos', () => {
+    let receiver;
+    beforeEach(() => {
+        receiver = Helpers.genEvtReceiver();
+    });
 
     it('can trigger events', ()=>{
         let g = new Gizmo();
-        let receiver = ExtEvtReceiver.gen();
         let counter = 0;
         let incr = () => counter++;
         EvtSystem.listen(g, receiver, 'test', incr);
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(1);
     });
 
     it('triggers creation event when created', ()=>{
         let counter = 0;
         let incr = () => counter++;
-        let receiver = ExtEvtReceiver.gen();
         Gizmo.listen(receiver, 'gizmo.created', incr)
         let g = new Gizmo();
         expect(counter).toBe(1);
@@ -197,30 +311,25 @@ describe('gizmos', () => {
 
     it('can receive global gizmo events', ()=>{
         let g = new Gizmo();
-        let receiver = ExtEvtReceiver.gen();
         let counter = 0;
         let incr = () => counter++;
         Gizmo.listen(receiver, 'test', incr)
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(1);
     });
 
     it('can receive global/local gizmo events', ()=>{
         let g = new Gizmo();
-        let receiver = ExtEvtReceiver.gen();
         let counter = 0;
         let incr = () => counter++;
         Gizmo.listen(receiver, 'test', incr);
         EvtSystem.listen(g, receiver, 'test', incr);
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(2);
-        expect(EvtSystem.getCount(g, 'test')).toBe(1);
     });
 
     it('can listen/ignore global gizmo events', ()=>{
         let g = new Gizmo();
-        let receiver = ExtEvtReceiver.gen();
         let counter = 0;
         let incr = () => counter++;
         Gizmo.listen(receiver, 'test', incr)
@@ -228,7 +337,6 @@ describe('gizmos', () => {
         Gizmo.ignore(receiver, 'test');
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(2);
     });
 
     it('can auto-release listeners', ()=>{
@@ -240,7 +348,6 @@ describe('gizmos', () => {
         g.destroy();
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(2);
     });
 
     it('can adopt children during constructor', ()=>{
@@ -251,6 +358,174 @@ describe('gizmos', () => {
         expect(g.children.includes(c2)).toBeTruthy();
         expect(c1.parent).toBe(g);
         expect(c2.parent).toBe(g);
+    });
+
+});
+
+describe('gadget arrays', () => {
+    class TRef extends gadgetClass {
+        static { 
+            this.schema('items', { link: 'array', dflt: () => [] }); 
+            this.schema('auto', { generator: (o,v) => {
+                return (o.items.length) ? 'hello:there' : 'wait';
+            }}); 
+            ExtEvtEmitter.apply(this)
+        };
+    };
+    let gzd, receiver, tevt;
+    beforeEach(() => {
+        gzd = new TRef();
+        receiver = Helpers.genEvtReceiver();
+        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+    });
+
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.items[0] = 'foo';
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+    });
+
+    it('causes gizmo events when items pushed', ()=>{
+        gzd.items.push('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+        gzd.items.push('bar', 'baz');
+        expect(tevt.set['items.2']).toEqual('baz');
+    });
+
+    it('causes gizmo events when items unshifted', ()=>{
+        gzd.items.unshift('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual('foo');
+        expect(gzd.items[0]).toEqual('foo');
+        gzd.items.unshift('bar', 'baz');
+        expect(tevt.set['items.1']).toEqual('baz');
+        expect(gzd.items[0]).toEqual('bar');
+        expect(gzd.items[1]).toEqual('baz');
+        expect(gzd.items[2]).toEqual('foo');
+        expect(gzd.items.length).toEqual(3);
+    });
+
+    it('causes gizmo events when items popped', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.pop();
+        expect(v).toEqual('baz');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.2']).toEqual(undefined);
+        expect(gzd.items.length).toEqual(2);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('bar');
+        v = gzd.items.pop();
+        expect(v).toEqual('bar');
+        expect(gzd.items.length).toEqual(1);
+    });
+
+    it('causes gizmo events when items shifted', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.shift();
+        expect(v).toEqual('foo');
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.0']).toEqual(undefined);
+        expect(gzd.items.length).toEqual(2);
+        expect(gzd.items[0]).toEqual('bar');
+        expect(gzd.items[1]).toEqual('baz');
+        v = gzd.items.shift();
+        expect(v).toEqual('bar');
+        expect(gzd.items.length).toEqual(1);
+    });
+
+    it('causes gizmo events when items spliced', ()=>{
+        gzd.items.push('foo', 'bar', 'baz');
+        let v = gzd.items.splice(1, 1);
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['items.1']).toEqual(undefined);
+        expect(v).toEqual(['bar']);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('baz');
+        expect(gzd.items.length).toEqual(2);
+        v = gzd.items.splice(1, 0, 'hello', 'there');
+        expect(v).toEqual([]);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('hello');
+        expect(gzd.items[2]).toEqual('there');
+        expect(gzd.items[3]).toEqual('baz');
+        expect(tevt.set['items.2']).toEqual('there');
+        expect(gzd.items.length).toEqual(4);
+        v = gzd.items.splice(1, 1, 'nihao');
+        expect(v).toEqual(['hello']);
+        expect(gzd.items.length).toEqual(4);
+        expect(gzd.items[1]).toEqual('nihao');
+        expect(tevt.set['items.1']).toEqual('nihao');
+        v = gzd.items.splice(1, 2, 'hola');
+        expect(v).toEqual(['nihao', 'there']);
+        expect(gzd.items.length).toEqual(3);
+        expect(tevt.set['items.2']).toEqual(undefined);
+        expect(gzd.items[0]).toEqual('foo');
+        expect(gzd.items[1]).toEqual('hola');
+        expect(gzd.items[2]).toEqual('baz');
+    });
+
+});
+
+describe('gadget objects', () => {
+    class TRef extends gadgetClass {
+        static { 
+            this.schema('atts', { dflt: () => ({}) }); 
+            ExtEvtEmitter.apply(this)
+        };
+    };
+    let gzd, receiver, tevt = {};
+    beforeEach(() => {
+        gzd = new TRef();
+        receiver = Helpers.genEvtReceiver();
+        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+        EvtSystem.listen(gzd, receiver, 'gizmo.delete', (evt) => tevt = evt);
+    });
+
+    it('causes gizmo events when k/v set', ()=>{
+        gzd.atts['foo'] = 'bar';
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['atts.foo']).toEqual('bar');
+    });
+
+    it('causes gizmo events when k deleted', ()=>{
+        gzd.atts['foo'] = 'bar';
+        delete gzd.atts['foo'];
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['atts.foo']).toEqual(undefined);
+        expect(gzd.atts.foo).toBeFalsy();
+    });
+
+    it('can use gizmodata.set', ()=>{
+        gSetter(gzd.atts, 'foo', 'bar');
+        expect(gzd.atts.foo).toBeTruthy();
+        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.actor).toBe(gzd);
+        expect(tevt.set['atts.foo']).toEqual('bar');
+    });
+
+});
+
+describe('gizmo contexts', () => {
+
+    it('can trigger events', ()=>{
+        let gctx = new GizmoContext();
+        let receiver = Helpers.genEvtReceiver();
+        let counter = 0;
+        let incr = () => counter++;
+        EvtSystem.listen(gctx, receiver, 'test', incr);
+        EvtSystem.trigger(gctx, 'test');
+        expect(counter).toBe(1);
     });
 
 });

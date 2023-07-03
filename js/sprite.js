@@ -8,9 +8,9 @@ import { Sketch } from './sketch.js';
 class Sprite extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'img', {readonly: true});
-        this.schema(this, 'width', {getter: ((o,x) => ((o.img) ? o.img.width : 0)), readonly: true});
-        this.schema(this, 'height', {getter: ((o,x) => ((o.img) ? o.img.height : 0)), readonly: true});
+        this.schema('img', {readonly: true});
+        this.schema('width', {getter: ((o,x) => ((o.img) ? o.img.width : 0)), readonly: true});
+        this.schema('height', {getter: ((o,x) => ((o.img) ? o.img.height : 0)), readonly: true});
     }
 
     // METHODS -------------------------------------------------------------

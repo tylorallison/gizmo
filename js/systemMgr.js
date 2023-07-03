@@ -7,8 +7,8 @@ import { System } from './system.js';
 class SystemMgr extends Gizmo {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'dbg', { dflt: false });
-        this.schema(this, 'systems', { readonly: true, parser: () => ({}) });
+        this.schema('dbg', { dflt: false });
+        this.schema('systems', { readonly: true, parser: () => ({}) });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

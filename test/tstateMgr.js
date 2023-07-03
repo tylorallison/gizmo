@@ -1,4 +1,4 @@
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { EvtSystem } from '../js/event.js';
 import { GameState } from '../js/gameState.js';
 import { StateMgr } from '../js/stateMgr.js';

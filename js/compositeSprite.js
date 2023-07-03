@@ -6,10 +6,10 @@ import { Sketch } from './sketch.js';
 class CompositeSprite extends Sketch {
 
     static {
-        this.schema(this, 'img', {});
-        this.schema(this, 'stack', {readonly: true, link: false, dflter: () => []});
-        this.schema(this, 'width', {dflt: 0});
-        this.schema(this, 'height', {dflt: 0});
+        this.schema('img', {});
+        this.schema('stack', {readonly: true, link: false, dflt: () => []});
+        this.schema('width', {dflt: 0});
+        this.schema('height', {dflt: 0});
     }
 
     static {

@@ -2,7 +2,6 @@ export { Hierarchy, ExtHierarchy }
 
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
 
 class Hierarchy {
 
@@ -109,8 +108,8 @@ class Hierarchy {
 
 class ExtHierarchy {
     static apply(cls, spec={}) {
-        GizmoData.schema(cls, 'parent', { link: false, serializable: false, parser: () => null });
-        GizmoData.schema(cls, 'children', { link: false, parser: (o,x) => { 
+        cls.schema('parent', { link: false, serializable: false, parser: () => null });
+        cls.schema('children', { link: false, parser: (o,x) => { 
             let v = x.children || [];
             for (const el of v) Hierarchy.adopt(o, el);
             return v;

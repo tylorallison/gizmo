@@ -34,18 +34,18 @@ class UiText extends UiView {
     static get dfltFmt() { return new TextFormat() };
 
     static {
-        this.schema(this, 'text', { dflt: 'default text', atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'fmt', { parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema('text', { dflt: 'default text', atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        this.schema('fmt', { parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (o,k,ov,nv) => o.needsLayout = true });
         // none, stretch, wrap, autowrap
-        this.schema(this, 'fitter', { dflt: 'stretch', atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'alignx', { dflt: .5, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'aligny', { dflt: .5, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
-        this.schema(this, 'tokens', { parser: (() => ([])) });
-        this.schema(this, 'needsLayout', { eventable: false, dflt: true });
-        this.schema(this, 'lastHeight', { eventable: false, dflt: 0 });
-        this.schema(this, 'lastWidth', { eventable: false, dflt: 0 });
+        this.schema('fitter', { dflt: 'stretch', atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        this.schema('alignx', { dflt: .5, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        this.schema('aligny', { dflt: .5, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        this.schema('tokens', { parser: (() => ([])) });
+        this.schema('needsLayout', { eventable: false, dflt: true });
+        this.schema('lastHeight', { eventable: false, dflt: 0 });
+        this.schema('lastWidth', { eventable: false, dflt: 0 });
         // -- leading is the space between lines, expressed as percent of line height
-        this.schema(this, 'leadingPct', { dflt: .25, atUpdate: (r,o,k,ov,nv) => o.needsLayout = true });
+        this.schema('leadingPct', { dflt: .25, atUpdate: (o,k,ov,nv) => o.needsLayout = true });
     }
 
     // STATIC METHODS ------------------------------------------------------

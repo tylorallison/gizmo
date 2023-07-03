@@ -21,10 +21,10 @@ class GameState extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'dbg', {dflt: false});
-        this.schema(this, 'state', {dflt: 'none'});
-        this.schema(this, 'assets', {readonly: true, parser: (o,x) => ((o.gctx.game && o.gctx.game.assets) ? o.gctx.game.assets: new Assets())});
-        this.schema(this, 'assetSpecs', {readonly: true, parser: (o,x) => {
+        this.schema('dbg', {dflt: false});
+        this.schema('state', {dflt: 'none'});
+        this.schema('assets', {link: false, parser: (o,x) => ((o.gctx.game && o.gctx.game.assets) ? o.gctx.game.assets: new Assets())});
+        this.schema('assetSpecs', {link: false, parser: (o,x) => {
             if (x.assetSpecs) return x.assetSpecs;
             if (o.constructor.assetSpecs) return o.constructor.assetSpecs;
             return [];

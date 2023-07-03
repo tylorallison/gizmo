@@ -1,12 +1,13 @@
 
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver} from '../js/event.js';
+import { Helpers } from '../js/helpers.js';
 
 describe('an event system', () => {
 
     let emitter, receiver;
     beforeEach(() => {
-        emitter = ExtEvtEmitter.gen();
-        receiver = ExtEvtReceiver.gen();
+        emitter = Helpers.genEvtEmitter()
+        receiver = Helpers.genEvtReceiver()
     });
 
     it('can trigger events', ()=>{
@@ -15,7 +16,6 @@ describe('an event system', () => {
         EvtSystem.listen(emitter, receiver, 'test', incr);
         EvtSystem.trigger(emitter, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(emitter, 'test')).toBe(1);
     });
 
     it('can trigger listener once', ()=>{
@@ -25,7 +25,6 @@ describe('an event system', () => {
         EvtSystem.trigger(emitter, 'test');
         EvtSystem.trigger(emitter, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(emitter, 'test')).toBe(2);
     });
 
     it('can prioritize listeners', ()=>{
@@ -36,7 +35,6 @@ describe('an event system', () => {
         EvtSystem.listen(emitter, receiver, 'test', double, { priority: 2 });
         EvtSystem.trigger(emitter, 'test');
         expect(counter).toBe(2);
-        expect(EvtSystem.getCount(emitter, 'test')).toBe(1);
     });
 
     it('can prioritize listeners 2', ()=>{
@@ -47,7 +45,6 @@ describe('an event system', () => {
         EvtSystem.listen(emitter, receiver, 'test', double, { priority: 1 });
         EvtSystem.trigger(emitter, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(emitter, 'test')).toBe(1);
     });
 
     it('can ignore listeners', ()=>{
@@ -58,7 +55,6 @@ describe('an event system', () => {
         EvtSystem.ignore(emitter, receiver, 'test');
         EvtSystem.trigger(emitter, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(emitter, 'test')).toBe(2);
     });
 
 });

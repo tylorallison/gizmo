@@ -1,26 +1,26 @@
 export { TextFormat };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 import { Stats } from './stats.js';
 import { Vect } from './vect.js';
 
-class TextFormat extends GizmoData {
+class TextFormat extends Gadget {
     static textCanvas = document.createElement('canvas');
     static textCtx = this.textCanvas.getContext('2d');
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'style', { dflt: 'normal' });
-        this.schema(this, 'variant', { dflt: 'normal' });
-        this.schema(this, 'weight', { dflt: 'normal' });
-        this.schema(this, 'size', { dflt: 12 });
-        this.schema(this, 'family', { dflt: 'sans-serif' });
-        this.schema(this, 'color', { dflt: 'black' });
-        this.schema(this, 'border', { dflt: 0 });
-        this.schema(this, 'borderColor', { dflt: 'white' });
-        this.schema(this, 'highlight', { dflt: false });
-        this.schema(this, 'highlightColor', { dflt: 'yellow' });
+        this.schema('style', { dflt: 'normal' });
+        this.schema('variant', { dflt: 'normal' });
+        this.schema('weight', { dflt: 'normal' });
+        this.schema('size', { dflt: 12 });
+        this.schema('family', { dflt: 'sans-serif' });
+        this.schema('color', { dflt: 'black' });
+        this.schema('border', { dflt: 0 });
+        this.schema('borderColor', { dflt: 'white' });
+        this.schema('highlight', { dflt: false });
+        this.schema('highlightColor', { dflt: 'yellow' });
     }
 
     static parse(str) {

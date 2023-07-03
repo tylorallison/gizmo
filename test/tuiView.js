@@ -1,4 +1,4 @@
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { UiView } from '../js/uiView.js';

@@ -1,6 +1,6 @@
 import { Vect } from '../js/vect.js';
 
-describe('a 2d vector', () => {
+describe('2d vectors', () => {
 
     // set
     for (const test of [
@@ -187,9 +187,9 @@ describe('a 2d vector', () => {
         {v: new Vect({x:1,y:-1}), xrslt: -45},
     ]) {
         it('can determine heading of ' + test.v, ()=>{
-            let rslt = Vect.heading(test.v);
+            let rslt = Vect.heading(test.v, false);
             expect(rslt).toBe(test.xrslt);
-            rslt = test.v.heading();
+            rslt = test.v.heading(false);
             expect(rslt).toBe(test.xrslt);
         })
     }
@@ -201,10 +201,10 @@ describe('a 2d vector', () => {
         {v: new Vect({x:1,y:1}), a: 90, xX: -1, xY: 1},
     ]) {
         it('can rotate ' + test.v + ' by: ' + test.a, ()=>{
-            let rslt = Vect.rotate(test.v, test.a);
+            let rslt = Vect.rotate(test.v, test.a, false);
             expect(rslt.x).toBeCloseTo(test.xX);
             expect(rslt.y).toBeCloseTo(test.xY);
-            rslt = test.v.rotate(test.a);
+            rslt = test.v.rotate(test.a, false);
             expect(rslt.x).toBeCloseTo(test.xX);
             expect(rslt.y).toBeCloseTo(test.xY);
         })
@@ -219,7 +219,7 @@ describe('a 2d vector', () => {
         {v1: new Vect({x:-1,y:-1}), v2: new Vect({x:-1,y:1}), xrslt: -90},
     ]) {
         it('can compute angle between ' + test.v1 + ' and: ' + test.v2, ()=>{
-            const rslt = test.v1.angle(test.v2);
+            const rslt = test.v1.angle(test.v2, false);
             expect(rslt).toBeCloseTo(test.xrslt);
         })
     }

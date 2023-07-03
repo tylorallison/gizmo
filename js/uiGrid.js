@@ -16,12 +16,12 @@ class UiGrid extends UiView {
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        this.schema(this, 'bounder', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
+        this.schema('bounder', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
         //this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
-        this.schema(this, 'createFilter', { readonly: true, dflt: ((gzo) => false) });
-        this.schema(this, 'renderFilter', { eventable: false, dflt: ((idx, view) => true) });
-        this.schema(this, 'optimizeRender', { eventable: false, dflt: true });
-        this.schema(this, 'chunks', { link: false, parser: (o,x) => {
+        this.schema('createFilter', { readonly: true, dflt: ((gzo) => false) });
+        this.schema('renderFilter', { eventable: false, dflt: ((idx, view) => true) });
+        this.schema('optimizeRender', { eventable: false, dflt: true });
+        this.schema('chunks', { link: false, parser: (o,x) => {
             if (x.chunks) return x.chunks;
             const rows = x.rows || 8;
             const cols = x.cols || 8;
@@ -39,18 +39,18 @@ class UiGrid extends UiView {
                 return new Grid(xgrid);
             }
         }});
-        this.schema(this, 'gzoIdxMap', { link: false, readonly: true, parser: (o,x) => new Map() });
-        this.schema(this, 'rerender', { parser: (o,x) => true });
-        this.schema(this, 'chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
-        this.schema(this, 'chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        this.schema(this, 'chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
-        this.schema(this, 'gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
-        this.schema(this, 'gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
-        this.schema(this, 'alignx', { dflt: .5 });
-        this.schema(this, 'aligny', { dflt: .5 });
-        this.schema(this, 'rowSize', { parser: (o,x) => o.xform.height/o.chunks.rows });
-        this.schema(this, 'colSize', { parser: (o,x) => o.xform.width/o.chunks.cols });
-        this.schema(this, 'length', { getter: (o,x) => o.chunks.length });
+        this.schema('gzoIdxMap', { link: false, readonly: true, parser: (o,x) => new Map() });
+        this.schema('rerender', { parser: (o,x) => true });
+        this.schema('chunkUpdates', { readonly: true, parser: (o,x) => new Set()});
+        this.schema('chunkCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
+        this.schema('chunkCtx', { readonly: true, parser: (o,x) => o.chunkCanvas.getContext('2d') });
+        this.schema('gridCanvas', { readonly: true, parser: (o,x) => document.createElement('canvas') });
+        this.schema('gridCtx', { readonly: true, parser: (o,x) => o.gridCanvas.getContext('2d') });
+        this.schema('alignx', { dflt: .5 });
+        this.schema('aligny', { dflt: .5 });
+        this.schema('rowSize', { parser: (o,x) => o.xform.height/o.chunks.rows });
+        this.schema('colSize', { parser: (o,x) => o.xform.width/o.chunks.cols });
+        this.schema('length', { getter: (o,x) => o.chunks.length });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

@@ -10,14 +10,14 @@ class Action extends Gizmo {
 
     static {
         // FIXME
-        this.schema(this, 'dbg', {dflt: true});
-        this.schema(this, 'done', { dflt: false });
-        this.schema(this, 'ok', { dflt: true });
-        this.schema(this, 'atts', { readonly: true });
-        this.schema(this, 'actor', { gizmo: true });
-        this.schema(this, 'startSfx', { parser: (o,x) => x.startSfx || o.constructor.dfltStartSfx });
-        this.schema(this, 'okSfx', { parser: (o,x) => x.okSfx || o.constructor.dfltOkSfx });
-        this.schema(this, 'failSfx', { parser: (o,x) => x.failSfx || o.constructor.dfltFailSfx });
+        this.schema('dbg', {dflt: true});
+        this.schema('done', { dflt: false });
+        this.schema('ok', { dflt: true });
+        this.schema('atts', { readonly: true });
+        this.schema('actor', { gizmo: true });
+        this.schema('startSfx', { parser: (o,x) => x.startSfx || o.constructor.dfltStartSfx });
+        this.schema('okSfx', { parser: (o,x) => x.okSfx || o.constructor.dfltOkSfx });
+        this.schema('failSfx', { parser: (o,x) => x.failSfx || o.constructor.dfltFailSfx });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

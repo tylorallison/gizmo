@@ -1,7 +1,5 @@
 export { Fmt };
 
-import { GizmoData } from './gizmoData.js';
-
 // =========================================================================
 class Fmt {
     // STATIC METHODS ------------------------------------------------------
@@ -16,7 +14,7 @@ class Fmt {
         if (!obj) return '';
         if (seen.has(obj)) return '<circular data>';
         if (typeof obj === 'object') seen.add(obj);
-        if (obj instanceof GizmoData) {
+        if (obj.$values) {
             return `${obj}`;
         }
         if (obj instanceof Map) {

@@ -1,14 +1,14 @@
 export { Hex };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
-class Hex extends GizmoData {
+class Hex extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'p', { dflter: () => { return {x:0,y:0}; }});
-        this.schema(this, 'size', { dflt: 32 });
+        this.schema('p', { dflt: () => { return {x:0,y:0}; }});
+        this.schema('size', { dflt: 32 });
     }
 
     static iHex(obj) {

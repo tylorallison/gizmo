@@ -1,25 +1,25 @@
 export { GridArray, GridBucketArray };
 
 import { Direction } from './direction.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 import { Util } from './util.js';
 import { Vect } from './vect.js';
 
 /**
  * Implements a 2-dimensional grid array and methods for indexing and accessing data within
- * @extends GizmoData
+ * @extends Gadget
  */
-class GridArray extends GizmoData {
+class GridArray extends Gadget {
     static directions = Array.from(Direction.all);
 
     /** @member {string} GridArray#cols=16 - columns in grid array */
-    static { this.schema(this, 'cols', { readonly: true, dflt: 16 }); }
+    static { this.schema('cols', { readonly: true, dflt: 16 }); }
     /** @member {string} GridArray#rows=16 - rows in grid array */
-    static { this.schema(this, 'rows', { readonly: true, dflt: 16 }); }
+    static { this.schema('rows', { readonly: true, dflt: 16 }); }
     /** @member {string} GridArray#length - length of flat array */
-    static { this.schema(this, 'length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
+    static { this.schema('length', { readonly: true, parser: (o,x) => o.cols*o.rows }); }
     /** @member {string} GridArray#entries - array storage */
-    static { this.schema(this, 'entries', { readonly: true, parser: (o,x) => x.entries || [] }); }
+    static { this.schema('entries', { readonly: true, parser: (o,x) => x.entries || [] }); }
 
     // STATIC METHODS ------------------------------------------------------
 
@@ -380,7 +380,7 @@ class GridArray extends GizmoData {
  */
 class GridBucketArray extends GridArray {
     static {
-        this.schema(this, 'bucketSort', { readonly: true });
+        this.schema('bucketSort', { readonly: true });
     }
 
     *_getij(i, j) {

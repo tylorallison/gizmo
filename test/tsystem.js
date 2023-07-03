@@ -1,6 +1,5 @@
-import { GizmoContext } from '../js/gizmoContext.js';
 import { EvtSystem, ExtEvtEmitter } from '../js/event.js';
-import { Gizmo } from '../js/gizmo.js';
+import { Gizmo, GizmoContext } from '../js/gizmo.js';
 import { System } from '../js/system.js';
 
 describe('systems', () => {

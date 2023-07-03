@@ -2,7 +2,7 @@ import { EvtSystem } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
 import { Generator } from '../js/generator.js';
-import { GizmoData } from '../js/gizmoData.js';
+import { Gadget } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { Mathf } from '../js/math.js';
 import { SheetRef } from '../js/refs.js';
@@ -13,7 +13,7 @@ import { Vect } from '../js/vect.js';
 import { Vect3 } from '../js/vect3.js';
 import { XForm } from '../js/xform.js';
 
-class Light extends GizmoData {
+class Light extends Gadget {
     static {
         this.schema(this, 'point', {dflt: false});
         this.schema(this, 'color', {parser: (o,x) => x.color || new Vect3({x:1,y:1,z:1})});

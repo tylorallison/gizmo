@@ -1,14 +1,14 @@
-import { GizmoContext } from '../js/gizmoContext.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
-import { Gizmo} from '../js/gizmo.js';
+import { Gizmo, GizmoContext } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
+import { Helpers } from '../js/helpers.js';
 
-describe('a hierarchy implementation', () => {
+describe('hierarchies', () => {
 
     let gctx, receiver, parent, child, child2;
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
-        receiver = ExtEvtReceiver.gen();
+        receiver = Helpers.genEvtReceiver();
         parent = new Gizmo({gctx: gctx, tag: 'parent'});
         child = new Gizmo({gctx: gctx, tag: 'child'});
         child2 = new Gizmo({gctx: gctx, tag: 'child2'});

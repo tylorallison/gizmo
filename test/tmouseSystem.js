@@ -1,6 +1,7 @@
 
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { EvtSystem, ExtEvtReceiver } from "../js/event.js";
+import { Helpers } from '../js/helpers.js';
 import { MouseSystem } from '../js/mouseSystem.js';
 import { UiView } from '../js/uiView.js';
 import { XForm } from '../js/xform.js';
@@ -21,7 +22,7 @@ describe('a mouse system', () => {
     });
 
     it('can handle mouse movements', ()=>{
-        let receiver = ExtEvtReceiver.gen();
+        let receiver = Helpers.genEvtReceiver();
         let moveEvt;
         EvtSystem.listen(sys, receiver, 'mouse.moved', (evt) => moveEvt = evt);
         sys.onMoved({offsetX: 125, offsetY: 135});
@@ -43,7 +44,7 @@ describe('a mouse system', () => {
     });
 
     it('can handle mouse clicks', ()=>{
-        let receiver = ExtEvtReceiver.gen();
+        let receiver = Helpers.genEvtReceiver();
         let clickEvt;
         EvtSystem.listen(sys, receiver, 'mouse.clicked', (evt) => clickEvt = evt);
 

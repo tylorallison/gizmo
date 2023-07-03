@@ -1,17 +1,15 @@
-import { GizmoContext } from '../js/gizmoContext.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
-import { Gizmo } from '../js/gizmo.js';
+import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
 import { UpdateSystem } from '../js/updateSystem.js';
-import { GizmoData } from '../js/gizmoData.js';
 
 class TUpdateRoot extends Gizmo {
-    static { this.schema(this, 'sub', {link: true}); };
-    static { this.schema(this, 'psub', {proxy: true}); };
+    static { this.schema('sub', {link: true}); };
+    static { this.schema('psub', {proxy: true}); };
 };
 
-class TUpdateSub extends GizmoData {
-    static { this.schema(this, 'var1'); };
-    static { this.schema(this, 'var2'); };
+class TUpdateSub extends Gadget {
+    static { this.schema('var1'); };
+    static { this.schema('var2'); };
 };
 
 describe('an update system', () => {
@@ -27,7 +25,8 @@ describe('an update system', () => {
     });
 
     it('gizmos trigger updates', ()=>{
-        GizmoData.set(g.sub, 'var1', 'bar');
+        GizmoData.set(
+	g.sub.var1 = 'bar';
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);

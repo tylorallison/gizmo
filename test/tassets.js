@@ -3,6 +3,7 @@ import { Assets } from '../js/assets.js';
 import { Rect } from '../js/rect.js';
 import { XForm } from '../js/xform.js';
 import { ImageRef, SheetRef } from '../js/refs.js';
+import { Fmt } from '../js/fmt.js';
 
 describe('an asset class', () => {
     let assets;
@@ -11,17 +12,16 @@ describe('an asset class', () => {
     });
 
     it('can load a rectangle', async ()=>{
-        let spec = Rect.xspec({tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, x_xform: XForm.xspec({ fixedWidth: 32, fixedHeight: 32 })});
+        let spec = Rect.xspec({tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2 });
         assets.register([spec]);
         await assets.load();
         let asset = assets.get('test.rect');
         expect(asset).toBeTruthy();
         if (asset) {
-            expect(asset.tag).toEqual(spec.tag);
-            expect(asset.color).toEqual(spec.color);
-            expect(asset.borderColor).toEqual(spec.borderColor);
-            expect(asset.border).toEqual(spec.border);
-            expect(asset.x_xform).toEqual(spec.x_xform);
+            expect(asset.args[0].tag).toEqual(spec.args[0].tag);
+            expect(asset.args[0].color).toEqual(spec.args[0].color);
+            expect(asset.args[0].borderColor).toEqual(spec.args[0].borderColor);
+            expect(asset.args[0].border).toEqual(spec.args[0].border);
         }
     });
 
@@ -31,11 +31,12 @@ describe('an asset class', () => {
         await assets.load();
         let asset = assets.get('test.sprite');
         expect(asset).toBeTruthy();
+        console.log(`==== tag: ${asset.tag} asset: ${Fmt.ofmt(asset)}`);
         if (asset) {
-            expect(asset.tag).toEqual(spec.tag);
-            expect(asset.img instanceof HTMLImageElement).toBeTruthy();
-            expect(asset.img.width).toEqual(16);
-            expect(asset.img.height).toEqual(16);
+            expect(asset.args[0].tag).toEqual('test.sprite');
+            expect(asset.args[0].img instanceof HTMLImageElement).toBeTruthy();
+            expect(asset.args[0].img.width).toEqual(16);
+            expect(asset.args[0].img.height).toEqual(16);
         }
     });
 
@@ -45,10 +46,10 @@ describe('an asset class', () => {
         await assets.load();
         let asset = assets.get('test.sprite');
         if (asset) {
-            expect(asset.tag).toEqual(spec.tag);
-            expect(asset.img instanceof HTMLImageElement).toBeTruthy();
-            expect(asset.img.width).toEqual(96);
-            expect(asset.img.height).toEqual(48);
+            expect(asset.args[0].tag).toEqual(spec.args[0].tag);
+            expect(asset.args[0].img instanceof HTMLImageElement).toBeTruthy();
+            expect(asset.args[0].img.width).toEqual(96);
+            expect(asset.args[0].img.height).toEqual(48);
         }
     });
 
@@ -58,10 +59,10 @@ describe('an asset class', () => {
         await assets.load();
         let asset = assets.get('test.sprite');
         if (asset) {
-            expect(asset.tag).toEqual(spec.tag);
-            expect(asset.img instanceof HTMLImageElement).toBeTruthy();
-            expect(asset.img.width).toEqual(16);
-            expect(asset.img.height).toEqual(16);
+            expect(asset.args[0].tag).toEqual(spec.args[0].tag);
+            expect(asset.args[0].img instanceof HTMLImageElement).toBeTruthy();
+            expect(asset.args[0].img.width).toEqual(16);
+            expect(asset.args[0].img.height).toEqual(16);
         }
     });
 

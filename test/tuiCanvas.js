@@ -1,4 +1,4 @@
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { XForm } from '../js/xform.js';

@@ -1,15 +1,15 @@
 export { Vect3 };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
 // =========================================================================
-class Vect3 extends GizmoData {
+class Vect3 extends Gadget {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'x', { dflt: 0 });
-        this.schema(this, 'y', { dflt: 0 });
-        this.schema(this, 'z', { dflt: 0 });
+        this.schema('x', { dflt: 0 });
+        this.schema('y', { dflt: 0 });
+        this.schema('z', { dflt: 0 });
     }
 
     // STATIC PROPERTIES ---------------------------------------------------

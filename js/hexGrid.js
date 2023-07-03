@@ -10,11 +10,11 @@ class HexGrid extends HexBucketArray {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'bounder', { readonly: true, dflt: ((v) => v.xform) });
+        this.schema('bounder', { readonly: true, dflt: ((v) => v.xform) });
         //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
-        this.schema(this, 'dbg', { eventable: false, dflt: false });
-        this.schema(this, 'rowSize', { readonly: true, dflt: 32 });
-        this.schema(this, 'colSize', { readonly: true, dflt: 32 });
+        this.schema('dbg', { eventable: false, dflt: false });
+        this.schema('rowSize', { readonly: true, dflt: 32 });
+        this.schema('colSize', { readonly: true, dflt: 32 });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

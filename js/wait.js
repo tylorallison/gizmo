@@ -10,7 +10,7 @@ class WaitAction extends Action {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'ttl', { parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL });
+        this.schema('ttl', { parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

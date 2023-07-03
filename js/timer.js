@@ -1,20 +1,19 @@
-import { GizmoContext } from './gizmoContext.js';
 import { EvtSystem, ExtEvtReceiver } from './event.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget, GizmoContext } from './gizmo.js';
 import { Stats } from './stats.js';
 
 export { Timer };
 
-class Timer extends GizmoData {
+class Timer extends Gadget {
     static dfltTTL = 1000;
 
     static {
-        this.schema(this, 'gctx', { readonly: true, parser: (o, x) => x.gctx || GizmoContext.main });
-        this.schema(this, 'ttl', { eventable: false, dflt: this.dfltTTL });
-        this.schema(this, 'startTTL', { readonly: true, parser: (o,x) => o.ttl });
-        this.schema(this, 'loop', { readonly: true, dflt: false });
-        this.schema(this, 'cb', { readonly: true, dflt: () => false });
-        this.schema(this, 'data', { readonly: true });
+        this.schema('gctx', { readonly: true, parser: (o, x) => x.gctx || GizmoContext.dflt });
+        this.schema('ttl', { eventable: false, dflt: this.dfltTTL });
+        this.schema('startTTL', { readonly: true, parser: (o,x) => o.ttl });
+        this.schema('loop', { readonly: true, dflt: false });
+        this.schema('cb', { readonly: true, dflt: () => false });
+        this.schema('data', { readonly: true });
         ExtEvtReceiver.apply(this);
     }
 

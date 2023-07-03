@@ -25,12 +25,12 @@ class UiCanvas extends UiView {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'active', {dflt: true});
-        this.schema(this, 'canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
-        this.schema(this, 'canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
-        this.schema(this, 'xform', { parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height }) });
-        this.schema(this, 'ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
-        this.schema(this, 'fitToWindow', { readonly: true, dflt: true });
+        this.schema('active', {dflt: true});
+        this.schema('canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
+        this.schema('canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
+        this.schema('xform', { parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height }) });
+        this.schema('ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
+        this.schema('fitToWindow', { readonly: true, dflt: true });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

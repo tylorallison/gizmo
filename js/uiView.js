@@ -20,20 +20,20 @@ class UiView extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'visible', {dflt: true});
-        this.schema(this, 'active', {dflt: false});
-        this.schema(this, 'xform', {parser: (o,x) => x.xform || new XForm()});
-        this.schema(this, 'smoothing', {dflt: null});
-        this.schema(this, 'alpha', {dflt: 1});
-        this.schema(this, 'dbg', {dflt: false, eventable: false});
-        this.schema(this, 'mask', {dflt: false});
-        this.schema(this, 'mouseOver', {dflt: false});
-        this.schema(this, 'mousePressed', {dflt: false});
-        this.schema(this, 'mousePriority', {dflt: 0});
-        this.schema(this, 'mouseBlock', {dflt: false});
-        this.schema(this, 'mouseClickedSound');
-        this.schema(this, 'mouseEnteredSound');
-        this.schema(this, 'mouseExitedSound');
+        this.schema('visible', {dflt: true});
+        this.schema('active', {dflt: false});
+        this.schema('xform', {parser: (o,x) => x.xform || new XForm()});
+        this.schema('smoothing', {dflt: null});
+        this.schema('alpha', {dflt: 1});
+        this.schema('dbg', {dflt: false, eventable: false});
+        this.schema('mask', {dflt: false});
+        this.schema('mouseOver', {dflt: false});
+        this.schema('mousePressed', {dflt: false});
+        this.schema('mousePriority', {dflt: 0});
+        this.schema('mouseBlock', {dflt: false});
+        this.schema('mouseClickedSound');
+        this.schema('mouseEnteredSound');
+        this.schema('mouseExitedSound');
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

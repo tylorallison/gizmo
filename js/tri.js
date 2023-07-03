@@ -1,15 +1,15 @@
 export { Tri };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
-class Tri extends GizmoData {
+class Tri extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'p1', { dflter: () => { return {x:0, y:0}; }});
-        this.schema(this, 'p2', { dflter: () => { return {x:0, y:0}; }});
-        this.schema(this, 'p3', { dflter: () => { return {x:0, y:0}; }});
+        this.schema('p1', { dflt: () => { return {x:0, y:0}; }});
+        this.schema('p2', { dflt: () => { return {x:0, y:0}; }});
+        this.schema('p3', { dflt: () => { return {x:0, y:0}; }});
     }
 
     static iTri(obj) {

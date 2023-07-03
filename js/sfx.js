@@ -1,20 +1,20 @@
 export { Sfx };
 
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 import { SfxSystem } from './sfxSystem.js';
 
 /** ========================================================================
  * Audio sound effect asset
  */
-class Sfx extends GizmoData {
+class Sfx extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'assetTag', { readonly: true });
-        this.schema(this, 'audio', { parser: (o,x) => x.audio || new ArrayBuffer() });
-        this.schema(this, 'channel', { dflt: this.dfltChannel });
-        this.schema(this, 'loop', { dflt: false });
-        this.schema(this, 'volume', { dflt: 1 });
+        this.schema('assetTag', { readonly: true });
+        this.schema('audio', { parser: (o,x) => x.audio || new ArrayBuffer() });
+        this.schema('channel', { dflt: this.dfltChannel });
+        this.schema('loop', { dflt: false });
+        this.schema('volume', { dflt: 1 });
     }
 
     // STATIC VARIABLES ----------------------------------------------------

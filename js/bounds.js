@@ -3,16 +3,16 @@ export { Bounds };
 import { Vect } from './vect.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
 // =========================================================================
-class Bounds extends GizmoData {
+class Bounds extends Gadget {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'x', { dflt: 0 });
-        this.schema(this, 'y', { dflt: 0 });
-        this.schema(this, 'width', { dflt: 0 });
-        this.schema(this, 'height', { dflt: 0 });
+        this.schema('x', { dflt: 0 });
+        this.schema('y', { dflt: 0 });
+        this.schema('width', { dflt: 0 });
+        this.schema('height', { dflt: 0 });
     }
 
     // STATIC METHODS ------------------------------------------------------
@@ -20,6 +20,8 @@ class Bounds extends GizmoData {
         return obj && ('minx' in obj) && ('miny' in obj) && ('maxx' in obj) && ('maxy' in obj);
     }
 
+    /*
+    // FIXME
     static _intersects(minx1, miny1, maxx1, maxy1, minx2, miny2, maxx2, maxy2, inclusive=false) {
         Stats.count('Bounds.intersects');
         let minx = Math.max(minx1, minx2);
@@ -153,6 +155,7 @@ class Bounds extends GizmoData {
             return inclusive && obj.x === x && obj.y === y;
         }
     }
+    */
 
     static _edge1(minx, miny, maxx, maxy) {
         return {

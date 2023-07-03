@@ -31,23 +31,23 @@ class Game extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {*} Game#dbg - enables debugging for gizmo */
-    static { this.schema(this, 'dbg', { eventable: false, dflt: false}); }
+    static { this.schema('dbg', { eventable: false, dflt: false}); }
     /** @member {string} Game#name - name for game */
-    static { this.schema(this, 'name', { dflt: this.name, readonly: true}); }
+    static { this.schema('name', { dflt: this.name, readonly: true}); }
     /** @member {int} Game#maxDeltaTime - max value for a single frame delta time */
-    static { this.schema(this, 'maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
+    static { this.schema('maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
     /** @member {int} Game#frame - frame counter */
-    static { this.schema(this, 'frame', { eventable: false, dflt: 0}); }
+    static { this.schema('frame', { eventable: false, dflt: 0}); }
     /** @member {float} Game#lastUpdate - time of last update */
-    static { this.schema(this, 'lastUpdate', { eventable: false, dflt: 0}); }
+    static { this.schema('lastUpdate', { eventable: false, dflt: 0}); }
     /** @member {Assets} Game#assets - game assets */
-    static { this.schema(this, 'assets', { readonly: true, parser: (o,x) => new Assets()}); }
+    static { this.schema('assets', { readonly: true, parser: (o,x) => new Assets()}); }
     /** @member {SystemMgr} Game#systems - game systems {@link System} */
-    static { this.schema(this, 'systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
+    static { this.schema('systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
-    static { this.schema(this, 'states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
+    static { this.schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
     /** @member {Generator} Game#generator - generator for gizmos in game */
-    static { this.schema(this, 'generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
+    static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
@@ -58,7 +58,7 @@ class Game extends Gizmo {
         super.cpost(spec);
         // -- build out game state
         this.gctx.game = this;
-        Generator.main = this.generator;
+        Generator.dflt = this.generator;
     }
 
     // METHODS -------------------------------------------------------------

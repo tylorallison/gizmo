@@ -1,9 +1,15 @@
 export { Segment };
 
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
-class Segment extends GizmoData {
+class Segment extends Gadget {
+
+    // SCHEMA --------------------------------------------------------------
+    static {
+        this.schema('p1', { dflt: () => { return { x:0, y:0 }; }});
+        this.schema('p2', { dflt: () => { return { x:0, y:0 }; }});
+    }
 
     static _slope(p1x, p1y, p2x, p2y) {
         return (p2y - p1y)/(p2x-p1x);
@@ -55,12 +61,6 @@ class Segment extends GizmoData {
     static bounds(s) {
         if (!s) return null;
         return this._bounds(t.p1.x, t.p1.y, t.p2.x, t.p2.y);
-    }
-
-    // SCHEMA --------------------------------------------------------------
-    static {
-        this.schema(this, 'p1', { dflter: () => { return { x:0, y:0 }; }});
-        this.schema(this, 'p2', { dflter: () => { return { x:0, y:0 }; }});
     }
 
     static iSegment(obj) {

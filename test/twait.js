@@ -1,8 +1,7 @@
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
-import { Gizmo } from '../js/gizmo.js';
-import { GizmoContext } from '../js/gizmoContext.js';
+import { Gizmo, GizmoContext } from '../js/gizmo.js';
 import { SerialData, Serializer } from '../js/serializer.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { WaitAction } from '../js/wait.js';

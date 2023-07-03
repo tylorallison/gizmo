@@ -7,6 +7,7 @@ import { EvtSystem } from './event.js';
 import { Vect } from './vect.js';
 import { Bounds } from './bounds.js';
 import { Fmt } from './fmt.js';
+import { Contains } from './intersect.js';
 
 class MouseSystem extends System {
     // STATIC VARIABLES ----------------------------------------------------
@@ -104,7 +105,7 @@ class MouseSystem extends System {
         // determine if view bounds contains mouse point (bounds is in world coords)
         // -- translate to local position
         let lpos = e.xform.getLocal(new Vect({x:this.x, y:this.y}));
-        let contains = Bounds.contains(e.xform, lpos);
+        let contains = Contains.bounds(e.xform, lpos);
         if (contains) {
             this.targets.push(e);
         }

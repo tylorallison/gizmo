@@ -11,13 +11,14 @@ describe('a game', () => {
         EvtSystem.listen(g, g, 'test', incr);
         EvtSystem.trigger(g, 'test');
         expect(counter).toBe(1);
-        expect(EvtSystem.getCount(g, 'test')).toBe(1);
     });
 
     it('can be started', async ()=>{
         let g = new Game();
+        let tevt = {};
+        EvtSystem.listen(g, g, 'game.started', (evt) => tevt=evt );
         await g.start();
-        expect(EvtSystem.getCount(g, 'game.started')).toBe(1);
+        expect(tevt.actor).toBe(g);
     });
 
 });

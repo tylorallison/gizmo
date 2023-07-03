@@ -13,18 +13,17 @@ class System extends Gizmo {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema(this, 'iterateTTL', { eventable: false, parser: (o,x) => x.hasOwnProperty('iterateTTL') ? x.iterateTTL : o.constructor.dfltIterateTTL});
-        this.schema(this, 'dbg', { eventable: false, dflt: false });
-        this.schema(this, 'active', { eventable: false, dflt: true });
-        this.schema(this, 'matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
-        this.schema(this, 'store', { readonly: true, parser: (o,x) => x.store || new Map()});
-        this.schema(this, 'iterating', { eventable: false, dflt: false });
-        this.schema(this, 'timer', { readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
+        this.schema('iterateTTL', { eventable: false, parser: (o,x) => x.hasOwnProperty('iterateTTL') ? x.iterateTTL : o.constructor.dfltIterateTTL});
+        this.schema('dbg', { eventable: false, dflt: false });
+        this.schema('active', { eventable: false, dflt: true });
+        this.schema('matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
+        this.schema('store', { link: false, readonly: true, parser: (o,x) => x.store || new Map()});
+        this.schema('iterating', { eventable: false, dflt: false });
+        this.schema('timer', { readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
-        super.cpre(spec);
         this.onTimer = this.onTimer.bind(this);
         this.onGizmoCreated = this.onGizmoCreated.bind(this);
         this.onGizmoDestroyed = this.onGizmoDestroyed.bind(this);

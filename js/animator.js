@@ -2,7 +2,7 @@ export { Animator };
 
 import { EvtSystem, ExtEvtReceiver } from './event.js';
 import { Sketch } from './sketch.js';
-import { GizmoData } from './gizmoData.js';
+import { Gadget } from './gizmo.js';
 
 // =========================================================================
 /**
@@ -13,13 +13,13 @@ class Animator extends Sketch {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
-    static { this.schema(this, 'trunkKey', { dflt: 'state', readonly: true }); }
+    static { this.schema('trunkKey', { dflt: 'state', readonly: true }); }
     /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */
-    static { this.schema(this, 'sketches', { dflt: {}, readonly: true, link: false }); }
+    static { this.schema('sketches', { dflt: {}, readonly: true, link: false }); }
     /** @member {Object} Animator#transitions - map of transitions  { <target state>: [ { from: <source state>, sketch: <sketch> }, ... ]} */
-    static { this.schema(this, 'transitions', { dflt: {}, readonly: true, link: false }); }
+    static { this.schema('transitions', { dflt: {}, readonly: true, link: false }); }
     /** @member {Object} Animator#state - current animator state, tracks to target state */
-    static { this.schema(this, 'state', { dflt: 'idle', generator: (o,v) => {
+    static { this.schema('state', { dflt: 'idle', generator: (o,v) => {
         if (v in o.sketches) {
             if (o.sketch) o.sketch.disable();
             let targetSketch = o.sketches[v];
@@ -48,8 +48,8 @@ class Animator extends Sketch {
             }
             o.sketch = targetSketch;
             if (transition) {
-                let root = GizmoData.root(o);
-                let path = `${GizmoData.path(o.sketch)}.done`;
+                let root = Gadget.root(o);
+                let path = `${Gadget.path(o.sketch)}.done`;
                 if (EvtSystem.isEmitter(root)) {
                     EvtSystem.listen(root, o, 'gizmo.updated', (evt) => {
                         if (o.state === v) {
@@ -68,21 +68,21 @@ class Animator extends Sketch {
         return o.state;
     } }); }
     /** @member {Object} Animator#state - current animator sketch */
-    static { this.schema(this, 'sketch', { parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
+    static { this.schema('sketch', { parser: ((o,x) => ((o.sketches) ? o.sketches[o.state] : null)) }); }
     /** @member {Object} Animator#width - width of current animator sketch*/
-    static { this.schema(this, 'width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
+    static { this.schema('width', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {Object} Animator#height - height of current animator sketch*/
-    static { this.schema(this, 'height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
+    static { this.schema('height', { readonly: true, getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animator sketch */
-    static { this.schema(this, 'ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
+    static { this.schema('ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
     /** @member {integer} Sketch#done - is current animator sketch marked as done */
-    static { this.schema(this, 'done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
+    static { this.schema('done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
     static { ExtEvtReceiver.apply(this); }
 
     // DATA CHANGE HANDLERS ------------------------------------------------
     /**
      * link animator to trunk object
-     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     * @param {Gadget} trunk - trunk data object that has been linked to the current object.
      */
     atLink(trunk) {
         // if linked to gizmo
@@ -97,7 +97,7 @@ class Animator extends Sketch {
 
     /**
      * unlink animator from trunk object
-     * @param {GizmoData} trunk - trunk data object that has been linked to the current object.
+     * @param {Gadget} trunk - trunk data object that has been linked to the current object.
      */
     atUnlink(trunk) {
         if (EvtSystem.isEmitter(trunk)) {

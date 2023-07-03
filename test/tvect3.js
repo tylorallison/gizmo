@@ -1,7 +1,7 @@
 import { Vect } from "../js/vect.js";
 import { Vect3 } from "../js/vect3.js";
 
-describe("a 3d vector", () => {
+describe("3d vectors", () => {
 
     // set
     for (const test of [

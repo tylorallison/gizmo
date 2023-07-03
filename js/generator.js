@@ -1,40 +1,39 @@
 export { Generator };
 
 import { Assets } from './assets.js';
-import { GizmoContext } from './gizmoContext.js';
 import { Fmt } from './fmt.js';
-import { GizmoData } from './gizmoData.js';
 import { Util } from './util.js';
+import { Gadget, GizmoContext } from './gizmo.js';
 
 /**
- * The Generator class creates instances of {@link GizmoData} or {@link Gizmo} based on specified GizmoSpec object specification.
+ * The Generator class creates instances of {@link Gadget} or {@link Gizmo} based on specified GadgetSpec object specification.
  */
 class Generator {
     // STATIC VARIABLES ----------------------------------------------------
-    static _main;
+    static _dflt;
 
     // STATIC PROPERTIES ---------------------------------------------------
-    static get main() {
-        if (!this._main) {
-            this._main = new this();
+    static get dflt() {
+        if (!this._dflt) {
+            this._dflt = new this();
         }
-        return this._main;
+        return this._dflt;
     }
-    static set main(v) {
-        this._main = v;
+    static set dflt(v) {
+        this._dflt = v;
     }
 
     // STATIC METHODS ------------------------------------------------------
     static generate(spec={}) {
-        let obj = this.main.generate(spec);
+        let obj = this.dflt.generate(spec);
         if (!obj) console.error(`generator failed for ${Fmt.ofmt(spec)}`);
         return obj;
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
-        this.registry = spec.registry || GizmoData.registry;
-        this.gctx = spec.gctx || GizmoContext.main;
+        this.registry = spec.registry || Gadget.$registry;
+        this.gctx = spec.gctx || GizmoContext.dflt;
         this.assets = spec.assets || ((this.gctx.game) ? this.gctx.game.assets : new Assets());
     }
 
@@ -62,7 +61,7 @@ class Generator {
         // look up class definition
         let cls = this.registry.get(spec.cls);
         if (!cls) return undefined;
-        if (cls) return new cls(spec);
+        if (cls) return new cls(...spec.args);
         return undefined;
     }
 

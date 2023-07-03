@@ -1,28 +1,468 @@
-export { Gizmo };
+export { Gadget, GadgetArray, GadgetObject, Gizmo, GizmoContext };
 
-import { GizmoContext } from './gizmoContext.js';
-import { ExtEvtEmitter, ExtEvtReceiver, EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
+import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from './event.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
-import { GizmoData } from './gizmoData.js';
-import { Serializer } from './serializer.js';
+import { Assets } from './assets.js';
+
+const FDEFINED=1;
+const FREADONLY=2;
+const FEVENTABLE=4;
+
+class GadgetSchemaEntry {
+    constructor(key, spec={}) {
+        this.key = key;
+        this.dflt = spec.dflt;
+        // getter function of format (object, specification) => { <function returning value> };
+        // -- is treated as a dynamic value
+        // -- setting getter will disable all set functions and notifications for this key
+        this.getter = spec.getter;
+        // generator function of format (object, value) => { <function returning final value> };
+        this.generator = spec.generator;
+        this.readonly = (this.getter || this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
+        this.parser = spec.parser || ((o, x) => {
+            if (this.key in x) return x[this.key];
+            const dflt = (this.dflt) ? ((this.dflt instanceof Function) ? this.dflt(o) : this.dflt) : undefined;
+            if (this.generator) return this.generator(o,dflt);
+            return dflt;
+        });
+        this.eventable = (this.getter) ? false : ('eventable' in spec) ? spec.eventable : true;
+        this.atUpdate = spec.atUpdate;
+        // link - if the value is an object, setup Gadget links between the trunk and leaf.
+        this.link = ('link' in spec) ? spec.link : true;
+        // generated fields are not serializable
+        this.serializable = (this.generator) ? false : ('serializable' in spec) ? spec.serializable : true;
+        this.serializer = spec.serializer || ((sdata, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
+    }
+    toString() {
+        return Fmt.toString(this.constructor.name, this.key);
+    }
+}
+
+class GadgetSchema {
+    constructor(base) {
+        if (!base) base = {};
+        this.map = Object.assign({}, base.map);
+    }
+
+    get entries() {
+        return Object.values(this.map);
+    }
+
+    has(key) {
+        return key in this.map;
+    }
+
+    get(key) {
+        return this.map[key];
+    }
+
+    set(key, entry) {
+        this.map[key] = entry;
+    }
+
+    clear(key) {
+        delete this.map[key];
+    }
+}
+
+class Gadget {
+
+    static $registry = new Map();
+    static register() {
+        this.prototype.$registered = true;
+        if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
+    }
+
+    static root(gadget) {
+        if (!gadget) return null;
+        for (; gadget.$trunk; gadget=gadget.$trunk);
+        return gadget;
+    }
+
+    static findInPath(gadget, filter) {
+        for (; gadget; gadget=gadget.$trunk) {
+            if (filter(gadget)) return gadget;
+        }
+        return null;
+    }
+
+    static *eachInPath(gadget, filter=() => true) {
+        for (; gadget; gadget=gadget.$trunk) {
+            if (filter(gadget)) yield gadget;
+        }
+    }
+
+    static *eachInLeafs(gadget, filter=() => true) {
+        for (let i=gadget.$leafs.length-1; i>=0; i--) {
+            let leaf = gadget.$leafs[i];
+            if (filter(leaf)) yield leaf;
+            yield *this.eachInLeafs(leaf, filter);
+        }
+    }
+
+    static $link(trunk, key, sentry, target) {
+        if (trunk === target || this.findInPath(trunk, (gdt) => gdt === target)) {
+            console.error(`hierarchy loop detected ${target} already in path: ${trunk}`);
+            throw(`hierarchy loop detected ${target} already in path: ${trunk}`);
+        }
+        trunk.$leafs.push(target);
+        target.$trunk = trunk;
+        target.$trunkKey = key;
+        target.$trunkSentry = sentry;
+        target.$path = (trunk.$path) ? `${trunk.$path}.${key}` : key;
+        target.$v++;
+        // handle path and flag changes propagated to leafs
+        let eventable = (trunk.$flags & FEVENTABLE) && sentry.eventable;
+        let readonly = (trunk.$flags & FREADONLY) || sentry.readonly;
+        target.$flags = (eventable) ? (target.$flags|FEVENTABLE) : (target.$flags&~FEVENTABLE);
+        target.$flags = (readonly) ? (target.$flags|FREADONLY) : (target.$flags&~FREADONLY);
+        for (const leaf of this.eachInLeafs(target)) {
+            // update flags
+            eventable &= leaf.$trunkSentry.eventable;
+            readonly |= leaf.$trunkSentry.readonly;
+            leaf.$flags = (eventable) ? (leaf.$flags|FEVENTABLE) : (leaf.$flags&~FEVENTABLE);
+            leaf.$flags = (readonly) ? (leaf.$flags|FREADONLY) : (leaf.$flags&~FREADONLY);
+            // update path
+            leaf.$path = `${leaf.$trunk.$path}.${leaf.$trunkKey}`;
+        }
+        if ('atLinkLeaf' in trunk) trunk.atLinkLeaf(target);
+        if ('atLinkTrunk' in target) target.atLinkTrunk(trunk);
+    }
+
+    static $unlink(trunk, target) {
+        let idx = trunk.$leafs.indexOf(target);
+        if (idx !== -1) trunk.$leafs.splice(idx, 1);
+        target.$trunk = null;
+        target.$trunkSentry = null;
+        target.$path = null;
+        target.$v++;
+        let eventable = EvtSystem.isEmitter(target);
+        let readonly = false;
+        target.$flags = (eventable) ? (target.$flags|FEVENTABLE) : (target.$flags&~FEVENTABLE);
+        target.$flags = (readonly) ? (target.$flags|FREADONLY) : (target.$flags&~FREADONLY);
+        for (const leaf of this.eachInLeafs(target)) {
+            // update flags
+            eventable &= leaf.$trunkSentry.eventable;
+            readonly |= leaf.$trunkSentry.readonly;
+            leaf.$flags = (eventable) ? (leaf.$flags|FEVENTABLE) : (leaf.$flags&~FEVENTABLE);
+            leaf.$flags = (readonly) ? (leaf.$flags|FREADONLY) : (leaf.$flags&~FREADONLY);
+            // update path
+            leaf.$path = (leaf.$trunk.$path) ? `${leaf.$trunk.$path}.${leaf.$trunkKey}` : leaf.$trunkKey;
+        }
+        if ('atUnlinkLeaf' in trunk) trunk.atUnlinkLeaf(target);
+        if ('atUnlinkTrunk' in target) target.atUnlinkTrunk(trunk);
+    }
+
+    static $get(target, key, sentry=null) {
+        if (sentry.getter) return sentry.getter(target);
+        if (sentry.generator) {
+            let value;
+            if (!(key in target.$store)) {
+                const dflt = (sentry.dflt) ? ((sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt) : undefined;
+                value = sentry.generator(target, dflt);
+                target.$store[key] = [target.$v, value];
+            } else {
+                let ov = target.$store[key][0];
+                value = target.$store[key][1];
+                if (ov !== target.$v) {
+                    value = sentry.generator(target, value);
+                    target.$store[key] = [target.$v, value];
+                }
+            }
+            return value;
+        }
+        return target.$store[key];
+    }
+
+    static $set(target, key, value, sentry) {
+        let storedValue;
+        if (target.$flags & FDEFINED) {
+            storedValue = target.$store[key];
+            if (Object.is(storedValue, value)) return true;
+            if (sentry.link && (storedValue instanceof Gadget) && !(storedValue instanceof Gizmo)) this.$unlink(target, storedValue);
+        }
+        if (value) {
+            if (sentry.link && (value instanceof Gadget) && !(value instanceof Gizmo)) {
+                this.$link(target, key, sentry, value);
+            } else if (sentry.link && Array.isArray(value)) {
+                value = new GadgetArray(value);
+                this.$link(target, key, sentry, value);
+            } else if (sentry.link && (typeof value === 'object') && !(value instanceof Gizmo) && !value.$proxy) {
+                value = new GadgetObject(value);
+                this.$link(target, key, sentry, value);
+            }
+        }
+        target.$store[key] = value;
+        if (target.$flags & FDEFINED) {
+            if (sentry.atUpdate) sentry.atUpdate( target, key, storedValue, value );
+            let pgdt = target;
+            for (const pgdt of this.eachInPath(target)) {
+                if (pgdt.$trunkSentry && pgdt.$trunkSentry.atUpdate) {
+                    pgdt.$trunkSentry.atUpdate(pgdt.$trunk, pgdt.$trunkKey, pgdt, pgdt);
+                }
+                pgdt.$v++;
+            }
+            if ((target.$flags & FEVENTABLE) && sentry.eventable) {
+                let gemitter = this.findInPath(target, (gdt) => EvtSystem.isEmitter(gdt));
+                let path = (target.$path) ? `${target.$path}.${key}` : key;
+                if (gemitter) EvtSystem.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
+            }
+        }
+        return true;
+    }
+
+    static $delete(target, key, sentry=null) {
+
+        const storedValue = target[key];
+        if (sentry.link && (storedValue instanceof Gadget) && !(storedValue instanceof Gizmo)) this.$unlink(target, storedValue);
+        delete target.$store[key];
+        if (target.$flags & FDEFINED) {
+            target.$v++;
+            if (sentry.atUpdate) sentry.atUpdate(target, key, storedValue, undefined);
+            let pgdt = target;
+            for (const pgdt of this.eachInPath(target.$trunk)) {
+                if (pgdt.$trunkSentry && pgdt.$trunkSentry.atUpdate) pgdt.$trunkSentry.atUpdate(pgdt.$trunk, pgdt.$trunkKey, pgdt, pgdt);
+                pgdt.$v++;
+            }
+            if ((target.$flags & FEVENTABLE) && sentry.eventable) {
+                let gemitter = this.findInPath(target, (gdt) => EvtSystem.isEmitter(gdt));
+                let path = (target.$path) ? `${target.$path}.${key}` : key;
+                if (gemitter) EvtSystem.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
+            }
+        }
+
+        return true;
+    }
+
+    static schema(key, spec={}) {
+        this.register();
+        let schema;
+        let clsp = this.prototype;
+        if (!clsp.hasOwnProperty('$schema')) {
+            schema = new GadgetSchema(Object.getPrototypeOf(clsp).$schema);
+            clsp.$schema = schema;
+        } else {
+            schema = clsp.$schema;
+        }
+        let sentry = new GadgetSchemaEntry(key, spec);
+        schema.set(key, sentry);
+        let property = {
+            enumerable: true,
+            get() {
+                return this.constructor.$get(this, key, sentry);
+            },
+        };
+        if (!sentry.readonly) {
+            property.set = function set(value) {
+                return this.constructor.$set(this, key, value, sentry);
+            }
+        }
+        Object.defineProperty(clsp, key, property);
+    }
+
+    static xparse(o, spec) {
+        const schema = o.$schema;
+        if (schema) {
+            for (const sentry of schema.entries) {
+                if (sentry.generator) continue;
+                this.$set(o, sentry.key, sentry.parser(o, spec), sentry);
+            }
+        }
+    }
+
+    static kvparse(o, key, value, sentry) {
+        if (!sentry && o.$schema) sentry = o.$schema.get(key);
+        if (sentry && value === undefined) value = (sentry.dflt) ? ((sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt) : undefined;
+        this.$set(o, key, value, sentry);
+    }
+
+    /**
+     * xspec provides an GizmoSpec which can be used by a {@link Generator} class to create a Gadget object.
+     * @param {Object} spec={} - overrides for properties to create in the GizmoSpec
+     * @returns {...GizmoSpec}
+     */
+    static xspec(spec={}) {
+        return {
+            $gzx: true,
+            cls: this.name,
+            args: [Object.assign({}, spec)],
+        }
+    }
+
+    #trunk;
+    #trunkKey;
+    #trunkSentry;
+    #path;
+    #leafs = [];
+    #store = {};
+    #flags = 0;
+    #v = 0;
+
+    get $trunk() { return this.#trunk };
+    set $trunk(v) { this.#trunk = v };
+    get $trunkKey() { return this.#trunkKey };
+    set $trunkKey(v) { this.#trunkKey = v };
+    get $trunkSentry() { return this.#trunkSentry };
+    set $trunkSentry(v) { this.#trunkSentry = v };
+    get $path() { return this.#path };
+    set $path(v) { this.#path = v };
+    get $leafs() { return this.#leafs };
+    set $leafs(v) { this.#leafs = v };
+    get $store() { return this.#store };
+    set $store(v) { this.#store = v };
+    get $flags() { return this.#flags };
+    set $flags(v) { this.#flags = v };
+    get $v() { return this.#v };
+    set $v(v) { this.#v = v };
+
+    constructor(...args) {
+        if (!this.$registered) this.constructor.register();
+        if (EvtSystem.isEmitter(this)) this.$flags |= FEVENTABLE;
+        this.cpre(...args);
+        this.cparse(...args);
+        this.$flags |= FDEFINED;
+    }
+
+    /**
+     * To allow for more flexible constructor methods, three sub constructors are used in all classes derived by the {@link Gizmo} class: cpre, cpost, cfinal.  
+     * cpre is called at the very beginning before any properties are applied to the object.
+     * @param {Object} args - object with key/value pairs used to pass properties to the constructor
+     * @abstract
+     */
+    cpre(...args) {
+    }
+
+    cparse(spec={}) {
+        this.constructor.xparse(this, spec);
+    }
+
+    destroy() {
+        if (this.$trunk) {
+            this.constructor.$unlink(this.$trunk, this);
+        }
+        while (this.$leafs.length>0) {
+            let leaf = this.$leafs.pop();
+            this.constructor.$unlink(this, leaf);
+            if ('destroy' in leaf) leaf.destroy();
+        }
+    }
+
+    xifyArgs(sdata) {
+        const xargs = {};
+        for (const [k,v] of Object.entries(this.$store)) {
+            let sentry = (this.$schema) ? this.$schema.get(k) : null;
+            if (sentry && !sentry.serializable) continue;
+            if (v && (typeof v === 'object')) {
+                if ('assetTag' in v) {
+                    xargs[k] = {
+                        $gzx: true,
+                        cls: 'AssetRef',
+                        args: [{ assetTag:v.assetTag }],
+                    };
+                } else if ('xify' in v) {
+                    xargs[k] = v.xify(sdata);
+                } else {
+                    let serializer = (sentry.serializer) ? sentry.serializer : (sdata, value) => JSON.parse(JSON.stringify(value));
+                    xargs[k] = serializer(sdata, v);
+                }
+            } else {
+                xargs[k] = v;
+            }
+        }
+        return xargs;
+    }
+
+    xify(sdata) {
+        const xargs = this.xifyArgs(sdata);
+        const xdata = {
+            $gzx: true,
+            cls: this.constructor.name,
+            args: [xargs],
+        };
+        return xdata;
+    }
+
+    get $dbg() {
+        return `${this.$v},${this.$trunk},${this.$trunkKey},${this.$trunkSentry},${this.$path},${this.$leafs},${this.$store},${this.flags}`;
+    }
+
+    get $values() {
+        return Object.values(this.$store);
+    }
+
+
+    toString() {
+        return Fmt.toString(this.constructor.name);
+    }
+
+}
+
+/**
+ * The GizmoContext class provides a global context that is attached to all classes derived from the {@link Gizmo} class.  It groups
+ * all Gizmo instances to the context as well as provides access to global context variables such as the main {@link Game} class.
+ * @extends Gadget
+ * @mixes ExtEvtEmitter
+ */
+class GizmoContext extends Gadget {
+    // STATIC VARIABLES ----------------------------------------------------
+    static _dflt;
+    static gid = 1;
+
+    // STATIC PROPERTIES ---------------------------------------------------
+    /**
+     * @member {GizmoContext} - get/set global/default instance of GizmoContext
+     */
+    static get dflt() {
+        if (!this._dflt) {
+            this._dflt = new GizmoContext();
+        }
+        return this._dflt;
+    }
+    static set dflt(v) {
+        this._dflt = v;
+    }
+
+    // SCHEMA --------------------------------------------------------------
+    /** @member {int} GizmoContext#gid - global id associated with context */
+    /** @member {string} GizmoContext#tag - tag associated with context */
+    /** @member {Game} GizmoContext#game - game instance */
+    /** @member {boolean} GizmoContext#userActive - indicates if user has interacted with UI/game by clicking or pressing a key */
+    static {
+        this.schema('gid', { readonly: true, parser: (gdt, x) => gdt.constructor.gid++ });
+        this.schema('tag', { readonly: true, parser: (gdt, x) => x.tag || `${gdt.constructor.name}.${gdt.gid}` });
+        this.schema('game', { dflt: null });
+        this.schema('userActive', { dflt: false });
+        ExtEvtEmitter.apply(this);
+    }
+
+    // METHODS -------------------------------------------------------------
+    /**
+     * returns string representation of object
+     * @returns {string}
+     */
+    toString() {
+        return Fmt.toString(this.constructor.name, this.tag);
+    }
+
+}
 
 /**
  * Gizmo is the base class for all game state objects, including game model and view components.
  * - Global gizmo events are triggered on creation/destruction.
  * - Every gizmo is associated with a {@link GizmoContext} that provides access to the global run environment and events.
  * - Gizmos can have parent/child hierarchical relationships
- * @extends GizmoData
+ * @extends Gadget
  */
-class Gizmo extends GizmoData {
+class Gizmo extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {GizmoContext} Gizmo#gctx - reference to gizmo context */
-    static { this.schema(this, 'gctx', { readonly: true, serializable: false, link: false, parser: (obj, x) => (x.gctx || GizmoContext.main )}); }
+    static { this.schema('gctx', { readonly: true, serializable: false, link: false, parser: (gdt, x) => (x.gctx || GizmoContext.dflt )}); }
     /** @member {int} Gizmo#gid - unique gizmo identifier*/
-    static { this.schema(this, 'gid', { readonly: true, parser: (obj, x) => (Gizmo.gid++) }); }
+    static { this.schema('gid', { readonly: true, parser: (gdt, x) => (Gizmo.gid++) }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
-    static { this.schema(this, 'tag', { readonly: true, parser: (obj, x) => x.tag || `${obj.constructor.name}.${obj.gid}` }); }
+    static { this.schema('tag', { readonly: true, parser: (gdt, x) => x.tag || `${gdt.constructor.name}.${gdt.gid}` }); }
     static {
         ExtEvtEmitter.apply(this);
         ExtEvtReceiver.apply(this);
@@ -32,15 +472,8 @@ class Gizmo extends GizmoData {
     // STATIC VARIABLES ----------------------------------------------------
     static gid = 1;
 
-    // STATIC PROPERTIES ---------------------------------------------------
-    /**
-     * @member {GizmoContext} - get singleton/global instance of GizmoContext
-     */
-    static get gctx() {
-        return GizmoContext.main;
-    }
-
     // STATIC METHODS ------------------------------------------------------
+
     /**
      * listen sets a new event handler for an event, where the emitter is the global game context {@link GizmoContext} and
      * the receiver is given along with the event tag and event handler function {@link EvtSystem~handler}.
@@ -51,9 +484,11 @@ class Gizmo extends GizmoData {
      * @param {int} opts.priority - priority associated with listener, event callbacks will be sorted based on ascending priority.
      * @param {boolean} opts.once - indicates if event listener should only be triggered once (after which the listener will automatically be removed).
      * @param {EvtSystem~filter} opts.filter - event filter for listener allowing for fine-grained event management.
+     * @param {GizmoContext} [gctx] - gizmo context
      */
-    static listen(receiver, tag, fcn, opts={}) {
-        EvtSystem.listen(this.gctx, receiver, tag, fcn, opts);
+    static listen(receiver, tag, fcn, opts={}, gctx) {
+        if (!gctx) gctx = GizmoContext.dflt;
+        EvtSystem.listen(gctx, receiver, tag, fcn, opts);
     }
 
     /**
@@ -64,9 +499,11 @@ class Gizmo extends GizmoData {
      * will be removed.
      * @param {EvtSystem~handler} [fcn] - optional event handler function, specifying specific event callback to remove.  If not specified, 
      * all events associated with the receiver and the given tag will be removed.
+     * @param {GizmoContext} [gctx] - gizmo context
      */
-    static ignore(receiver, tag, fcn) {
-        EvtSystem.ignore(this.gctx, receiver, tag, fcn);
+    static ignore(receiver, tag, fcn, gctx) {
+        if (!gctx) gctx = GizmoContext.dflt;
+        EvtSystem.ignore(gctx, receiver, tag, fcn);
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -75,13 +512,7 @@ class Gizmo extends GizmoData {
      * @param {Object} spec - object with key/value pairs used to pass properties to the constructor
      */
     constructor(spec={}) {
-        let gctx = spec.gctx || GizmoContext.main;
-        let proxied = gctx.proxied;
-        super(spec, false, proxied);
-        // pre constructor actions
-        this.cpre(spec);
-        // apply schema/parse properties
-        this.constructor.parser(this, spec);
+        super(spec);
         // -- post constructor actions
         this.cpost(spec);
         this.cfinal(spec);
@@ -106,14 +537,6 @@ class Gizmo extends GizmoData {
     // -- overridable constructor functions
     /**
      * To allow for more flexible constructor methods, three sub constructors are used in all classes derived by the {@link Gizmo} class: cpre, cpost, cfinal.  
-     * cpre is called at the very beginning before any properties are applied to the object.
-     * @param {Object} spec - object with key/value pairs used to pass properties to the constructor
-     * @abstract
-     */
-    cpre(spec={}) {
-    }
-    /**
-     * To allow for more flexible constructor methods, three sub constructors are used in all classes derived by the {@link Gizmo} class: cpre, cpost, cfinal.  
      * cpost is called after applying schema-defined properties to the object.
      * @param {*} spec 
      * @abstract
@@ -130,21 +553,19 @@ class Gizmo extends GizmoData {
     }
 
     // METHODS -------------------------------------------------------------
-
     xify(sdata) {
         // save new serialized gzo
         if (!sdata.xgzos[this.gid]) {
-            sdata.xgzos[this.gid] = Serializer.xifyData(sdata, this.$values, { 
-                $gzx: true,
-                cls: this.constructor.name,
-            }, this.$schema);
+            let xdata = super.xify(sdata);
+            sdata.xgzos[this.gid] = xdata;
         }
         return {
+            $gzx: true,
             cls: '$GizmoRef',
             gid: this.gid,
         }
     }
-    
+
     /**
      * create string representation of object
      * @returns {string}
@@ -153,4 +574,136 @@ class Gizmo extends GizmoData {
         return Fmt.toString(this.constructor.name, this.gid, this.tag);
     }
 
+}
+
+function genProxy(target) {
+    const proxy = new Proxy(target, {
+        get(target, key, receiver) {
+            if (key === '$proxy') return receiver;
+            if (key === '$target') return target;
+            const value = target[key];
+            if (typeof key === 'string' && key.startsWith('$')) {
+                return value;
+            }
+            if (value instanceof Function) {
+                return function (...args) {
+                    return value.apply(this === receiver ? target : this, args);
+                };
+            }
+            return target.constructor.$get(target, key, target.esentry);
+        },
+        set(target, key, value, receiver) {
+            if (typeof key === 'string' && key.startsWith('$')) {
+                target[key] = value;
+            } else {
+                target.constructor.$set(target, key, value, target.esentry);
+            }
+            return true;
+        },
+        deleteProperty(target, key) {
+            target.constructor.$delete(target, key, target.esentry);
+            return true;
+        }
+    });
+    return proxy;
+}
+
+class GadgetArray extends Gadget {
+
+    cparse(values) {
+        if (!values) values = [];
+        this.$store = [];
+        this.esentry = new GadgetSchemaEntry('wrap', {})
+        for (let i=0; i<values.length; i++) {
+            this.constructor.$set(this, i, values[i], this.esentry);
+        }
+    }
+
+    constructor(...args) {
+        super(...args);
+        const proxy = genProxy(this);
+        return proxy;
+    }
+
+    push(...v) {
+        let i=this.$store.length;
+        for (const el of v) {
+            this.constructor.$set(this, i++, el, this.esentry);
+        }
+        return this.$store.length;
+    }
+
+    pop() {
+        let idx = this.$store.length-1;
+        if (idx < 0) return undefined;
+        const v = this.$store[idx];
+        this.constructor.$set(this, idx, undefined, this.esentry);
+        this.$store.pop();
+        return v;
+    }
+
+    unshift(...v) {
+        let i=0;
+        for (const el of v) {
+            this.$store.splice(i, 0, undefined);
+            this.constructor.$set(this, i++, el, this.esentry);
+        }
+        return this.$store.length;
+    }
+
+    shift() {
+        if (this.$store.length < 0) return undefined;
+        const v = this.$store[0];
+        this.constructor.$set(this, 0, undefined, this.esentry);
+        this.$store.shift();
+        return v;
+    }
+
+    splice(start, deleteCount=0, ...avs) {
+        let tidx = start;
+        let aidx = 0;
+        let dvs = [];
+        // splice out values to delete, replace w/ items to add (if any)
+        for (let i=0; i<deleteCount; i++ ) {
+            dvs.push(this.$store[tidx])
+            if (aidx < avs.length) {
+                this.constructor.$set(this, tidx++, avs[aidx++], this.esentry);
+            } else {
+                this.constructor.$set(this, tidx, undefined, this.esentry);
+                this.$store.splice(tidx++, 1);
+            }
+        }
+        // splice in any remainder of items to add
+        for ( ; aidx<avs.length; aidx++ ) {
+            this.$store.splice(tidx, 0, undefined);
+            this.constructor.$set(this, tidx++, avs[aidx], this.esentry);
+        }
+        return dvs;
+    }
+
+    *[Symbol.iterator]() {
+        for (const v of this.$values) yield v;
+    }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, ...this.$values);
+    }
+
+}
+
+class GadgetObject extends Gadget {
+    cparse(values) {
+        if (!values) values = {};
+        this.$store = values;
+        this.esentry = new GadgetSchemaEntry('wrap', {})
+        for (const [k,v] of Object.entries(values)) {
+            this.constructor.$set(this, k, v, this.esentry);
+        }
+    }
+
+    constructor(...args) {
+        super(...args);
+        const proxy = genProxy(this);
+        return proxy;
+    }
 }

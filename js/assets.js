@@ -2,7 +2,7 @@ export { Assets };
 
 import { FileLoader } from './fileLoader.js';
 import { Fmt } from './fmt.js';
-import { GizmoContext } from './gizmoContext.js';
+import { GizmoContext } from './gizmo.js';
 import { AssetRef, BaseRef } from './refs.js';
 import { Util } from './util.js';
 
@@ -11,12 +11,12 @@ class Assets {
 
     // STATIC METHODS ------------------------------------------------------
     static get(tag, overrides={}, gctx) {
-        if (!gctx) gctx = GizmoContext.main;
+        if (!gctx) gctx = GizmoContext.dflt;
         if (!gctx.game || !gctx.game.assets) return null;
         return gctx.game.assets.get(tag, overrides);
     }
     static add(tag, asset, gctx) {
-        if (!gctx) gctx = GizmoContext.main;
+        if (!gctx) gctx = GizmoContext.dflt;
         if (!gctx.game) return;
         if (!gctx.game.assets) gctx.game.assets = new Assets()
         gctx.game.assets.add(tag, asset);
@@ -52,9 +52,10 @@ class Assets {
                 let idx = this.specs.indexOf(spec);
                 this.specs.splice(idx, 1);
             }
+            let tag = (spec.args && spec.args.length) ? spec.args[0].tag : 'tag';
             // clear from assets
-            if (spec.tag in this.assets) {
-                delete this.assets[spec.tag];
+            if (tag in this.assets) {
+                delete this.assets[tag];
             }
         }
     }
@@ -75,13 +76,15 @@ class Assets {
         await FileLoader.load(this.getMediaRefs(), this.media);
         // populate assets
         for (const spec of this.specs) {
-            let tag = spec.tag || 'tag';
+            let args = spec.args;
+            let tag = (args && args.length) ? args[0].tag : 'tag';
             if (this.assets.hasOwnProperty(tag)) {
                 console.error(`duplicate asset tag detected: ${tag}, previous definition: ${Fmt.ofmt(this.assets[tag])}, skipping: ${Fmt.ofmt(spec)}`);
                 continue;
             }
-            spec.assetTag = tag;
+            if (args && args.length) args[0].assetTag = tag;
             // asset spec is copied from input spec
+            console.log(`== spec: ${Fmt.ofmt(spec)}`);
             this.assets[tag] = Object.assign({}, spec);
         }
         // once specs have been loaded, they get cleared
@@ -132,12 +135,14 @@ class Assets {
     }
 
     get(tag, overrides={}) {
+        console.log(`tag: ${tag} assets: ${Fmt.ofmt(this.assets)}`);
         let spec = this.assets[tag];
+        console.log(`tag: ${tag} spec: ${Fmt.ofmt(spec)}`);
         if (!spec) {
             console.error(`-- missing asset for ${tag}`);
             return null;
         }
-        spec = Object.assign({}, spec, overrides);
+        if (spec.args && spec.args.length) spec.args[0] = Object.assign({}, spec.args[0], overrides);
         return spec;
     }
 

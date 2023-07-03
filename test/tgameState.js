@@ -1,26 +1,32 @@
-import { GizmoContext } from '../js/gizmoContext.js';
+import { GizmoContext } from '../js/gizmo.js';
 import { GameState } from '../js/gameState.js';
 import { EvtSystem } from '../js/event.js';
+import { Helpers } from '../js/helpers.js';
 
 describe('a game state', () => {
 
     let gctx;
+    let receiver;
+    let tevt;
     beforeEach(() => {
         gctx = new GizmoContext({tag: 'test'});
+        let receiver = Helpers.genEvtReceiver();
+        tevt = {};
+        EvtSystem.listen(gctx, receiver, 'state.started', (evt) => tevt = evt);
     });
 
     it('can be started', async ()=>{
         let state = new GameState( { gctx: gctx });
         await state.start();
-        expect(EvtSystem.getCount(state, 'state.started')).toBe(1);
+        expect(tevt.tag).toEqual('state.started');
     });
 
     it('registers assets', async ()=>{
         let state = new GameState( { gctx: gctx, assetSpecs: [
-            { cls: 'test', tag: 'test' },
+            { cls: 'test', args: [{tag: 'test'}] },
         ] });
         await state.start();
-        expect(EvtSystem.getCount(state, 'state.started')).toBe(1);
+        expect(tevt.tag).toEqual('state.started');
         let asset = state.assets.get('test');
         expect(asset).toBeTruthy();
         await state.stop();
@@ -29,7 +35,7 @@ describe('a game state', () => {
 
     it('can be restarted', async ()=>{
         let state = new GameState( { gctx: gctx, assetSpecs: [
-            { cls: 'test', tag: 'test' },
+            { cls: 'test', args: [{tag: 'test'}] },
         ] });
         expect(state.state).toEqual('none');
         await state.start();

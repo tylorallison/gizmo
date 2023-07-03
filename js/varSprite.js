@@ -9,7 +9,7 @@ import { Prng } from './prng.js';
  */
 class VarSprite extends Sprite {
     static {
-        this.schema(this, 'img', {readonly: true, parser: (o,x) => {
+        this.schema('img', {readonly: true, parser: (o,x) => {
             if ('variations' in x) {
                 return Prng.choose(x.variations);
             }
