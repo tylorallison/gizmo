@@ -346,7 +346,6 @@ class UiText extends UiView {
             this.layout();
         }
         if (!this.tokens.length) {
-            console.log(`this: ${this} fmt: ${this.fmt}`)
             let tsize = this.fmt.measure(' ');
             return new Bounds({x:0,y:0, width:tsize.x, height:tsize.y});
         }

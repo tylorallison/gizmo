@@ -93,11 +93,11 @@ class TextFormat extends Gadget {
     }
 
     copy(overrides={}) {
-        return new this.constructor(Object.assign({}, this.$values, overrides));
+        return new this.constructor(Object.assign({}, this.$store, overrides));
     }
 
     toString() {
-        return Fmt.toString(this.constructor.name, Fmt.ofmt(this.$values));
+        return Fmt.toString(this.constructor.name, Fmt.ofmt(this.$store));
     }
 
 }

@@ -89,6 +89,7 @@ class SfxSystem extends System {
         // lookup asset
         let x_sfx = this.assets.get(assetTag);
         if (!x_sfx) return;
+        x_sfx = x_sfx.args[0];
         // decode asset (or pull from cache)
         let decoded;
         if (!this.decodes[assetTag]) {

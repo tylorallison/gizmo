@@ -48,10 +48,12 @@ class TextTest extends Game {
         let cvs = new UiCanvas({ gctx: this.gctx });
         let panel;
 
+        /*
         this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none');
         this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none', .5, 0);
         this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'none', .5, 1);
         this.testToken(cvs, new TextToken({fmt: new TextFormat({color: 'red', highlight: true, size: 22, }) }), 'stretch');
+        */
 
         this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'wrap');
         this.testUiText(cvs, 'hello great big world', new TextFormat({color: 'red', size: 22 }), 'wrap', 1);

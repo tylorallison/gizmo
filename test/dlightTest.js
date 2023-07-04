@@ -15,14 +15,14 @@ import { XForm } from '../js/xform.js';
 
 class Light extends Gadget {
     static {
-        this.schema(this, 'point', {dflt: false});
-        this.schema(this, 'color', {parser: (o,x) => x.color || new Vect3({x:1,y:1,z:1})});
-        this.schema(this, 'ambientIntensity', {dflt: 0});
-        this.schema(this, 'diffuseIntensity', {dflt: 1});
-        this.schema(this, 'v', {parser: (o,x) => x.v || Vect3.zero});
-        this.schema(this, 'attenuationConstant', {dflt: 0});
-        this.schema(this, 'attenuationLinear', {dflt: 0});
-        this.schema(this, 'attenuationExp', {dflt: 1});
+        this.schema('point', {dflt: false});
+        this.schema('color', {parser: (o,x) => x.color || new Vect3({x:1,y:1,z:1})});
+        this.schema('ambientIntensity', {dflt: 0});
+        this.schema('diffuseIntensity', {dflt: 1});
+        this.schema('v', {parser: (o,x) => x.v || Vect3.zero});
+        this.schema('attenuationConstant', {dflt: 0});
+        this.schema('attenuationLinear', {dflt: 0});
+        this.schema('attenuationExp', {dflt: 1});
     }
 }
 
@@ -33,13 +33,13 @@ class NSprite extends Sprite {
     }
 
     static {
-        this.schema(this, 'nimg', {readonly: true});
-        this.schema(this, 'specularity', {dflt: 1});
-        this.schema(this, 'specularPower', {dflt: 1});
-        this.schema(this, 'shiny', {dflt: 1});
-        this.schema(this, 'idata', {readonly: true, parser: (o,x) => o.constructor.getDataFromImage(o.img)});
-        this.schema(this, 'ndata', {renderable: true, parser: () => null});
-        this.schema(this, 'normals', {readonly: true, parser: () => []});
+        this.schema('nimg', {readonly: true});
+        this.schema('specularity', {dflt: 1});
+        this.schema('specularPower', {dflt: 1});
+        this.schema('shiny', {dflt: 1});
+        this.schema('idata', {readonly: true, parser: (o,x) => o.constructor.getDataFromImage(o.img)});
+        this.schema('ndata', {renderable: true, parser: () => null});
+        this.schema('normals', {readonly: true, parser: () => []});
     }
 
     static getDataFromImage(img) {
@@ -310,11 +310,11 @@ class DLightTest extends Game {
 
         let panels = [];
         let rows = 2;
-        let cols = 3;
+        let cols = 2;
         let scale = 4;
         for (let i=0; i<cols; i++) {
             for (let j=0; j<rows; j++) {
-                let nsprite = new NSprite({img: tsprite.img, nimg: tsprite.img, specularity: .25*i, specularPower: 2.5*j});
+                let nsprite = new NSprite({img: tsprite.args[0].img, nimg: tsprite.args[0].img, specularity: .25*i, specularPower: 2.5*j});
                 let panel = new UiPanel({
                     gctx: this.gctx, 
                     sketch: nsprite,

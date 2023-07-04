@@ -17,8 +17,8 @@ class UiGrid extends UiView {
     static {
         this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) )});
         //this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
-        this.schema('createFilter', { readonly: true, dflt: ((gzo) => false) });
-        this.schema('renderFilter', { eventable: false, dflt: ((idx, view) => true) });
+        this.schema('createFilter', { readonly: true, parser: (o,x) => ((x.createFilter) ? x.createFilter : ((gzo) => false)) });
+        this.schema('renderFilter', { eventable: false, parser: (o,x) => ((x.renderFilter) ? x.renderFilter : ((idx, view) => true)) });
         this.schema('optimizeRender', { eventable: false, dflt: true });
         this.schema('chunks', { link: false, parser: (o,x) => {
             if (x.chunks) return x.chunks;

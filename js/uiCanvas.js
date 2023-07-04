@@ -20,7 +20,6 @@ class UiCanvas extends UiView {
         canvas.id = id;
         canvas.constructed = true;
         document.body.appendChild(canvas);
-        console.log(`returning canvas: ${canvas}`);
         return canvas;
     }
 
