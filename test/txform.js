@@ -4,12 +4,11 @@ import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Vect } from '../js/vect.js';
-import { GizmoObject } from '../js/gizmoData.js';
+import { Helpers } from '../js/helpers.js';
 
 class TXFormRoot extends Gizmo {
     static {
-        //this.schema(this, 'xform', { proxy: true });
-        this.schema(this, 'xform', { });
+        this.schema('xform', { link: true });
     }
 
     cpost(spec={}) {
@@ -27,18 +26,17 @@ describe('xforms', () => {
     let root, receiver, tevts;
     beforeEach(() => {
         root = new TXFormRoot({ xform: new XForm()});
-        receiver = ExtEvtReceiver.gen();
+        receiver = Helpers.genEvtReceiver();
         tevts = [];
         EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => {
             tevts.push(evt);
-            //console.error(`event: ${Fmt.ofmt(evt)}`);
         });
     });
 
     it('updates triggered to bound gizmo', ()=>{
         root.xform.gripOffsetLeft = 5;
         //console.log(`tevts: ${Fmt.ofmt(tevts)}`);
-        expect(tevts.length).toEqual(2);
+        expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.tag).toEqual('gizmo.set'); 
         expect(tevt.actor).toEqual(root); 
@@ -47,10 +45,9 @@ describe('xforms', () => {
 
     it('gizmo cleared from xform on gizmo destroy', ()=>{
         let x = root.xform;
-        let n = x.$link.trunk.node;
-        expect(x.$link.trunk.node).toBe(root);
+        expect(x.$trunk).toBe(root);
         root.destroy();
-        expect(x.$link.trunk).toBe(null);
+        expect(x.$trunk).toBe(null);
     });
 
     it('data can be set on init', ()=>{

@@ -152,7 +152,7 @@ describe('gadgets', () => {
             static { this.schema('sub', { atUpdate: (o,k,ov,nv) => rootUpdate = { ov: ov, nv: nv }, link: true }); }
         };
         class TBRoot extends gadgetClass {
-            static { this.schema('sub' ); }
+            static { this.schema('sub', { link: true } ); }
         };
         let leaf = new TLeaf({el: 'hello'});
         let roota = new TARoot();
@@ -196,7 +196,7 @@ describe('gadgets', () => {
             static { this.schema('el'); }
         };
         class TBase extends gadgetClass {
-            static { this.schema('el'); }
+            static { this.schema('el', { link: true }); }
             static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
         };
         let b = new TBase({el: new TLeaf()});
@@ -218,7 +218,7 @@ describe('gadgets', () => {
             static { this.schema('g', { dflt: 1, generator: (o,ov) => ov*2}); }
         };
         class TBase extends gadgetClass {
-            static { this.schema('el'); }
+            static { this.schema('el', { link: true }); }
         };
         let b = new TBase();
         let l = new TLeaf();
@@ -365,7 +365,7 @@ describe('gizmos', () => {
 describe('gadget arrays', () => {
     class TRef extends gadgetClass {
         static { 
-            this.schema('items', { link: 'array', dflt: () => [] }); 
+            this.schema('items', { link: true, dflt: () => [] }); 
             this.schema('auto', { generator: (o,v) => {
                 return (o.items.length) ? 'hello:there' : 'wait';
             }}); 
@@ -478,7 +478,7 @@ describe('gadget arrays', () => {
 describe('gadget objects', () => {
     class TRef extends gadgetClass {
         static { 
-            this.schema('atts', { dflt: () => ({}) }); 
+            this.schema('atts', { dflt: () => ({}), link: true }); 
             ExtEvtEmitter.apply(this)
         };
     };

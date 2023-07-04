@@ -31,7 +31,6 @@ describe('an asset class', () => {
         await assets.load();
         let asset = assets.get('test.sprite');
         expect(asset).toBeTruthy();
-        console.log(`==== tag: ${asset.tag} asset: ${Fmt.ofmt(asset)}`);
         if (asset) {
             expect(asset.args[0].tag).toEqual('test.sprite');
             expect(asset.args[0].img instanceof HTMLImageElement).toBeTruthy();

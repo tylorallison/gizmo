@@ -16,7 +16,7 @@ class Grid extends GridBucketArray {
     static dfltRows = 8;
 
     static {
-        this.schema('bounder', { readonly: true, dflt: ((v) => v.xform) });
+        this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((v) => v.xform) )});
         //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema('dbg', { eventable: false, dflt: false });
         this.schema('rowSize', { readonly: true, dflt: 32 });

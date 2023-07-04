@@ -3,7 +3,7 @@ export { Gadget, GadgetArray, GadgetObject, Gizmo, GizmoContext };
 import { Fmt } from './fmt.js';
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from './event.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
-import { Assets } from './assets.js';
+import { Serializer } from './serializer.js';
 
 const FDEFINED=1;
 const FREADONLY=2;
@@ -22,17 +22,17 @@ class GadgetSchemaEntry {
         this.readonly = (this.getter || this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
             if (this.key in x) return x[this.key];
-            const dflt = (this.dflt) ? ((this.dflt instanceof Function) ? this.dflt(o) : this.dflt) : undefined;
+            const dflt = (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
             if (this.generator) return this.generator(o,dflt);
             return dflt;
         });
         this.eventable = (this.getter) ? false : ('eventable' in spec) ? spec.eventable : true;
         this.atUpdate = spec.atUpdate;
         // link - if the value is an object, setup Gadget links between the trunk and leaf.
-        this.link = ('link' in spec) ? spec.link : true;
+        this.link = ('link' in spec) ? spec.link : false;
         // generated fields are not serializable
         this.serializable = (this.generator) ? false : ('serializable' in spec) ? spec.serializable : true;
-        this.serializer = spec.serializer || ((sdata, value) => (typeof value === 'object') ? JSON.parse(JSON.stringify(value)) : value);
+        this.serializer = spec.serializer;
     }
     toString() {
         return Fmt.toString(this.constructor.name, this.key);
@@ -41,12 +41,19 @@ class GadgetSchemaEntry {
 
 class GadgetSchema {
     constructor(base) {
-        if (!base) base = {};
-        this.map = Object.assign({}, base.map);
+        //if (!base) base = {};
+        this.map = {};
+        this._entries = [];
+        if (base) {
+            for (const oentry of base.entries) {
+                this.set(oentry.key, oentry);
+            }
+        }
+        //this.map = Object.assign({}, base.map);
     }
 
     get entries() {
-        return Object.values(this.map);
+        return Array.from(this._entries);
     }
 
     has(key) {
@@ -58,10 +65,21 @@ class GadgetSchema {
     }
 
     set(key, entry) {
+        if (key in this.map) {
+            let oentry = this.map[key];
+            let idx = this._entries.indexOf(oentry);
+            if (!idx !== -1) this._entries.splice(idx, 1);
+        }
         this.map[key] = entry;
+        this._entries.push(entry);
     }
 
     clear(key) {
+        if (key in this.map) {
+            let oentry = this.map[key];
+            let idx = this._entries.indexOf(oentry);
+            if (!idx !== -1) this._entries.splice(idx, 1);
+        }
         delete this.map[key];
     }
 }
@@ -159,7 +177,7 @@ class Gadget {
         if (sentry.generator) {
             let value;
             if (!(key in target.$store)) {
-                const dflt = (sentry.dflt) ? ((sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt) : undefined;
+                const dflt = (sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt;
                 value = sentry.generator(target, dflt);
                 target.$store[key] = [target.$v, value];
             } else {
@@ -273,7 +291,7 @@ class Gadget {
 
     static kvparse(o, key, value, sentry) {
         if (!sentry && o.$schema) sentry = o.$schema.get(key);
-        if (sentry && value === undefined) value = (sentry.dflt) ? ((sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt) : undefined;
+        if (sentry && value === undefined) value = (sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt;
         this.$set(o, key, value, sentry);
     }
 
@@ -363,8 +381,11 @@ class Gadget {
                 } else if ('xify' in v) {
                     xargs[k] = v.xify(sdata);
                 } else {
-                    let serializer = (sentry.serializer) ? sentry.serializer : (sdata, value) => JSON.parse(JSON.stringify(value));
-                    xargs[k] = serializer(sdata, v);
+                    if (sentry && sentry.serializer) {
+                        xargs[k] = sentry.serializer(sdata, v);
+                    } else {
+                        xargs[k] = Serializer.xify(sdata, v);
+                    }
                 }
             } else {
                 xargs[k] = v;
@@ -391,6 +412,9 @@ class Gadget {
         return Object.values(this.$store);
     }
 
+    $regen() {
+        this.$v++;
+    }
 
     toString() {
         return Fmt.toString(this.constructor.name);

@@ -35,7 +35,7 @@ class UiText extends UiView {
 
     static {
         this.schema('text', { dflt: 'default text', atUpdate: (o,k,ov,nv) => o.needsLayout = true });
-        this.schema('fmt', { parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (o,k,ov,nv) => o.needsLayout = true });
+        this.schema('fmt', { link: true, parser: (o,x) => (x.fmt || this.dfltFmt), atUpdate: (o,k,ov,nv) => o.needsLayout = true });
         // none, stretch, wrap, autowrap
         this.schema('fitter', { dflt: 'stretch', atUpdate: (o,k,ov,nv) => o.needsLayout = true });
         this.schema('alignx', { dflt: .5, atUpdate: (o,k,ov,nv) => o.needsLayout = true });

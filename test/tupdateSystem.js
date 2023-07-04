@@ -1,10 +1,11 @@
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
+import { EvtSystem } from '../js/event.js';
 import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
+import { Helpers } from '../js/helpers.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 
 class TUpdateRoot extends Gizmo {
     static { this.schema('sub', {link: true}); };
-    static { this.schema('psub', {proxy: true}); };
+    static { this.schema('psub', {link: true}); };
 };
 
 class TUpdateSub extends Gadget {
@@ -19,14 +20,13 @@ describe('an update system', () => {
         gctx = new GizmoContext({tag: 'test'});
         sys = new UpdateSystem( { gctx: gctx });
         g = new TUpdateRoot({ gctx: gctx, sub: new TUpdateSub({ data: 'hello world'}), psub: new TUpdateSub({ data: 'nihao' }) });
-        receiver = ExtEvtReceiver.gen();
+        receiver = Helpers.genEvtReceiver();
         EvtSystem.listen(gctx, receiver, 'gizmo.updated', (tevt) => tevts.push(tevt));
         tevts = [];
     });
 
     it('gizmos trigger updates', ()=>{
-        GizmoData.set(
-	g.sub.var1 = 'bar';
+        g.sub.var1 = 'bar';
         EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);

@@ -20,6 +20,7 @@ class UiCanvas extends UiView {
         canvas.id = id;
         canvas.constructed = true;
         document.body.appendChild(canvas);
+        console.log(`returning canvas: ${canvas}`);
         return canvas;
     }
 
@@ -27,9 +28,9 @@ class UiCanvas extends UiView {
     static {
         this.schema('active', {dflt: true});
         this.schema('canvasId', { readonly: true, parser: (o,x) => x.canvasId || o.constructor.dfltCanvasID });
-        this.schema('canvas', { readonly: true, parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
-        this.schema('xform', { parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height }) });
-        this.schema('ctx', { readonly: true, parser: (o,x) => o.canvas.getContext('2d') });
+        this.schema('canvas', { parser: (o,x) => x.canvas || o.constructor.getCanvas(o.canvasId) });
+        this.schema('xform', { link: true, parser: (o,x) => x.xform || new XForm({ origx: 0, origy: 0, fixedWidth: o.canvas.width, fixedHeight: o.canvas.height }) });
+        this.schema('ctx', { parser: (o,x) => o.canvas.getContext('2d') });
         this.schema('fitToWindow', { readonly: true, dflt: true });
     }
 

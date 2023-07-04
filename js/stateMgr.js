@@ -16,7 +16,7 @@ class StateMgr extends Gizmo {
     // SCHEMA --------------------------------------------------------------
     static {
         this.schema('dbg', { dflt: false });
-        this.schema('states', { readonly: true, parser: () => ({}) });
+        this.schema('states', { link: false, parser: () => ({}) });
         this.schema('current');
     }
 

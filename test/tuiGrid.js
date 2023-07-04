@@ -2,6 +2,7 @@ import { Bounds } from '../js/bounds.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { GizmoContext } from '../js/gizmo.js';
+import { Helpers } from '../js/helpers.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { UpdateSystem } from '../js/updateSystem.js';
@@ -15,7 +16,7 @@ describe('a UI grid', () => {
         gctx = new GizmoContext({tag: 'test'});
         grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
         sys = new UpdateSystem( { gctx: gctx, dbg: false });
-        receiver = ExtEvtReceiver.gen();
+        receiver = Helpers.genEvtReceiver();
         tevts = [];
         EvtSystem.listen(grid, receiver, 'gizmo.updated', (evt) => {
             //console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
@@ -59,7 +60,6 @@ describe('a UI grid', () => {
             [3, [g4]],
         ]) {
             let gzos = Array.from(grid.findForIdx(idx, (v) => true));
-            console.log(`idx: ${idx} gzos: ${gzos}`);
             expect(gzos).toEqual(rslt);
         }
     });

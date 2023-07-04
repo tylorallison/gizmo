@@ -1,11 +1,12 @@
 import { EvtSystem, ExtEvtEmitter } from '../js/event.js';
+import { Helpers } from '../js/helpers.js';
 import { Timer } from '../js/timer.js';
 
 describe('timers', () => {
 
     let ticker, counter, incr;
     beforeEach(() => {
-        ticker = ExtEvtEmitter.gen();
+        ticker = Helpers.genEvtEmitter();
         counter = 0;
         incr = () => counter++;
     });

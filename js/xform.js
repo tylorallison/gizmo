@@ -100,15 +100,8 @@ class XForm extends Gadget {
     // parent transform linked through gizmo relation (if any)
     get parent() {
         Stats.count('xform.parent');
-        if (!this.$link || !this.$link.trunk || !this.$link.trunk.node.parent) return null;
-        return this.$link.trunk.node.parent.xform;
-        /*
-        let v = this.$trunk;
-        if (!v) return null;
-        v = v.parent;
-        if (!v) return null;
-        return v.xform;
-        */
+        if (!this.$trunk || !this.$trunk.parent) return null;
+        return this.$trunk.parent.xform;
     }
 
     // grip positions relative to parent bounds/rect

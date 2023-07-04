@@ -8,7 +8,6 @@ import { UiView } from './uiView.js';
 import { Direction } from './direction.js';
 import { Grid } from './grid.js';
 import { HexGrid } from './hexgrid.js';
-import { Vect } from './vect.js';
 import { Overlaps } from './intersect.js';
 
 class UiGrid extends UiView {
@@ -16,7 +15,7 @@ class UiGrid extends UiView {
     // This makes it possible to serialize data and still have customizable functions.
 
     static {
-        this.schema('bounder', { readonly: true, dflt: ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) });
+        this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) )});
         //this.schema(this, 'bounds', { parser: (o,x) => (x.bounds || Bounds.zero), atUpdate: (r, o, k, ov, nv) => { console.log(`r: ${r} o: ${o}`); r.resize(); }});
         this.schema('createFilter', { readonly: true, dflt: ((gzo) => false) });
         this.schema('renderFilter', { eventable: false, dflt: ((idx, view) => true) });

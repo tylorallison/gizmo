@@ -7,7 +7,7 @@ class UiPanel extends UiView {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('sketch', { parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch });
+        this.schema('sketch', { link: true, parser: (o,x) => (x.hasOwnProperty('sketch')) ? x.sketch : o.constructor.dfltSketch });
         this.schema('fitter', { dflt: 'stretch' });
         this.schema('alignx', { dflt: .5 });
         this.schema('aligny', { dflt: .5 });

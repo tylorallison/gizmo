@@ -42,7 +42,8 @@ class Generator {
         let nspec = Util.copy(spec);
         for (const [k,v,o] of Util.kvWalk(nspec)) {
             if (v && v.cls === 'AssetRef') {
-                o[k] = this.generate(this.assets.get(v.assetTag));
+                const assetTag = v.args[0].assetTag;
+                o[k] = this.generate(this.assets.get(assetTag));
             } else if (v && typeof v === 'object' && v.$gzx) {
                 let nv = this.generate(v);
                 o[k] = nv;

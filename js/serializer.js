@@ -21,24 +21,14 @@ class SerialData {
 
 class Serializer {
 
-    static xifyData(sdata, obj, sobj={}, schema=null) {
+    static xifyData(sdata, obj, sobj={}) {
         if (!obj) return null;
         if (typeof obj !== 'object') return obj;
-        if (!schema) schema = obj.$schema;
         for (const [k,v] of Object.entries(obj)) {
-            if (k.startsWith('$')) continue;
-            let sentry = (schema) ? schema.map[k] : null;
-            if (sentry && !sentry.serializable) continue;
-            let skey = (sentry && sentry.serializeKey) ? sentry.serializeKey : k;
-            if (v && typeof v === 'object' && ('assetTag' in v)) {
-                sobj[skey] = {
-                    cls: 'AssetRef',
-                    assetTag: v.assetTag,
-                };
-            } else if (v && typeof v === 'object') {
-                sobj[skey] = this.xify(sdata, v);
+            if (v && typeof v === 'object') {
+                sobj[k] = this.xify(sdata, v);
             } else {
-                sobj[skey] = v;
+                sobj[k] = v;
             }
         }
         return sobj;
@@ -60,6 +50,7 @@ class Serializer {
             let swaps = [];
             for (const [k,v,obj] of Util.kvWalk(xgzo)) {
                 if (v && typeof v === 'object' && v.cls === '$GizmoRef') {
+                    //console.log(`found gizmoref in ${Fmt.ofmt(obj)} ${Fmt.ofmt(v)}`)
                     let ref = refs[v.gid];
                     if (ref) swaps.push([k, ref, obj]);
                 }
@@ -67,7 +58,8 @@ class Serializer {
             for (const [k,v,obj] of swaps) obj[k] = v;
             // generate
             let gzo = generator.generate(xgzo);
-            refs[xgzo.gid] = gzo;
+            //console.log(`push ref: ${xgzo.args[0].gid} ${gzo}`);
+            refs[xgzo.args[0].gid] = gzo;
             gzos.push(gzo);
         }
         // purge non-root gizmos

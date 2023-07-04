@@ -36,13 +36,19 @@ describe('a serializer', () => {
     it('can xify a basic gizmo', ()=>{
         let g = new Gizmo({ gctx: gctx, tag: 'root' });
         let rslt = Serializer.xify(sdata, g);
-        expect(rslt).toEqual({ cls: '$GizmoRef', gid: g.gid });
+        expect(rslt).toEqual({ 
+            $gzx: true,
+            cls: '$GizmoRef', 
+            gid: g.gid,
+        });
         expect(sdata.xgzos[g.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
-            gid: g.gid,
-            tag: g.tag,
-            children: [],
+            args: [{
+                gid: g.gid,
+                tag: g.tag,
+                children: [],
+            }],
         });
         // test restore
         let gzos = Serializer.restore(sdata, generator);
@@ -55,27 +61,37 @@ describe('a serializer', () => {
         let sub1 = new Gizmo({ gctx: gctx, tag: 'sub1', children: [ sub2 ] });
         let root = new Gizmo({ gctx: gctx, tag: 'root', children: [ sub1 ] });
         let rslt = Serializer.xify(sdata, root);
-        expect(rslt).toEqual({ cls: '$GizmoRef', gid: root.gid });
+        expect(rslt).toEqual({ 
+            $gzx: true,
+            cls: '$GizmoRef', 
+            gid: root.gid 
+        });
         expect(sdata.xgzos[sub2.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
-            gid: sub2.gid,
-            tag: sub2.tag,
-            children: [],
+            args: [{
+                gid: sub2.gid,
+                tag: sub2.tag,
+                children: [],
+            }],
         });
         expect(sdata.xgzos[sub1.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
-            gid: sub1.gid,
-            tag: sub1.tag,
-            children: [ { cls: '$GizmoRef', gid: sub2.gid }],
+            args: [{
+                gid: sub1.gid,
+                tag: sub1.tag,
+                children: [ { $gzx: true, cls: '$GizmoRef', gid: sub2.gid }],
+            }],
         });
         expect(sdata.xgzos[root.gid]).toEqual({
             $gzx: true,
             cls: 'Gizmo',
-            gid: root.gid,
-            tag: root.tag,
-            children: [ { cls: '$GizmoRef', gid: sub1.gid }],
+            args: [{
+                gid: root.gid,
+                tag: root.tag,
+                children: [ { $gzx: true, cls: '$GizmoRef', gid: sub1.gid }],
+            }],
         });
         // test restore
         let gzos = Serializer.restore(sdata, generator);
@@ -96,23 +112,30 @@ describe('a serializer', () => {
             }),
         });
         let rslt = Serializer.xify(sdata, root);
-        expect(rslt).toEqual({ cls: '$GizmoRef', gid: root.gid });
+        expect(rslt).toEqual({ $gzx: true, cls: '$GizmoRef', gid: root.gid });
         expect(sdata.xgzos[root.gid]).toEqual({
             $gzx: true,
             cls: 'TSerializerGizmo',
-            gid: root.gid,
-            tag: root.tag,
-            children: [],
-            data: {
-                $gzx: true,
-                cls: 'TSerializerData',
-                sub: {
+            args: [{
+                gid: root.gid,
+                tag: root.tag,
+                children: [],
+                data: {
                     $gzx: true,
-                    cls: 'TSerializerSub',
-                    value: 'hello world',
+                    cls: 'TSerializerData',
+                    args: [{
+                        sub: {
+                            $gzx: true,
+                            cls: 'TSerializerSub',
+                            args: [{
+                                value: 'hello world',
+                            }],
+                        },
+                    }]
                 },
-            },
-            asset: undefined,
+                asset: undefined,
+            }],
+
         });
         // test restore
         let gzos = Serializer.restore(sdata, generator);
@@ -124,15 +147,17 @@ describe('a serializer', () => {
     it('can xify a gizmo with asset ref', ()=>{
         let g = new TSerializerGizmo({ gctx: gctx, tag: 'root', asset: generator.generate(assets.get('test.rect')) });
         let rslt = Serializer.xify(sdata, g);
-        expect(rslt).toEqual({ cls: '$GizmoRef', gid: g.gid });
+        expect(rslt).toEqual({ $gzx: true, cls: '$GizmoRef', gid: g.gid });
         expect(sdata.xgzos[g.gid]).toEqual({
             $gzx: true,
             cls: 'TSerializerGizmo',
-            gid: g.gid,
-            tag: g.tag,
-            data: undefined,
-            asset: { assetTag: 'test.rect', cls: 'AssetRef'},
-            children: [],
+            args: [{
+                gid: g.gid,
+                tag: g.tag,
+                data: undefined,
+                asset: { $gzx: true, cls: 'AssetRef', args: [{ assetTag: 'test.rect' }]},
+                children: [],
+            }],
         });
         // test restore
         let gzos = Serializer.restore(sdata, generator);

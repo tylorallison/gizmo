@@ -8,14 +8,14 @@ import { UiText } from './uiText.js';
 class UiButton extends UiPanel {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('unpressed', { parser: (o,x) => (x.hasOwnProperty('unpressed')) ? x.unpressed : o.constructor.dfltUnpressed });
-        this.schema('highlight', { parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight });
-        this.schema('pressed', { parser: (o,x) => (x.hasOwnProperty('pressed')) ? x.pressed : o.constructor.dfltPressed });
-        this.schema('text', { parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', atUpdate: (o,k,ov,nv) => o._text.text = nv });
-        this.schema('hltext', { parser: (o,x) => (x.hasOwnProperty('hltext')) ? x.hltext : null });
-        this.schema('textSpec', {link: false, eventable: false, parser: (o,x) => (x.textSpec || {}), onset: (o,k,v) => Object.assign(o._text, v)});
-        this.schema('hlTextSpec', {link: false, eventable: false, parser: (o,x) => (x.hlTextSpec || {})});
-        this.schema('_text', { readonly: true, serializable: false, parser: (o,x) => {
+        this.schema('unpressed', { link: true, parser: (o,x) => (x.hasOwnProperty('unpressed')) ? x.unpressed : o.constructor.dfltUnpressed });
+        this.schema('highlight', { link: true, parser: (o,x) => (x.hasOwnProperty('highlight')) ? x.highlight : o.constructor.dfltHighlight });
+        this.schema('pressed', { link: true, parser: (o,x) => (x.hasOwnProperty('pressed')) ? x.pressed : o.constructor.dfltPressed });
+        this.schema('text', { link: true, parser: (o,x) => (x.hasOwnProperty('text')) ? x.text : 'default text', atUpdate: (o,k,ov,nv) => o._text.text = nv });
+        this.schema('hltext', { link: true, parser: (o,x) => (x.hasOwnProperty('hltext')) ? x.hltext : null });
+        this.schema('textSpec', { eventable: false, parser: (o,x) => (x.textSpec || {}), onset: (o,k,v) => Object.assign(o._text, v)});
+        this.schema('hlTextSpec', { eventable: false, parser: (o,x) => (x.hlTextSpec || {})});
+        this.schema('_text', { link: true, readonly: true, serializable: false, parser: (o,x) => {
             let spec = Object.assign({}, o.textSpec || {}, { text: o.text });
             return new UiText(spec);
         }});

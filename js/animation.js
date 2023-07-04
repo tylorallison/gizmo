@@ -14,13 +14,13 @@ class Animation extends Sketch {
     /** @member {boolean} Animation#loop - should the animation be looped */
     static { this.schema('loop', { dflt: true }); }
     /** @member {boolean} Animation#timer - timer for this animation */
-    static { this.schema('timer', { serializable: false, eventable: false }); }
+    static { this.schema('timer', { link: true, serializable: false, eventable: false }); }
     /** @member {boolean} Animation#sketchIdx - index of current animation frame */
     static { this.schema('sketchIdx', { eventable: false, dflt: 0 }); }
     /** @member {Sketch[]} Animation#sketches - array of cels/sketches to animate */
-    static { this.schema('sketches', { link: false, dflt: [], readonly: true }); }
+    static { this.schema('sketches', { dflt: [], readonly: true }); }
     /** @member {boolean} Animation#sketch - the current animation frame/sketch */
-    static { this.schema('sketch', { parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
+    static { this.schema('sketch', { link: true, parser: ((o,x) => ((o.sketches && o.sketches.length) ? o.sketches[o.sketchIdx] : null)) }); }
     /** @member {boolean} Animation#width - width of current animation frame */
     static { this.schema('width', { getter: ((o,x) => ((o.sketch) ? o.sketch.width : 0)) }); }
     /** @member {boolean} Animation#height - height of current animation frame */

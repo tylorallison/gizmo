@@ -8,7 +8,7 @@ class SystemMgr extends Gizmo {
     // SCHEMA --------------------------------------------------------------
     static {
         this.schema('dbg', { dflt: false });
-        this.schema('systems', { readonly: true, parser: () => ({}) });
+        this.schema('systems', { link: false, parser: () => ({}) });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
@@ -27,7 +27,7 @@ class SystemMgr extends Gizmo {
         if (evt.actor && (evt.actor instanceof System)) {
             let system = evt.actor;
             // pre-existing?
-            if (this.systems[system.tag]) console.log(`${this} replacing system for tag: ${system.tag}`);
+            if (this.systems[system.tag]) if (this.dbg) console.log(`${this} replacing system for tag: ${system.tag}`);
             if (this.dbg) console.log(`${this} adding system: ${system} tag: ${system.tag}`);
             this.systems[system.tag] = system;
         }

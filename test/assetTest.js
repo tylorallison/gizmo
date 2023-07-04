@@ -17,7 +17,7 @@ import { CompositeSprite } from '../js/compositeSprite.js';
 
 class TestModel extends UiPanel {
     static {
-        this.schema(this, 'state', { dflt: 'on', renderable: true });
+        this.schema('state', { dflt: 'on', renderable: true });
     }
 }
 
@@ -69,7 +69,7 @@ class AssetTest extends Game {
         let p = new TestModel({ 
             gctx: this.gctx, 
             //sketch: x, 
-            sketch: c, 
+            sketch: x, 
             //xform: new XForm({origx: .5, origy: .5, grip: .5, fixedWidth: 220, fixedHeight: 220}),
             xform: new XForm({origx: .5, origy: .5, grip: .3}),
             fitter: 'stretchRatio',
@@ -78,7 +78,7 @@ class AssetTest extends Game {
         //let sv = new TestSketchView( { gctx: this.gctx, sketch: a, x: 100, y: 100, xform: new XForm({origx: 0, origy: 0})});
         //Hierarchy.adopt(cvs, sv);
 
-        //new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
+        new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
 
 
     }

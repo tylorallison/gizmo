@@ -2,6 +2,7 @@ import { GizmoContext } from '../js/gizmo.js';
 import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { UiView } from '../js/uiView.js';
+import { Helpers } from '../js/helpers.js';
 
 describe('a view', () => {
 
@@ -10,7 +11,7 @@ describe('a view', () => {
         gctx = new GizmoContext({tag: 'test'});
         view = new UiView({gctx: gctx});
         sys = new UpdateSystem( { gctx: gctx });
-        receiver = ExtEvtReceiver.gen();
+        receiver = Helpers.genEvtReceiver();
         tevts = [];
         EvtSystem.listen(view, receiver, 'gizmo.updated', (evt) => tevts.push(evt));
     });

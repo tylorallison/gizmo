@@ -1,12 +1,13 @@
 import { EvtSystem, ExtEvtEmitter } from '../js/event.js';
 import { Gizmo, GizmoContext } from '../js/gizmo.js';
 import { System } from '../js/system.js';
+import { Helpers } from '../js/helpers.js';
 
 describe('systems', () => {
 
     it('automatically track entities based on match rules', ()=>{
         let g = new Gizmo();
-        let emitter = ExtEvtEmitter.gen();
+        let emitter = Helpers.genEvtEmitter();
         let e = { gid: 1, wanted: true };
         let system = new System({
             gctx: emitter,
@@ -23,7 +24,7 @@ describe('systems', () => {
 
     it('can iterate over tracked entities', ()=>{
         let g = new Gizmo();
-        let emitter = ExtEvtEmitter.gen();
+        let emitter = Helpers.genEvtEmitter();
         let e = { gid: 1, wanted: true };
         let system = new System({
             gctx: emitter,

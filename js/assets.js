@@ -84,7 +84,6 @@ class Assets {
             }
             if (args && args.length) args[0].assetTag = tag;
             // asset spec is copied from input spec
-            console.log(`== spec: ${Fmt.ofmt(spec)}`);
             this.assets[tag] = Object.assign({}, spec);
         }
         // once specs have been loaded, they get cleared
@@ -135,9 +134,7 @@ class Assets {
     }
 
     get(tag, overrides={}) {
-        console.log(`tag: ${tag} assets: ${Fmt.ofmt(this.assets)}`);
         let spec = this.assets[tag];
-        console.log(`tag: ${tag} spec: ${Fmt.ofmt(spec)}`);
         if (!spec) {
             console.error(`-- missing asset for ${tag}`);
             return null;

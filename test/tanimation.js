@@ -7,7 +7,7 @@ import { UiView } from '../js/uiView.js';
 
 class TSketchView extends UiView {
     static {
-        this.schema(this, 'sketch', { renderable: true, link: true });
+        this.schema('sketch', { renderable: true, link: true });
     }
     cpost(spec) {
         super.cpost(spec);
