@@ -227,7 +227,7 @@ class UiGrid extends UiView {
             const min = this.xform.getWorld({x:t.x+dx, y:t.y+dy}, false);
             const max = this.xform.getWorld({x:t.x+dx+this.colSize, y:t.y+dy+this.rowSize}, false);
             if (!Overlaps.bounds(this.parent.xform.bounds, {minx:min.x, miny:min.y, maxx: max.x, maxy:max.y})) {
-                if (this.dbg) console.log(`-- chunk: ${idx} ${t.x},${t.y} is out of bounds against ${this.xform.bounds}`);
+                //if (this.dbg) console.log(`-- chunk: ${idx} ${t.x},${t.y} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }
