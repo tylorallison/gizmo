@@ -20,6 +20,7 @@ class Config {
             },
             set(target, key, value, receiver) {
                 target[key] = value;
+                return true;
             },
         })
     }
