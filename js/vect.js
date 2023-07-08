@@ -120,6 +120,9 @@ class Vect extends Gadget {
         return ((v1.x||0)*(v2.x||0)) + ((v1.y||0)*(v2.y||0));
     }
 
+    static _cross(v1x, v1y, v2x, v2y) {
+        return (v1x*v2y) - (v1y*v2x);
+    }
     static cross(v1,v2) {
         if (!v1 || !v2) return NaN;
         return ((v1.x||0)*(v2.y||0)) - ((v1.y||0)*(v2.x||0));

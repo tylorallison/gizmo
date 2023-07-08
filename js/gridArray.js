@@ -337,7 +337,7 @@ class GridArray extends Gadget {
      */
     *[Symbol.iterator]() {
         for (let i=0; i<this.length; i++) {
-            yield *this.entries[i];
+            yield this.entries[i];
         }
     }
 

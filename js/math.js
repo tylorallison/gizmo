@@ -75,6 +75,29 @@ class Mathf {
         return Math.sqrt(dx*dx + dy*dy);
     }
 
+    static lineDistance(p1x, p1y, p2x, p2y, p3x, p3y) {
+        // special case ... vertical line
+        if (p1x === p2x) {
+            return Math.abs(p3x-p1x);
+        // special case ... horizontal line
+        } else if (p1y === p2y) {
+            return Math.abs(p3y-p1y);
+        } else {
+            // standard line equation
+            // y = mx+b
+            // converted to ax + by + c = 0 form
+            // mx - y + b = 0
+            // distance formula w/ vars from a,b,c form
+            // d = Math.abs(a*p3x + b*p3y + c)/Math.sqrt(a^2+b^2)
+            // converted to use m/b (a=>m b=>-1 c=>b)
+            // d = Math.abs(m*p3x - p3y + b)/Math.sqrt(m^2+1)
+            let m = (p2y - p1y)/(p2x-p1x);
+            let b = (p1y-m*p1x);
+            let d = Math.abs(m*p3x - p3y + b)/Math.sqrt(m*m+1);
+            return d;
+        }
+    }
+
     static rotatePoint(cx, cy, pX, pY, angle) {
         var dx = pX - cx;
         var dy = pY - cy;

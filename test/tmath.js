@@ -128,3 +128,18 @@ describe("a angle normalization function", () => {
         });
     }
 });
+
+describe("a line distance function", () => {
+    // intersects
+    for (const test of [
+        {args: [1,1, 2,2, 2,1], xrslt: Math.sqrt(2)/2},
+        {args: [1,1, 2,1, 2,2], xrslt: 1},
+        {args: [1,1, 1,2, 2,2], xrslt: 1},
+        {args: [10,0, 0,10, 10,10], xrslt: Math.sqrt(2)*5},
+    ]) {
+        it(`can compute ${test.args}`, ()=>{
+            const rslt = Mathf.lineDistance(...test.args);
+            expect(rslt).toBeCloseTo(test.xrslt);
+        });
+    }
+});
