@@ -234,9 +234,7 @@ class UiGrid extends UiView {
         this.chunkCtx.clearRect( 0, 0, this.colSize, this.rowSize );
         this.chunkCtx.translate(-t.x, -t.y);
         // iterate through all views at given idx
-        let rendered = false;
         for (const view of this.getidx(idx)) {
-            rendered = true;
             if (this.renderFilter(idx, view)) {
                 //console.log(`render view: ${view} to ${this.chunkCtx}`);
                 view.render(this.chunkCtx);
@@ -244,10 +242,8 @@ class UiGrid extends UiView {
         }
         this.chunkCtx.translate(t.x, t.y);
         // -- resulting chunk is rendered to grid canvas
-        if (rendered) {
-            this.gridCtx.clearRect(t.x, t.y, this.colSize, this.rowSize);
-            this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
-        }
+        this.gridCtx.clearRect(t.x, t.y, this.colSize, this.rowSize);
+        this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
     }
 
     subrender(ctx) {
