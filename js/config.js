@@ -1,28 +1,63 @@
 export { Config };
 
+import { Util } from './util.js';
+
 class Config {
     static defaults = {};
     static setDefault(key, value) {
-        this.defaults[key] = value;
+        Util.setpath(this.defaults, key, value);
     }
     static setDefaults(atts={}) {
-        Object.assign(this.defaults, atts);
+        for (const [key, value] of Object.entries(atts)) {
+            Util.setpath(this.defaults, key, value);
+        }
+        //Object.assign(this.defaults, atts);
+    }
+    static getDefault(path) {
+        return Util.getpath(path);
     }
 
-    constructor(spec={}) {
-        let atts = Object.assign({}, spec);
-        return new Proxy(atts, {
+    static cfgproxy(cfg, scope, overrides={}) {
+        let atts;
+        let dflts;
+        if (scope) {
+            dflts = Util.getpath(this.defaults, scope, {});
+            if (!Util.haspath(cfg.$atts, scope)) Util.setpath(cfg.$atts, scope, {});
+            atts = Util.getpath(cfg.$atts, scope);
+        } else {
+            dflts = this.defaults;
+            atts = cfg.$atts;
+        }
+        atts = Util.update({}, atts, overrides);
+        return new Proxy(cfg, {
             get(target, key, receiver) {
-                if (key in target) return target[key];
-                if (key in Config.defaults) return Config.defaults[key];
-                //console.error(`config missing value for att: ${key}`);
+                if ((key in target) && (target[key] instanceof Function)) {
+                    return function (...args) {
+                        let value = target[key];
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
+                if (key in atts) return atts[key];
+                if (key in dflts) return dflts[key];
                 return undefined;
             },
             set(target, key, value, receiver) {
-                target[key] = value;
+                atts[key] = value;
                 return true;
             },
-        })
+        });
+    }
+
+    constructor(spec={}) {
+        this.$atts = {};
+        for (const [key, value] of Object.entries(spec)) {
+            Util.setpath(this.$atts, key, value);
+        }
+        return this.constructor.cfgproxy(this);
+    }
+
+    scope(path, overrides={}) {
+        return this.constructor.cfgproxy(this, path, overrides);
     }
 
 }

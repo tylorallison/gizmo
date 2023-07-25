@@ -15,6 +15,7 @@ import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { Bounds } from '../js/bounds.js';
 import { Rect } from '../js/rect.js';
+import { UiToggle } from '../js/uiToggle.js';
 
 class UITest extends Game {
     static assetSpecs = [
@@ -78,6 +79,17 @@ class UITest extends Game {
             })
         });
         Hierarchy.adopt(cvs, input)
+
+        let toggle = new UiToggle({ 
+            xform: new XForm({ 
+                grip: .5, 
+                x: 300, 
+                y: 0, 
+                fixedWidth: this.size, 
+                fixedHeight: this.size,
+            }),
+        });
+        Hierarchy.adopt(cvs, toggle)
 
         let grid = new UiGrid({
             hex: true,

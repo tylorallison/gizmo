@@ -25,11 +25,9 @@ class CompositeSprite extends Sketch {
         canvas.width = this.width;
         canvas.height = this.height;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        console.log(`-- resolve`)
         for (let i=0; i<this.stack.length; i++) {
             let sketch = this.stack[i].sketch;
             sketch.render(ctx, 0, 0);
-        console.log(`render sketch: ${sketch}`);
         }
         let promise = resolveImage(canvas.toDataURL(), false);
         promise.then((img) => this.img = img);

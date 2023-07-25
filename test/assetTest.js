@@ -13,6 +13,7 @@ import { UiPanel } from '../js/uiPanel.js';
 import { Animator } from '../js/animator.js';
 import { Timer } from '../js/timer.js';
 import { CompositeSprite } from '../js/compositeSprite.js';
+import { Shape } from '../js/shape.js';
 
 
 class TestModel extends UiPanel {
@@ -30,6 +31,8 @@ class AssetTest extends Game {
 
         Rect.xspec({ tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
+
+        Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
 
         Animation.xspec({tag: 'test.animation', jitter: true, sketches: [
             Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
@@ -66,10 +69,11 @@ class AssetTest extends Game {
         c.add('two', Generator.generate(this.assets.get('rect.two')));
         let a = Generator.generate(this.assets.get('test.animation'));
         let x = Generator.generate(this.assets.get('test.animator'));
+        let shape = Generator.generate(this.assets.get('test.shape'));
         let p = new TestModel({ 
             gctx: this.gctx, 
             //sketch: x, 
-            sketch: x, 
+            sketch: shape, 
             //xform: new XForm({origx: .5, origy: .5, grip: .5, fixedWidth: 220, fixedHeight: 220}),
             xform: new XForm({origx: .5, origy: .5, grip: .3}),
             fitter: 'stretchRatio',

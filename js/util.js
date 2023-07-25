@@ -52,6 +52,50 @@ class Util {
         }
     }
 
+    static getpath(obj, path, dflt=null) {
+        let node = obj;
+        for (const key of path.split('.')) {
+            if (!node || !node.hasOwnProperty(key)) return dflt;
+            node = node[key];
+        }
+        return (node !== undefined) ? node : dflt;
+    }
+
+    static haspath(obj, path) {
+        let node = obj;
+        for (const key of path.split('.')) {
+            if (!node || !node.hasOwnProperty(key)) return false;
+            node = node[key];
+        }
+        return (node !== undefined) ? true : false;
+    }
+
+    static setpath(obj, path, v) {
+        let node = obj;
+        let ptokens = path.split('.');
+        let key = ptokens[ptokens.length-1];
+        ptokens = ptokens.slice(0,-1);
+        for (const token of ptokens) {
+            if (!node.hasOwnProperty(token)) {
+                node[token] = {}
+            }
+            node = node[token];
+        }
+        node[key] = v;
+    }
+
+    static delpath(obj, path) {
+        let node = obj;
+        let ptokens = path.split('.');
+        let key = ptokens[ptokens.length-1];
+        ptokens = ptokens.slice(0,-1);
+        for (const token of ptokens) {
+            if (!node.hasOwnProperty(token)) return;
+            node = node[token];
+        }
+        delete node[key];
+    }
+
     static hashStr(str) {
         var hash = 0, i, chr;
         if (str.length === 0) return hash;
@@ -64,7 +108,7 @@ class Util {
     }
 
     static copy(entity, cache = new WeakMap()) {
-        if (!entity) return undefined;
+        if (entity === undefined) return undefined;
         if (cache.has(entity)) return cache.get(entity);
         if (entity instanceof Map) {
             let c = new Map();
