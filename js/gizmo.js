@@ -12,6 +12,7 @@ const FEVENTABLE=4;
 class GadgetSchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
+        this.xkey = spec.xkey || this.key;
         this.dflt = spec.dflt;
         // getter function of format (object, specification) => { <function returning value> };
         // -- is treated as a dynamic value
@@ -21,7 +22,7 @@ class GadgetSchemaEntry {
         this.generator = spec.generator;
         this.readonly = (this.getter || this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
-            if (this.key in x) return x[this.key];
+            if (this.xkey in x) return x[this.xkey];
             const dflt = (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
             if (this.generator) return this.generator(o,dflt);
             return dflt;

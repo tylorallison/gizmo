@@ -1,6 +1,5 @@
 export { UiToggle };
 
-import { Hierarchy } from './hierarchy.js';
 import { Rect } from './rect.js';
 import { Shape } from './shape.js';
 import { UiView } from './uiView.js';
@@ -13,6 +12,7 @@ class UiToggle extends UiView {
         this.schema('highlight', { link: true, dflt: (o) => o.constructor.dfltHighlight });
         this.schema('pressed', { link: true, dflt: (o) => o.constructor.dfltPressed });
         this.schema('icon', { link: true, dflt: (o) => o.constructor.dfltIcon });
+        this.schema('iconXForm', { link: true, dflt: (o) => new XForm({grip: .1})});
         this.schema('value', { dflt: true });
 
     }
@@ -39,58 +39,19 @@ class UiToggle extends UiView {
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     cpost(spec) {
         super.cpost(spec);
-
-        // -- link sketches
-        //this.sketch = (this._value) ? this._pressed : this._unpressed;
-        // -- icon xform
-        //this.iconXform = spec.hasOwnProperty('iconXform') ? spec.iconXform : XForm.identity;
-        //Hierarchy.adopt(this.xform, this.iconXform);
+        this.iconXForm._parent = this.xform;
     }
-
 
     // PROPERTIES ----------------------------------------------------------
-    /*
-    get value() {
-        return this._value;
-    }
-    set value(v) {
-        if (v !== this._value) {
-            this._value = v;
-            this.sketch.hide();
-            this.sketch = (this._value) ? this._pressed : this._unpressed;
-            this.sketch.show();
-            this.evt.trigger(this.constructor.evtUpdated, {actor: this, update: { value: v }});
-            this.evt.trigger(this.constructor.evtToggled, {actor: this, update: { value: v }});
-        }
-    }
-    */
-
     // EVENT HANDLERS ------------------------------------------------------
     onMouseClicked(evt) {
         super.onMouseClicked(evt);
         this.value = !this.value;
-        //this.sketch = (this._value) ? this._pressed : this._unpressed;
-        //this.evt.trigger(this.constructor.evtToggled, {actor: this, update: { value: this._value }});
-        //super.onMouseClicked(evt);
     }
 
     // METHODS -------------------------------------------------------------
-    /*
-    show() {
-        this.sketch.show();
-        this._icon.show();
-    }
-    hide() {
-        this.sketch.hide();
-        this._icon.hide();
-    }
-    */
-
     subrender(ctx) {
         // render active sketch
-        //this.sketch.width = this.xform.width;
-        //this.sketch.height = this.xform.height;
-        //this.sketch.render(ctx, this.xform.minx, this.xform.miny);
         if (this.value) {
             this.pressed.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
         } else {
@@ -98,22 +59,16 @@ class UiToggle extends UiView {
         }
         // render highlight
         if (this.mouseOver) {
-            console.log(`mouse is over`);
             this.highlight.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
-            //this._highlight.width = this.xform.width;
-            //this._highlight.height = this.xform.height;
-            //this._highlight.render(ctx, this.xform.minx, this.xform.miny);
         }
         //if (this.dbg && this.dbg.viewXform) this.iconXform.render(ctx);
         // apply transform
-        //this.iconXform.apply(ctx, false);
+        if (this.iconXForm) this.iconXForm.apply(ctx, false);
         // render icon
         if (this.value) {
-            //this._icon.width = this.iconXform.width;
-            //this._icon.height = this.iconXform.height;
-            this.icon.render(ctx, this.xform.minx, this.xform.miny, this.xform.width, this.xform.height);
+            this.icon.render(ctx, this.iconXForm.minx, this.iconXForm.miny, this.iconXForm.width, this.iconXForm.height);
         }
-        //this.iconXform.revert(ctx, false);
+        if (this.iconXForm) this.iconXForm.revert(ctx, false);
     }
 
 }
