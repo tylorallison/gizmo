@@ -38,9 +38,6 @@ class Shape extends Sketch {
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
         super(spec);
-        //this.width = this.max.x-this.min.x;
-        //this.height = this.max.y-this.min.y;
-
         let verts =[{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}];
         let min = Vect.min(verts);
         let max = Vect.max(verts);
@@ -48,9 +45,6 @@ class Shape extends Sketch {
 
     // METHODS -------------------------------------------------------------
     subrender(ctx, x=0, y=0, width=0, height=0) {
-        console.log(`render shape: @${x},${y} dim: ${width},${height}`);
-        console.log(`verts: ${Fmt.ofmt(this.verts)}`);
-        console.log(`min: ${this.min} max: ${this.max}`);
         // translate
         let cform = ctx.getTransform();
         if (x || y) ctx.translate(x, y);

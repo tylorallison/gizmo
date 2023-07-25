@@ -12,7 +12,8 @@ class UiToggle extends UiView {
         this.schema('highlight', { link: true, dflt: (o) => o.constructor.dfltHighlight });
         this.schema('pressed', { link: true, dflt: (o) => o.constructor.dfltPressed });
         this.schema('icon', { link: true, dflt: (o) => o.constructor.dfltIcon });
-        this.schema('iconXForm', { link: true, dflt: (o) => new XForm({grip: .1})});
+        this.schema('blankIcon', { link: true, dflt: (o) => o.constructor.dfltBlankIcon });
+        this.schema('iconXForm', { link: true, dflt: (o) => new XForm({grip: .1, gripOffsetForceRatio: 1})});
         this.schema('value', { dflt: true });
 
     }
@@ -34,6 +35,19 @@ class UiToggle extends UiView {
         border: 2,
         borderColor: 'rgba(0,0,0,1)',
         color: 'rgba(255,255,255,1)'
+    })};
+    static get dfltBlankIcon() { return new Shape({ 
+        fill: false,
+        verts: [
+                {x:2, y:19},
+                {x:5, y:16},
+                {x:10, y:21},
+                {x:26, y:5},
+                {x:29, y:8},
+                {x:10, y:27},
+        ],
+        border: 2,
+        borderColor: 'rgba(0,0,0,.25)',
     })};
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
@@ -67,6 +81,8 @@ class UiToggle extends UiView {
         // render icon
         if (this.value) {
             this.icon.render(ctx, this.iconXForm.minx, this.iconXForm.miny, this.iconXForm.width, this.iconXForm.height);
+        } else {
+            this.blankIcon.render(ctx, this.iconXForm.minx, this.iconXForm.miny, this.iconXForm.width, this.iconXForm.height);
         }
         if (this.iconXForm) this.iconXForm.revert(ctx, false);
     }
