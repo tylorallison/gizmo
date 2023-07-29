@@ -55,7 +55,7 @@ class Util {
     static getpath(obj, path, dflt=null) {
         let node = obj;
         for (const key of path.split('.')) {
-            if (!node || !node.hasOwnProperty(key)) return dflt;
+            if (!node || !(key in node)) return dflt;
             node = node[key];
         }
         return (node !== undefined) ? node : dflt;

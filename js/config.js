@@ -1,7 +1,6 @@
 export { Config };
 
 import { Util } from './util.js';
-
 class Config {
     static defaults = {};
     static setDefault(key, value) {
@@ -44,6 +43,23 @@ class Config {
             set(target, key, value, receiver) {
                 atts[key] = value;
                 return true;
+            },
+            has(target, key) {
+                return (key in atts) || (key in dflts);
+            },
+            ownKeys(target) {
+                return [...Object.keys(atts), ...Object.keys(dflts)];
+            },
+            getOwnPropertyDescriptor(target, key) {
+                let value = undefined;
+                if (key in atts) value = atts[key];
+                if (key in dflts) value = dflts[key];
+                return {
+                    value: value,
+                    enumerable: true,
+                    configurable: true,
+                    writable: true
+                };
             },
         });
     }
