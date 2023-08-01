@@ -30,6 +30,7 @@ class Config {
         atts = Util.update({}, atts, overrides);
         return new Proxy(cfg, {
             get(target, key, receiver) {
+                if (key === '$scope') return scope;
                 if ((key in target) && (target[key] instanceof Function)) {
                     return function (...args) {
                         let value = target[key];
@@ -74,6 +75,11 @@ class Config {
 
     scope(path, overrides={}) {
         return this.constructor.cfgproxy(this, path, overrides);
+    }
+
+    path(key) {
+        if (this.$scope) return `${this.$scope}.${key}`;
+        return key;
     }
 
 }
