@@ -27,10 +27,21 @@ class Config {
             dflts = this.defaults;
             atts = cfg.$atts;
         }
-        atts = Util.update({}, atts, overrides);
+        for (const [key, value] of Object.entries(overrides)) {
+            Util.setpath(atts, key, value);
+        }
+        //atts = Util.update({}, atts, overrides);
         return new Proxy(cfg, {
             get(target, key, receiver) {
+                // FIXME
                 if (key === '$scope') return scope;
+                if (key === 'path') {
+                    return function (...args) {
+                        args.push(scope);
+                        let value = target[key];
+                        return value.apply(this === receiver ? target : this, args);
+                    };
+                }
                 if ((key in target) && (target[key] instanceof Function)) {
                     return function (...args) {
                         let value = target[key];
@@ -77,8 +88,8 @@ class Config {
         return this.constructor.cfgproxy(this, path, overrides);
     }
 
-    path(key) {
-        if (this.$scope) return `${this.$scope}.${key}`;
+    path(key, scope) {
+        if (scope) return `${scope}.${key}`;
         return key;
     }
 

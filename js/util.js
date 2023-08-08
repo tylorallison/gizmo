@@ -1,5 +1,8 @@
 export { Util };
 
+// FIXME
+import { Fmt } from "./fmt.js";
+
 // =========================================================================
 class Util {
 
@@ -191,6 +194,21 @@ class Util {
         return { [name](...args) { return body.apply(this, args) } }[name]
     }
 
+    static findBest(items, evalFcn=(v)=>v, cmpFcn=(v1,v2) => v1<v2, filterFcn=(v)=>true, itemFilterFcn=(v)=>true) {
+        let bestItem;
+        let bestValue;
+        for (const item of items) {
+            let value = evalFcn(item);
+            if (!filterFcn(value)) continue;
+            if (!itemFilterFcn(item)) continue;
+            if (!bestItem || cmpFcn(value,bestValue)) {
+                bestItem = item;
+                bestValue = value;
+            }
+        }
+        return bestItem;
+    }
+
 }
 
 class xUtil {
@@ -309,21 +327,6 @@ class xUtil {
         delete node[key];
     }
 
-
-    static findBest(items, evalFcn=(v)=>v, cmpFcn=(v1,v2) => v1<v2, filterFcn=(v)=>true, itemFilterFcn=(v)=>true) {
-        let bestItem;
-        let bestValue;
-        for (const item of items) {
-            let value = evalFcn(item);
-            if (!filterFcn(value)) continue;
-            if (!itemFilterFcn(item)) continue;
-            if (!bestItem || cmpFcn(value,bestValue)) {
-                bestItem = item;
-                bestValue = value;
-            }
-        }
-        return bestItem;
-    }
 
     static getOrAssign(obj, tag, dflt=[]) {
         if (tag in obj) return obj[tag];
