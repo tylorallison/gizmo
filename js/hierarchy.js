@@ -28,6 +28,7 @@ class Hierarchy {
         if (Array.isArray(parent.children)) parent.children.push(child);
         // event handling
         EvtSystem.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
+        EvtSystem.trigger(parent, 'gizmo.childed', {parent: parent, child: child});
         let root = this.root(parent);
         EvtSystem.trigger(child, 'gizmo.rooted', {root: root});
         for (const dec of this.children(child)) {
@@ -47,6 +48,7 @@ class Hierarchy {
             child.parent = null;
             // trigger events
             EvtSystem.trigger(child, 'gizmo.orphaned', {parent: parent, child: child});
+            EvtSystem.trigger(parent, 'gizmo.unchilded', {parent: parent, child: child});
         }
     }
 
