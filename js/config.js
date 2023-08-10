@@ -27,14 +27,13 @@ class Config {
             dflts = this.defaults;
             atts = cfg.$atts;
         }
+        atts = Util.update({}, atts);
         for (const [key, value] of Object.entries(overrides)) {
             Util.setpath(atts, key, value);
         }
-        //atts = Util.update({}, atts, overrides);
         return new Proxy(cfg, {
             get(target, key, receiver) {
-                // FIXME
-                if (key === '$scope') return scope;
+                console.log(`get: ${key}`);
                 if (key === 'path') {
                     return function (...args) {
                         args.push(scope);
@@ -88,8 +87,15 @@ class Config {
         return this.constructor.cfgproxy(this, path, overrides);
     }
 
+    get(path, scope, dflt) {
+        if (scope) path = `${scope}.${path}`;
+        console.log(`path: ${path}`);
+        return Util.getpath(this, path, dflt);
+    }
+
     path(key, scope) {
-        if (scope) return `${scope}.${key}`;
+        if (key && scope) return `${scope}.${key}`;
+        if (scope) return scope;
         return key;
     }
 
