@@ -55,7 +55,7 @@ class Util {
         }
     }
 
-    static getpath(obj, path, dflt=null) {
+    static getpath(obj, path, dflt) {
         let node = obj;
         for (const key of path.split('.')) {
             if (!node || !(key in node)) return dflt;
@@ -291,42 +291,6 @@ class xUtil {
         }
         return false;
     }
-
-    static getpath(obj, path, dflt=null) {
-        let node = obj;
-        for (const key of path.split('.')) {
-            if (!node || !node.hasOwnProperty(key)) return dflt;
-            node = node[key];
-        }
-        return (node !== undefined) ? node : dflt;
-    }
-
-    static setpath(obj, path, v) {
-        let node = obj;
-        let ptokens = path.split('.');
-        let key = ptokens[ptokens.length-1];
-        ptokens = ptokens.slice(0,-1);
-        for (const token of ptokens) {
-            if (!node.hasOwnProperty(token)) {
-                node[token] = {}
-            }
-            node = node[token];
-        }
-        node[key] = v;
-    }
-
-    static delpath(obj, path) {
-        let node = obj;
-        let ptokens = path.split('.');
-        let key = ptokens[ptokens.length-1];
-        ptokens = ptokens.slice(0,-1);
-        for (const token of ptokens) {
-            if (!node.hasOwnProperty(token)) return;
-            node = node[token];
-        }
-        delete node[key];
-    }
-
 
     static getOrAssign(obj, tag, dflt=[]) {
         if (tag in obj) return obj[tag];

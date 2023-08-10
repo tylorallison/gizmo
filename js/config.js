@@ -10,7 +10,6 @@ class Config {
         for (const [key, value] of Object.entries(atts)) {
             Util.setpath(this.defaults, key, value);
         }
-        //Object.assign(this.defaults, atts);
     }
     static getDefault(path) {
         return Util.getpath(path);
@@ -33,13 +32,37 @@ class Config {
         }
         return new Proxy(cfg, {
             get(target, key, receiver) {
-                console.log(`get: ${key}`);
                 if (key === 'path') {
                     return function (...args) {
                         args.push(scope);
                         let value = target[key];
                         return value.apply(this === receiver ? target : this, args);
                     };
+                }
+                if (key === 'scope') {
+                    return function (path, overrides={}) {
+                        if (scope) path = `${scope}.${path}`;
+                        return target.scope(path, overrides);
+                    }
+                }
+                if (key === 'get') {
+                    return function get(path, dflt) {
+                        if (Util.haspath(atts, path)) return Util.getpath(atts, path, dflt);
+                        if (Util.haspath(dflts, path)) return Util.getpath(atts, path, dflt);
+                        return dflt;
+                    }
+                }
+                if (key === 'set') {
+                    return function set(path, value) {
+                        Util.setpath(atts, path, value);
+                    }
+                }
+                if (key === 'has') {
+                    return function has(path) {
+                        if (Util.haspath(atts, path)) return true;
+                        if (Util.haspath(dflts, path)) return true;
+                        return false;
+                    }
                 }
                 if ((key in target) && (target[key] instanceof Function)) {
                     return function (...args) {
@@ -59,7 +82,8 @@ class Config {
                 return (key in atts) || (key in dflts);
             },
             ownKeys(target) {
-                return [...Object.keys(atts), ...Object.keys(dflts)];
+                let set = new Set([...Object.keys(atts), ...Object.keys(dflts)]);
+                return Array.from(set.keys);
             },
             getOwnPropertyDescriptor(target, key) {
                 let value = undefined;
@@ -85,12 +109,6 @@ class Config {
 
     scope(path, overrides={}) {
         return this.constructor.cfgproxy(this, path, overrides);
-    }
-
-    get(path, scope, dflt) {
-        if (scope) path = `${scope}.${path}`;
-        console.log(`path: ${path}`);
-        return Util.getpath(this, path, dflt);
     }
 
     path(key, scope) {
