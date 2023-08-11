@@ -1,5 +1,6 @@
 export { Config };
 
+    import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 class Config {
     static defaults = {};
@@ -15,6 +16,7 @@ class Config {
         return Util.getpath(path);
     }
 
+    /*
     static cfgproxy(cfg, scope, overrides={}) {
         let atts;
         let dflts;
@@ -98,23 +100,60 @@ class Config {
             },
         });
     }
+    */
 
     constructor(spec={}) {
-        this.$atts = {};
-        for (const [key, value] of Object.entries(spec)) {
-            Util.setpath(this.$atts, key, value);
+        this.$path;
+        this.values = {};
+        if (spec.path) this.$path = spec.path;
+        if (spec.values) {
+            for (const [key, value] of Object.entries(spec.values)) {
+                Util.setpath(this.values, key, value);
+            }
         }
-        return this.constructor.cfgproxy(this);
+        if (this.$path) {
+            this.dflts = {};
+            for (const [key, value] of Object.entries(Util.getpath(this.constructor.defaults, this.$path, {}))) {
+                Util.setpath(this.dflts, key, value);
+            }
+        } else {
+            this.dflts = this.constructor.defaults;
+        }
+    }
+
+    get(path, dflt) {
+        if (Util.haspath(this.values, path)) return Util.getpath(this.values, path, dflt);
+        if (Util.haspath(this.dflts, path)) return Util.getpath(this.dflts, path, dflt);
+        return dflt;
+    }
+
+    has(path) {
+        if (Util.haspath(this.values, path)) return true;
+        if (Util.haspath(this.dflts, path)) return true;
+        return false;
+    }
+
+    set(path, value) {
+        Util.setpath(this.values, path, value);
     }
 
     scope(path, overrides={}) {
-        return this.constructor.cfgproxy(this, path, overrides);
+        let spec = {
+            path: this.path(path),
+            values: Util.getpath(this.values, path, {}),
+        };
+        for (const [key, value] of Object.entries(overrides)) {
+            Util.setpath(spec.values, key, value);
+        }
+        return new Config(spec);
     }
 
-    path(key, scope) {
-        if (key && scope) return `${scope}.${key}`;
-        if (scope) return scope;
-        return key;
+    path(path) {
+        if (path) {
+            if (this.$path) return `${this.$path}.${path}`;
+            return path;
+        }
+        return this.$path;
     }
 
 }
