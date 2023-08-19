@@ -85,6 +85,13 @@ class Hierarchy {
         return null;
     }
 
+    static *findall(obj, filter) {
+        if (filter(obj)) yield obj;
+        for (const child of (obj.children || [])) {
+            yield *this.findall(child, filter);
+        }
+    }
+
     /**
      * find object in parent hierarchy (evaluating parent hierarchy)
      * @param {*} obj 
