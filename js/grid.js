@@ -58,10 +58,9 @@ class Grid extends GridBucketArray {
     }
 
     static _pointFromIdx(idx, dimx, dimy, sizex, sizey, center=false) {
-        //console.log(`${idx} dim: ${dimx},${dimy} size: ${sizex},${sizey}`)
-        if (idx<0 || idx>(dimx*dimy)) return 
+        if (idx<0 || idx>(dimx*dimy)) return { x:-1, y:-1 };
         let x = ((idx % dimx) * sizex) + ((center) ? sizex*.5 : 0);
-        let y = (Math.floor(idx/dimy) * sizey) + ((center) ? sizey*.5 : 0);
+        let y = (Math.floor(idx/dimx) * sizey) + ((center) ? sizey*.5 : 0);
         return {x:x, y:y};
     }
     static pointFromIdx(idx, dim, size, center=false) {

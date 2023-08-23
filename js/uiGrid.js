@@ -66,6 +66,8 @@ class UiGrid extends UiView {
         this.gridCanvas.height = this.xform.height;
         this.chunkCanvas.width = this.chunks.colSize;
         this.chunkCanvas.height = this.chunks.rowSize;
+        console.log(`cols: ${this.chunks.cols} size: ${this.chunks.colSize}`);
+        console.log(`rows: ${this.chunks.rows} size: ${this.chunks.rowSize}`);
         //console.log(`${this} size ${this.xform.width},${this.xform.height} dim: ${this.chunks.cols},${this.chunks.rows} csize: ${this.chunks.colSize},${this.chunks.rowSize}`)
         // handle view creation event handling
         if (this.createFilter) {
@@ -222,7 +224,6 @@ class UiGrid extends UiView {
     renderChunk(idx, dx, dy) {
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
         let t = this.pointFromIdx(idx);
-        //console.log(`idx: ${idx} d: ${dx},${dy} t: ${t.x},${t.y}`);
         if (this.parent && this.optimizeRender) {
             const min = this.xform.getWorld({x:t.x+dx, y:t.y+dy}, false);
             const max = this.xform.getWorld({x:t.x+dx+this.colSize, y:t.y+dy+this.rowSize}, false);
