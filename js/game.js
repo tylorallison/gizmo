@@ -12,6 +12,7 @@ import { SystemMgr } from './systemMgr.js';
 import { Generator } from './generator.js';
 import { UiCanvas } from './uiCanvas.js';
 import { SfxSystem } from './sfxSystem.js';
+import { Config } from './config.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -25,6 +26,17 @@ class Game extends Gizmo {
      * @static
      */
     static assetSpecs = [];
+
+    static {
+        Config.setPathDefaults(this.cfgpath, {
+            'maxDeltaTime': 50,
+        });
+    }
+
+    static cfgAtts = {
+        'game.dbg': true,
+        'system.renderSystem.dbg': true,
+    }
 
     // max allowed delta time (in ms)
     static dfltMaxDeltaTime = 50;

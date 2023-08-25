@@ -9,6 +9,12 @@ const FDEFINED=1;
 const FREADONLY=2;
 const FEVENTABLE=4;
 
+// parse behavior
+// -- key in spec: spec[key]
+// -- key in config: cfg[key]
+// -- key in config.dflts: cfg.dflts[key]
+// -- schema.dflt
+
 class GadgetSchemaEntry {
     constructor(key, spec={}) {
         this.key = key;
@@ -91,6 +97,18 @@ class Gadget {
     static register() {
         this.prototype.$registered = true;
         if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
+    }
+
+    static get cfgpath() {
+        let cls = this;
+        let p;
+        while (cls && (cls !== Gadget)) {
+            let str = cls.name;
+            str = str.charAt(0).toLowerCase() + str.slice(1);
+            if (!cls.hasOwnProperty('cfgpathskip')) p = (p) ? `${str}.${p}` : str;
+            cls = Object.getPrototypeOf(cls);
+        }
+        return p;
     }
 
     static root(gadget) {
@@ -496,6 +514,7 @@ class Gizmo extends Gadget {
 
     // STATIC VARIABLES ----------------------------------------------------
     static gid = 1;
+    static cfgpathskip = true;
 
     // STATIC METHODS ------------------------------------------------------
 
