@@ -66,8 +66,6 @@ class UiGrid extends UiView {
         this.gridCanvas.height = this.xform.height;
         this.chunkCanvas.width = this.chunks.colSize;
         this.chunkCanvas.height = this.chunks.rowSize;
-        console.log(`cols: ${this.chunks.cols} size: ${this.chunks.colSize}`);
-        console.log(`rows: ${this.chunks.rows} size: ${this.chunks.rowSize}`);
         //console.log(`${this} size ${this.xform.width},${this.xform.height} dim: ${this.chunks.cols},${this.chunks.rows} csize: ${this.chunks.colSize},${this.chunks.rowSize}`)
         // handle view creation event handling
         if (this.createFilter) {

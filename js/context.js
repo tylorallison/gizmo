@@ -1,61 +1,10 @@
-export { EventContext };
-import { Evt } from './event.js';
+//export { GizmoCtx, ConfigCtx };
+import { Evt, EvtLink } from './event.js';
 import { Fmt } from './fmt.js';
 
 
-class GizmoContext {
-    static _instance;
-    static $stack = [];
-    static get instance() {
-        if (!this._instance) this._instance = new GizmoContext();
-        return this._instance;
-    }
-
-    static advance(which, xctx) {
-    }
-
-    static withdraw(which) {
-    }
-
-    constructor(spec={}) {
-        this.assets = spec.assets;
-        this.events = spec.events;
-        this.cfg = spec.cfg;
-    }
-
-    advance() {
-    }
-
-    withdraw() {
-    }
-
-    suspend() {
-    }
-
-    resume() {
-    }
-
-    toString() {
-        return Fmt.toString(this.constructor.name, this.tag);
-    }
-}
 
 class AssetContext {
-}
-
-class EvtLink {
-    constructor(tag, emitter, receiver, fcn, opts={}) {
-        this.tag = tag;
-        this.emitter = emitter;
-        this.receiver = receiver;
-        this.fcn = fcn;
-        this.priority = opts.priority || 0;
-        this.once = opts.hasOwnProperty('once') ? opts.once : false;
-        this.filter = opts.filter;
-    }
-    toString() {
-        return Fmt.toString(this.constructor.name, this.emitter, this.receiver);
-    }
 }
 
 class EventContext {
@@ -81,7 +30,6 @@ class EventContext {
     }
 
     trigger(emitter, tag, atts) {
-        // special case -- gizmo.destroy
         // build event
         let evt = new Evt(tag, Object.assign({ actor: emitter }, atts));
         // -- listeners
@@ -91,14 +39,14 @@ class EventContext {
         links.sort((a,b) => a.priority-b.priority);
         // delete any listener from emitter if marked w/ once attribute
         for (const link of links.filter((v) => v.once && (!v.filter || v.filter(evt)))) {
-            this.delEmitterLink(emitter, link);
-            this.delReceiverLink(link.receiver, link);
+            this.delLink(link);
         }
         // trigger callback for each listener
         for (const link of links) {
             if (link.filter && !link.filter(evt)) continue;
             link.fcn(evt);
         }
+        // special case -- gizmo.destroy
         if (tag === 'gizmo.destroyed') {
             this.linksByGid.delete(emitter.gid);
         }
@@ -133,6 +81,22 @@ class EventContext {
         }
     }
 
+    delFor(actor) {
+        let links = this.linksByGid.get(actor.gid);
+        if (links) {
+            for (const link of links) {
+                let key = (link.emitter) ? `${link.tag}:${link.emitter.gid}` : link.tag;
+                let elinks = this.linksByTag.get(key);
+                if (elinks) {
+                    let idx = elinks.indexOf(link);
+                    links.splice(idx, 1);
+                    if (!elinks.length) this.linksByTag.delete(key);
+                }
+            }
+        }
+        this.linksByGid.delete(actor.gid);
+    }
+
     listen(emitter, receiver, tag, fcn, opts={}) {
         let link = new EvtLink(tag, emitter, receiver, fcn, opts);
         let key = (emitter) ? `${tag}:${emitter.gid}` : tag;
@@ -148,10 +112,12 @@ class EventContext {
                 this.linksByGid.set(receiver.gid, [ link ]);
             }
         }
-        if (this.linksByGid.has(receiver.gid)) {
-            this.linksByGid.get(receiver.gid).push(link);
-        } else {
-            this.linksByGid.set(receiver.gid, [ link ]);
+        if (emitter !== receiver) {
+            if (this.linksByGid.has(receiver.gid)) {
+                this.linksByGid.get(receiver.gid).push(link);
+            } else {
+                this.linksByGid.set(receiver.gid, [ link ]);
+            }
         }
     }
 
@@ -159,10 +125,6 @@ class EventContext {
     }
 }
 
-class ConfigContext {
-    static get(key) {
-    }
-}
 
 class GameContext {
 }

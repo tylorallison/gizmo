@@ -4,6 +4,7 @@ import { Fmt } from './fmt.js';
 import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from './event.js';
 import { ExtHierarchy, Hierarchy } from './hierarchy.js';
 import { Serializer } from './serializer.js';
+import { ConfigCtx } from './configCtx.js';
 
 const FDEFINED=1;
 const FREADONLY=2;
@@ -29,7 +30,7 @@ class GadgetSchemaEntry {
         this.readonly = (this.getter || this.generator) ? true : ('readonly' in spec) ? spec.readonly : false;
         this.parser = spec.parser || ((o, x) => {
             if (this.xkey in x) return x[this.xkey];
-            const dflt = (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
+            const dflt = this.getDefault(o);
             if (this.generator) return this.generator(o,dflt);
             return dflt;
         });
@@ -40,6 +41,12 @@ class GadgetSchemaEntry {
         // generated fields are not serializable
         this.serializable = (this.generator) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
+    }
+    getDefault(o) {
+        if (ConfigCtx.hasForGdt(o, this.key)) {
+            return ConfigCtx.getForGdt(o, this.key);
+        }
+        return (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
     }
     toString() {
         return Fmt.toString(this.constructor.name, this.key);
@@ -196,7 +203,7 @@ class Gadget {
         if (sentry.generator) {
             let value;
             if (!(key in target.$store)) {
-                const dflt = (sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt;
+                const dflt = sentry.getDefault(target);
                 value = sentry.generator(target, dflt);
                 target.$store[key] = [target.$v, value];
             } else {
@@ -310,7 +317,7 @@ class Gadget {
 
     static kvparse(o, key, value, sentry) {
         if (!sentry && o.$schema) sentry = o.$schema.get(key);
-        if (sentry && value === undefined) value = (sentry.dflt instanceof Function) ? sentry.dflt(o) : sentry.dflt;
+        if (sentry && value === undefined) value = sentry.getDefault(o);
         this.$set(o, key, value, sentry);
     }
 

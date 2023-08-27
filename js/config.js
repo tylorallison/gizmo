@@ -1,7 +1,7 @@
 export { Config };
 
-    import { Fmt } from './fmt.js';
 import { Util } from './util.js';
+
 class Config {
     static defaults = {};
     static setDefault(key, value) {
@@ -21,6 +21,14 @@ class Config {
     }
     static getDefault(path) {
         return Util.getpath(path);
+    }
+
+    static has(o, key) {
+        return false;
+    }
+
+    static get(o, key) {
+        return undefined;
     }
 
     /*
