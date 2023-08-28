@@ -1,43 +1,55 @@
+export { AssetCtx };
 import { GizmoCtx } from './gizmoCtx.js';
 
 class AssetCtx extends GizmoCtx {
 
+    static gassets = {};
+
+    static get(tag, overrides={}) {
+        return this.instance.get(tag, overrides);
+    }
+
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
         // the asset references defined by the user...
-        this.specs = Array.from(spec.specs || []);
+        this.xassets = Array.from(spec.xassets || []);
         // the raw media loaded from media files
-        this.media = {};
+        //this.media = {};
         // the translated asset references with resolved media files
         this.assets = {};
     }
 
-    getMediaRefs() {
+    async advance() {
+
+        // collect set of media file references from asset specifications
         let mrefs = [];
         for (const [k,v,o] of Util.kvWalk(this.specs)) {
             if (v instanceof BaseRef && v.src && !mrefs.includes(v.src)) {
                 mrefs.push(v.src);
             }
         }
-        return mrefs;
-    }
 
-    async load() {
-        // load asset files
-        this.media = {}
-        await FileLoader.load(this.getMediaRefs(), this.media);
+        // load media assets from files, they are cached by file name
+        const media = {};
+        await FileLoader.load(mrefs, media);
+
         // populate assets
-        for (const spec of this.specs) {
+        for (const xasset of this.xasset) {
             let args = spec.args;
             let tag = (args && args.length) ? args[0].tag : 'tag';
             if (this.assets.hasOwnProperty(tag)) {
                 console.error(`duplicate asset tag detected: ${tag}, previous definition: ${Fmt.ofmt(this.assets[tag])}, skipping: ${Fmt.ofmt(spec)}`);
                 continue;
             }
-            if (args && args.length) args[0].assetTag = tag;
             // asset spec is copied from input spec
             this.assets[tag] = Object.assign({}, spec);
         }
+    }
+
+    async load() {
+        // load asset files
+        this.media = {}
+
         // once specs have been loaded, they get cleared
         this.specs = [];
         // resolve media references
