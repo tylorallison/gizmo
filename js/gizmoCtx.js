@@ -6,16 +6,20 @@ class GizmoCtx {
     static _gid = 1;
     static $stack = [];
     static get instance() {
-        if (!this._instance) this._instance = new this();
+        if (!this._instance) {
+            this._instance = new this();
+            console.log(`instance: ${this._instance}`);
+        }
         this._instance.advance();
         return this._instance;
     }
 
-    static advance(ctx) {
+    static async advance(ctx) {
         this._instance.suspend();
         this.$stack.push(this._instance);
         this._instance = ctx;
-        ctx.advance();
+        await ctx.advance();
+        return Promise.resolve();
     }
 
     static withdraw() {
@@ -35,11 +39,11 @@ class GizmoCtx {
     }
 
     constructor(spec={}) {
-        this.gid = ('gid' in spec) ? spec.gid : (this.constructor.gid)++;
-        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}_${this.gid}`;
+        this.gid = ('gid' in spec) ? spec.gid : (this.constructor._gid)++;
+        this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
     }
 
-    advance() {}
+    async advance() {}
 
     withdraw() {}
 

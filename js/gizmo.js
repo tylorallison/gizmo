@@ -110,8 +110,13 @@ class Gadget {
         let cls = this;
         let p;
         while (cls && (cls !== Gadget)) {
-            let str = cls.name;
-            str = str.charAt(0).toLowerCase() + str.slice(1);
+            let str;
+            if (cls.cfgtoken) {
+                str = cls.cfgtoken;
+            } else {
+                str = (cls.cfgtoken) ? cls.cfgToken : cls.name;
+                str = str.charAt(0).toLowerCase() + str.slice(1);
+            }
             if (!cls.hasOwnProperty('cfgpathskip')) p = (p) ? `${str}.${p}` : str;
             cls = Object.getPrototypeOf(cls);
         }

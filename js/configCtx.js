@@ -5,14 +5,14 @@ import { Util } from './util.js';
 
 class ConfigCtx extends GizmoCtx {
 
-    static hasForGdt(gzo, key) {
-        return this.instance.hasForGdt(gzo, key);
+    static hasForGdt(gdt, key) {
+        return this.instance.hasForGdt(gdt, key);
     }
-    static getForGdt(gzo, key, dflt) {
-        return this.instance.getForGdt(gzo, key, dflt);
+    static getForGdt(gdt, key, dflt) {
+        return this.instance.getForGdt(gdt, key, dflt);
     }
-    static setForGdt(gzo, key, value) {
-        return this.instance.setForGdt(gzo, key, value);
+    static setForGdt(gdt, key, value) {
+        return this.instance.setForGdt(gdt, key, value);
     }
 
     static has(path) {
@@ -22,12 +22,19 @@ class ConfigCtx extends GizmoCtx {
         return this.instance.get(path, dflt);
     }
     static set(path, value) {
-        return this.instance.get(path, value);
+        this.instance.set(path, value);
+    }
+    static setValues(values) {
+        this.instance.setValues(values);
     }
 
     constructor(spec={}) {
         super(spec);
         this.values = {};
+        // optionally inherit values from current config context
+        if (spec.inherit) {
+            Util.update(this.values, this.constructor.instance.values);
+        }
         if (spec.values) {
             for (const [key, value] of Object.entries(spec.values)) {
                 Util.setpath(this.values, key, value);
@@ -59,6 +66,11 @@ class ConfigCtx extends GizmoCtx {
     }
     set(path, value) {
         Util.setpath(this.values, path, value);
+    }
+    setValues(values) {
+        for (const [key, value] of Object.entries(values)) {
+            Util.setpath(this.values, key, value);
+        }
     }
 
 }

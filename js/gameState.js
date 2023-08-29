@@ -1,9 +1,11 @@
 export { GameState };
 
 import { Assets } from './assets.js';
+import { ConfigCtx } from './configCtx.js';
 import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
+import { Util } from './util.js';
 
 /**
  * A generic game state class that provides building blocks for game state transitions.  For example, a title screen, a main menu screen, and the 
@@ -18,6 +20,7 @@ import { Gizmo } from './gizmo.js';
 class GameState extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
     static assetSpecs = [];
+    static xcfgValues = {};
 
     // SCHEMA --------------------------------------------------------------
     static {
@@ -34,6 +37,8 @@ class GameState extends Gizmo {
     // METHODS -------------------------------------------------------------
     async doinit(data) {
         if (this.dbg) console.log(`${this} starting initialization`);
+        // contexts
+        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.instance.values, this.xcfgValues) }));
         await this.init(data);
         if (this.dbg) console.log(`${this} initialization complete`);
         return Promise.resolve();
@@ -116,6 +121,7 @@ class GameState extends Gizmo {
         this.state = 'initialized';
         EvtSystem.trigger(this, 'state.stopped');
         this.assets.unregister(this.assetSpecs);
+        ConfigCtx.withdraw();
         return Promise.resolve();
     }
 

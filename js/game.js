@@ -13,6 +13,8 @@ import { Generator } from './generator.js';
 import { UiCanvas } from './uiCanvas.js';
 import { SfxSystem } from './sfxSystem.js';
 import { Config } from './config.js';
+import { ConfigCtx } from './configCtx.js';
+import { Util } from './util.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -33,10 +35,10 @@ class Game extends Gizmo {
         });
     }
 
-    static cfgAtts = {
+    static xcfgValues = { 
         'game.dbg': true,
         'system.renderSystem.dbg': true,
-    }
+    };
 
     // max allowed delta time (in ms)
     static dfltMaxDeltaTime = 50;
@@ -76,12 +78,10 @@ class Game extends Gizmo {
     // METHODS -------------------------------------------------------------
     async doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
-        /*
-        // -- config
-        Config.init(this.config);
-        */
         UiCanvas.getCanvas().addEventListener('click', () => this.gctx.userActive = true, {once: true});
         EvtSystem.listen(this.gctx, this, 'key.down', () => this.gctx.userActive = true, {once: true});
+        // -- contexts
+        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.instance.values, this.xcfgValues) }));
 
         // -- assets
         this.assets.register(this.constructor.assetSpecs);
