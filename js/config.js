@@ -15,7 +15,7 @@ class Config {
     static setPathDefaults(path, atts={}) {
         for (const [key, value] of Object.entries(atts)) {
             let p = `${path}.${key}`;
-            console.log(`set: ${p} to ${value}`);
+            //console.log(`set: ${p} to ${value}`);
             Util.setpath(this.defaults, p, value);
         }
     }

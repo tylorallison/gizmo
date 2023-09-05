@@ -1,15 +1,18 @@
 export { BaseRef, SfxRef, ImageRef, SheetRef, AssetRef, resolveImage }
 
+import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 
 function resolveImage(media, encode=true) {
     let promise = new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous';
+        img.crossOrigin = 'anonymous';
         img.addEventListener('load', () => { 
+            //console.log(`img: ${img}`);
             return resolve( img );
         });
-        img.addEventListener('error', err => { console.error('error: ' + Fmt.ofmt(err)); reject(err) });
+        //console.log(`media: ${media}`);
+        img.addEventListener('error', err => { console.error(`media: ${media} error: ${Fmt.ofmt(err)}`); reject(err) });
         let src = (encode) ? `data:image/png;base64,${Util.arrayBufferToBase64(media)}` : media;
         img.src = src;
     });
@@ -29,6 +32,7 @@ class BaseRef {
 class SfxRef extends BaseRef {}
 
 class ImageRef extends BaseRef {
+    static referencable = true;
     static _canvas;
     static _ctx;
 

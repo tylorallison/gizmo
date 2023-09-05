@@ -10,6 +10,16 @@ class FileLoader {
     static dbg = false;
 
     // STATIC METHODS ------------------------------------------------------
+
+    static async loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.addEventListener("load", () => resolve(img));
+            img.addEventListener("error", err => reject(err));
+            img.src = src;
+        });
+    }
+
     static async loadFile(src) {
         return new Promise((resolve, reject) => {
             const req = new XMLHttpRequest();

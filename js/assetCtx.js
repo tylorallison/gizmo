@@ -11,10 +11,11 @@ class AssetCtx extends GizmoCtx {
 
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
+        super(spec);
         // the asset references defined by the user...
         this.xassets = Array.from(spec.xassets || []);
-        // the raw media loaded from media files
-        //this.media = {};
+        // the raw media cache
+        this.media = {};
         // the translated asset references with resolved media files
         this.assets = {};
     }
