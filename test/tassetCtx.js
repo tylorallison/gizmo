@@ -24,7 +24,13 @@ describe('an asset', () => {
         });
     });
 
-    xit('can be referenced via game asset definitions', async ()=>{
+    xit('assets can be loaded from files', async () => {
+        let sprite = new Sprite({
+            media: Media.imageFrom(),
+        })
+    });
+
+    xit('can be referenced via game asset specifications', async ()=>{
         class TestGame extends Game {
             static xassets = [
             ];
