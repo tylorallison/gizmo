@@ -40,7 +40,7 @@ describe('an asset', () => {
         class TestGame extends Game {
             static xassets = [
                 Sprite.xspec({
-                    media: ImageMedia.xspec({src: '../media/token.png'}),
+                    media: new ImageMedia({src: '../media/token.png'}),
                 }),
             ];
         }
