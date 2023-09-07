@@ -5,7 +5,7 @@ import { Generator } from '../js/generator.js';
 import { Gadget } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { Mathf } from '../js/math.js';
-import { SheetRef } from '../js/refs.js';
+import { ImageRef, SheetRef } from '../js/refs.js';
 import { Sprite } from '../js/sprite.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { UiPanel } from '../js/uiPanel.js';
@@ -288,6 +288,7 @@ class DLightTest extends Game {
 
     static assetSpecs = [
         Sprite.xspec({tag: 'test.sprite', img: new SheetRef({src: '../media/sphere-normal.png', width: tileSize, height: tileSize, x: 0, y: 0, smoothing: false}), smoothing: false }),
+        NSprite.xspec({tag: 'test.nsprite', img: new ImageRef({src: '../media/body.png'}), nimg: new ImageRef({src: '../media/body-n.png'}), specularity: .5, specularPower: 2}),
     ];
 
     async prepare() {
@@ -309,16 +310,16 @@ class DLightTest extends Game {
         });
 
         let panels = [];
-        let rows = 2;
-        let cols = 2;
+        let rows = 1;
+        let cols = 1;
         let scale = 4;
         for (let i=0; i<cols; i++) {
             for (let j=0; j<rows; j++) {
-                let nsprite = new NSprite({img: tsprite.args[0].img, nimg: tsprite.args[0].img, specularity: .25*i, specularPower: 2.5*j});
+                //let nsprite = new NSprite({img: tsprite.args[0].img, nimg: tsprite.args[0].img, specularity: .25*i, specularPower: 2.5*j});
                 let panel = new UiPanel({
                     gctx: this.gctx, 
-                    sketch: nsprite,
-                    xform: new XForm({grip: .5, x:-tileSize*2*scale+tileSize*i*scale, y:-tileSize*2*scale+tileSize*j*scale, fixedWidth: tileSize, fixedHeight: tileSize, scale: scale, smoothing: false}),
+                    sketch: Generator.generate(this.assets.get('test.nsprite')),
+                    xform: new XForm({grip: .5, x:-tileSize*2*scale+tileSize*i*scale, y:-tileSize*2*scale+tileSize*j*scale, fixedWidth: 16, fixedHeight: 32, scale: scale, smoothing: false}),
                 });
                 Hierarchy.adopt(cvs, panel);
                 panels.push(panel);

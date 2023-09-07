@@ -3,11 +3,13 @@ import { AssetCtx } from '../js/assetCtx.js';
 import { FileLoader } from '../js/fileLoader.js';
 import { Game } from '../js/game.js';
 import { Hierarchy } from '../js/hierarchy.js';
+import { ImageMedia } from '../js/media.js';
 import { UiPanel } from '../js/uiPanel.js';
 //import { ImageRef } from '../js/refs.js';
 //import { Sprite } from '../js/sprite.js';
 
 describe('an asset', () => {
+    /*
     it('can be created w preloaded media', async ()=>{
         let img = await FileLoader.loadImage('../media/token.png');
         let sprite = new Sprite({ img: img });
@@ -23,32 +25,64 @@ describe('an asset', () => {
             console.log(`sprite.img ${sprite.img} === sprite2.img ${sprite2.img}: ${sprite.img === sprite2.img}`);
         });
     });
+    */
 
+    /*
     xit('assets can be loaded using from method', async () => {
         let sprite = Sprite.from(src, {});
-        let varsprite = VarSprite.from( [src1, src2] );
-        let anim = Animation.from( [src1, src2] );
-    });
-
-    xit('assets can be directly provided', async () => {
-        let sprite = new Sprite({ media: image });
         //let varsprite = VarSprite.from( [src1, src2] );
         //let anim = Animation.from( [src1, src2] );
     });
+    */
+
+    xit('assets can be directly provided via media src', async () => {
+        // media instances will start to load references as soon as they are defined under the current asset context
+        let sprite = new Sprite({ media: new ImageMedia({ src: '../media/token.png'}) });
+    });
+
+    xit('assets can be directly provided via media data', async () => {
+        let img = new Image();
+        img.src = '../media/token.png';
+        let sprite = new Sprite({ media: new ImageMedia({ data: img }) });
+    });
+
+    xit('assets can be created using from helper', async () => {
+        // media instances will start to load references as soon as they are defined under the current asset context
+        let sprite = Sprite.from( { src: '../media/token.png'} );
+    });
+
+    xit('complex assets can be created using from helper', async () => {
+        // media instances will start to load references as soon as they are defined under the current asset context
+        let varsprite = VarSprite.from( [{ src: '../media/token.png'}, { src: '../media/token.png'}] );
+    });
 
     xit('can be referenced via game asset specifications', async ()=>{
+        // asset specifications defined as static members of the game
+        // -- these are evaluated at declaration of class
+        // -- media resolved when game is started (not at declaration)
         class TestGame extends Game {
             static xassets = [
                 Sprite.xspec({
-                    media: new ImageMedia({src: '../media/token.png'}),
+                    tag: 'token',
+                    media: ImageMedia.xspec({src: '../media/token.png'}),
                 }),
             ];
         }
+
+        let game = new TestGame();
+        // -- media is not loaded until here
+        game.start();
+        let panel = new UiPanel({
+            sketch: AssetCtx.get('token'),
+        });
+
     });
 
     xit('can be manually defined and referenced', async ()=>{
-        let game = new Game();
-        AssetCtx.add(Sprite.from('../media/token.png', { tag: 'token' }));
+        AssetCtx.add(Sprite.xspec({
+            media: ImageMedia.xspec({src: '../media/token.png'}),
+            tag: 'token',
+        }));
         AssetCtx.load().then(() => {
             let panel = new UiPanel({
                 sketch: AssetCtx.get('token'),
@@ -56,8 +90,8 @@ describe('an asset', () => {
         })
     });
 
-    xit('can resolve media reference', async ()=>{
         /*
+    xit('can resolve media reference', async ()=>{
         let sprite = new Sprite({
             tag: 'test',
             img: new ImageRef({tag: 'test', src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAM5JREFUOE9jZKAQMFKon2E4GvD7f9v/f4eXwoOGyTYazIaJsdtdRfE2CgekeYflagaXuGdYw3bPIikGt65fDMiGoBjw85D2/39X3jAw6Ygw7CpjAysGARgbJMdylY2BdepjuD6sBoAUFe/hYuh1+QY2AMb+o/0LvwHfp4n/BzkT5AWQISANIABjg+T4pJ8x2K99id0FDAwMCgeDxe9bSbBhhMGxFxDD7Ne+VGRgYHgAU4CekBSgEjI4UugTqDhOA0DyMENwpXK4ZpCCYZCUARFBUhFhEjuAAAAAAElFTkSuQmCC'}),
@@ -81,8 +115,8 @@ describe('an asset', () => {
             console.log(`sprite3.img: ${sprite3.img}`);
             console.log(`sprite4.img: ${sprite4.img}`);
         }, 500);
-        */
     });
+        */
 });
 
 xdescribe('an asset context', () => {
