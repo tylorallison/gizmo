@@ -24,15 +24,24 @@ describe('an asset', () => {
         });
     });
 
-    xit('assets can be loaded from files', async () => {
-        let sprite = new Sprite({
-            media: Media.imageFrom(),
-        })
+    xit('assets can be loaded using from method', async () => {
+        let sprite = Sprite.from(src, {});
+        let varsprite = VarSprite.from( [src1, src2] );
+        let anim = Animation.from( [src1, src2] );
+    });
+
+    xit('assets can be directly provided', async () => {
+        let sprite = new Sprite({ media: image });
+        //let varsprite = VarSprite.from( [src1, src2] );
+        //let anim = Animation.from( [src1, src2] );
     });
 
     xit('can be referenced via game asset specifications', async ()=>{
         class TestGame extends Game {
             static xassets = [
+                Sprite.xspec({
+                    media: ImageMedia.xspec({src: '../media/token.png'}),
+                }),
             ];
         }
     });

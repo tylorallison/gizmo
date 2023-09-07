@@ -65,5 +65,6 @@ class AssetCtx extends GizmoCtx {
         return Promise.resolve();
     }
     async withdraw() {
+        return Promise.resolve();
     }
 }

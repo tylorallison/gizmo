@@ -15,8 +15,9 @@ class GizmoCtx {
     }
 
     static async advance(ctx) {
-        this._instance.suspend();
-        this.$stack.push(this._instance);
+        let old = this.instance;
+        old.suspend();
+        this.$stack.push(old);
         this._instance = ctx;
         await ctx.advance();
         return Promise.resolve();

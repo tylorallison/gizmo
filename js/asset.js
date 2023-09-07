@@ -1,6 +1,6 @@
 export { Asset, GadgetRef, ImageRef, SheetRef, Sprite };
 
-    import { AssetCtx } from './assetCtx.js';
+import { AssetCtx } from './assetCtx.js';
 import { FileLoader } from './fileLoader.js';
 import { Fmt } from './fmt.js';
 import { Gadget } from './gizmo.js';
@@ -163,6 +163,10 @@ class Asset extends Gadget {
             }
         }
     }
+
+    toString() {
+        return Fmt.toString(this.constructor.name, this.tag);
+    }
 }
 
 class Sprite extends Asset {
@@ -215,6 +219,7 @@ class Sprite extends Asset {
             media = await promise;
         }
         return media;
+
         /*
         //let promise = resolveImage(media);
         return promise.then(img => {
@@ -247,32 +252,3 @@ class Sprite extends Asset {
     }
 
 };
-
-class Media extends Asset {
-    static { this.schema('src', {}); }
-    static { this.schema('data', {}); }
-
-    static fromImage() {
-    }
-
-    static fromSheet() {
-    }
-
-    static from() {
-    }
-
-    static async loadFile(src) {
-        return new Promise((resolve, reject) => {
-            const req = new XMLHttpRequest();
-            req.crossOrigin = 'Anonymous';
-            req.responseType = 'arraybuffer';
-            req.addEventListener('load', () => {
-                return resolve( req.response );
-            });
-            req.addEventListener('error', err => { console.error('error: ' + Fmt.ofmt(err)); reject(err) });
-            req.open('GET', src, true);
-            req.setRequestHeader('Cache-Control', 'no-store');
-            req.send()
-        });
-    }
-}
