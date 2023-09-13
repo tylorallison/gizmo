@@ -161,6 +161,11 @@ class Animation extends Sketch {
         return Promise.all(this.sketches.map((x) => x.load()));
     }
 
+    copy(overrides={}) {
+        let sketches = (this.sketches || []).map((x) => x.copy());
+        return new this.constructor(Object.assign({}, this.$store, { sketches: sketches}, overrides));
+    }
+
     /**
      * subrender renders the current animation frame
      * @param {canvasContext} ctx - canvas context on which to draw

@@ -12,22 +12,23 @@ describe('media assets', () => {
     });
 
     it('can be async loaded', async ()=>{
-        let src = '../media/token.png';
-        let media = await Media.load('../media/token.png');
+        let media = await Media.load('../media/test.mp3');
+        console.log(`media.data: ${media.data}`);
         expect(media.data instanceof ArrayBuffer).toBeTruthy();
-        expect(src in AssetCtx.instance.media).toBeTruthy();
-        let media2 = await Media.load('../media/token.png');
+        expect(media.src in AssetCtx.media).toBeTruthy();
+        let media2 = await Media.load('../media/test.mp3');
         expect(media2.data instanceof ArrayBuffer).toBeTruthy();
     });
 
     it('can be constructed using from helper', async ()=>{
-        let media = Media.from('../media/token.png');
+        let media = Media.from('../media/test.mp3');
         await media.load();
+        //console.log(`media.data: ${media.data}`);
         expect(media.data instanceof ArrayBuffer).toBeTruthy();
     });
 
     it('can be constructed using constructor', async ()=>{
-        let media = new Media({ src: '../media/token.png' });
+        let media = new Media({ src: '../media/test.mp3' });
         await media.load();
         expect(media.data instanceof ArrayBuffer).toBeTruthy();
     });
@@ -47,7 +48,7 @@ describe('image media assets', () => {
     it('can be async loaded', async ()=>{
         let media = await ImageMedia.load('../media/token.png');
         expect(media.data instanceof Image).toBeTruthy();
-        expect(media.src in AssetCtx.instance.media).toBeTruthy();
+        expect(media.src in AssetCtx.media).toBeTruthy();
         let media2 = await ImageMedia.load('../media/token.png');
         expect(media2.data instanceof Image).toBeTruthy();
         expect(media2.data.height).toEqual(48);

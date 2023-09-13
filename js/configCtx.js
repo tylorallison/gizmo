@@ -4,6 +4,7 @@ import { GizmoCtx } from './gizmoCtx.js';
 import { Util } from './util.js';
 
 class ConfigCtx extends GizmoCtx {
+    static _instance;
 
     static hasForGdt(gdt, key) {
         return this.instance.hasForGdt(gdt, key);

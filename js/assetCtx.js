@@ -1,70 +1,90 @@
 export { AssetCtx };
+
+import { Asset } from './asset.js';
+import { Generator } from './generator.js';
 import { GizmoCtx } from './gizmoCtx.js';
 
 class AssetCtx extends GizmoCtx {
+    static _instance;
 
-    static gassets = {};
+    // the raw media cache (shared for all contexts)
+    static media = {};
 
     static get(tag, overrides={}) {
         return this.instance.get(tag, overrides);
+    }
+    static add(xasset) {
+        return this.instance.add(xasset);
+    }
+    static async load() {
+        return this.instance.load();
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
     constructor(spec={}) {
         super(spec);
         // the asset references defined by the user...
-        this.xassets = Array.from(spec.xassets || []);
-        // the raw media cache
-        this.media = {};
-        // the translated asset references with resolved media files
+        this.xassets = [];
+        // the generated/loaded asset cache
         this.assets = {};
+        for (const xasset of (spec.xassets || [])) this.add(xasset);
     }
 
     async advance() {
-
-        // collect set of media file references from asset specifications
-        let mrefs = [];
-        for (const [k,v,o] of Util.kvWalk(this.specs)) {
-            if (v instanceof BaseRef && v.src && !mrefs.includes(v.src)) {
-                mrefs.push(v.src);
-            }
-        }
-
-        // load media assets from files, they are cached by file name
-        const media = {};
-        await FileLoader.load(mrefs, media);
-
-        // populate assets
-        for (const xasset of this.xasset) {
-            let args = spec.args;
-            let tag = (args && args.length) ? args[0].tag : 'tag';
-            if (this.assets.hasOwnProperty(tag)) {
-                console.error(`duplicate asset tag detected: ${tag}, previous definition: ${Fmt.ofmt(this.assets[tag])}, skipping: ${Fmt.ofmt(spec)}`);
-                continue;
-            }
-            // asset spec is copied from input spec
-            this.assets[tag] = Object.assign({}, spec);
-        }
+        return this.load();
     }
 
-    async load() {
-        // load asset files
-        this.media = {}
-
-        // once specs have been loaded, they get cleared
-        this.specs = [];
-        // resolve media references
-        await this.resolve();
-        // resolve asset references
-        this.resolveAssets();
-        // clear media references
-        this.media = {}
-    }
-
-    async advance() {
-        return Promise.resolve();
-    }
     async withdraw() {
         return Promise.resolve();
     }
+
+    async load() {
+        // load unresolves assets
+        let xassets = this.xassets;
+        this.xassets = [];
+        for (const xasset of xassets) {
+            let asset = Generator.generate(xasset);
+            if (!asset) {
+                console.error(`failed to generate asset for: ${Fmt.ofmt(xasset)}`);
+                continue;
+            }
+            if (asset.tag in this.assets) {
+                console.error(`duplicate asset tag detected: ${asset.tag}, previous asset: ${this.assets[asset.tag]}, new asset: ${asset}`);
+            }
+            this.assets[asset.tag] = asset;
+        }
+        //return Promise.all(this.assets.map((x) => x.load()));
+        return Promise.all(Object.values(this.assets || {}).map((x) => x.load()));
+    }
+
+    add(xasset) {
+        if (xasset instanceof Asset) {
+            if (xasset.tag in this.assets) {
+                console.error(`duplicate asset tag detected: ${xasset.tag}, previous asset: ${this.assets[xasset.tag]}, new asset: ${xasset}`);
+            }
+            this.assets[xasset.tag] = xasset;
+        } else {
+            this.xassets.push(xasset);
+        }
+    }
+
+    get(tag, overrides={}) {
+        let asset = this.assets[tag];
+        // search for asset tag in asset context stack
+        if (!asset) {
+            for (const ctx of this.constructor.$stack) {
+                console.log(`ctx: ${ctx}`);
+                if (tag in (ctx.assets)) {
+                    asset = ctx.assets[tag];
+                    break;
+                }
+            }
+        }
+        if (!asset) {
+            console.error(`-- missing asset for ${tag}`);
+            return null;
+        }
+        return asset.copy(Object.assign({}, overrides, { contextable: true }));
+    }
+
 }

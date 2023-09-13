@@ -41,9 +41,9 @@ class Media extends Asset {
     }
 
     async load() {
-        if (this.tag in AssetCtx.instance.media) {
+        if (this.tag in AssetCtx.media) {
             //console.log(`media cache hit for: ${this.tag}`);
-            return Promise.resolve(AssetCtx.instance.media[this.tag]).then((rslt) => {
+            return Promise.resolve(AssetCtx.media[this.tag]).then((rslt) => {
                 this.data = rslt;
             });
         }
@@ -62,7 +62,7 @@ class Media extends Asset {
             req.setRequestHeader('Cache-Control', 'no-store');
             req.send()
         });
-        AssetCtx.instance.media[this.tag] = promise;
+        AssetCtx.media[this.tag] = promise;
         return promise;
     }
 
@@ -106,9 +106,9 @@ class ImageMedia extends Media {
         // load from source
         let promise;
         // file loading can be cached to asset context -- cache lookup
-        if (this.tag in AssetCtx.instance.media) {
+        if (this.tag in AssetCtx.media) {
             //console.log(`image media cache hit for: ${this.tag}`);
-            promise = AssetCtx.instance.media[this.tag];
+            promise = AssetCtx.media[this.tag];
         } else {
             promise = new Promise((resolve, reject) => {
                 const img = new Image();
@@ -119,7 +119,7 @@ class ImageMedia extends Media {
                 img.src = this.src;
             });
             // file loading can be cached to asset context -- cache store
-            AssetCtx.instance.media[this.tag] = promise;
+            AssetCtx.media[this.tag] = promise;
         }
 
         // if scaling, translation, or snipping is required, write image from source to internal canvas, then capture that canvas to a new image

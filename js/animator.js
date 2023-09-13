@@ -154,6 +154,12 @@ class Animator extends Sketch {
         return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => x.load()));
     }
 
+    copy(overrides={}) {
+        let sketches = Object.fromEntries(Object.entries(this.sketches || {}).map(([k,v]) => [k, v.copy()]));
+        let transitions = Object.fromEntries(Object.entries(this.transitions || {}).map(([k,v]) => [k, v.copy()]));
+        return new this.constructor(Object.assign({}, this.$store, { sketches: sketches, transitions: transitions }, overrides));
+    }
+
     /**
      * render the animator
      * @param {canvasContext} ctx - canvas context on which to draw

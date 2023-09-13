@@ -403,11 +403,11 @@ class Gadget {
             let sentry = (this.$schema) ? this.$schema.get(k) : null;
             if (sentry && !sentry.serializable) continue;
             if (v && (typeof v === 'object')) {
-                if ('assetTag' in v) {
+                if (v.contextable) {
                     xargs[k] = {
                         $gzx: true,
-                        cls: 'AssetRef',
-                        args: [{ assetTag:v.assetTag }],
+                        cls: '$Asset',
+                        args: [{ tag:v.tag }],
                     };
                 } else if ('xify' in v) {
                     xargs[k] = v.xify(sdata);

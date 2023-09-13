@@ -1,3 +1,4 @@
+import { AssetCtx } from '../js/assetCtx.js';
 import { Assets } from '../js/assets.js';
 import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
@@ -22,15 +23,15 @@ class TSerializerGizmo extends Gizmo {
 }
 
 describe('a serializer', () => {
-    let gctx, sdata, generator, assets;
+    let gctx, actx, sdata, generator;
     beforeEach(async () => {
         gctx = new GizmoContext({tag: 'test'});
         sdata = new SerialData();
-        assets = new Assets({specs: [
+        actx = new AssetCtx({ xassets: [
             Rect.xspec({tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, xform: XForm.xspec({ fixedWidth: 32, fixedHeight: 32 })}),
         ]});
-        await assets.load();
-        generator = new Generator({gctx: gctx, assets: assets});
+        await actx.load();
+        generator = new Generator({gctx: gctx, assets: actx});
     });
 
     it('can xify a basic gizmo', ()=>{
@@ -145,8 +146,8 @@ describe('a serializer', () => {
     });
 
     // FIXME
-    xit('can xify a gizmo with asset ref', ()=>{
-        let g = new TSerializerGizmo({ gctx: gctx, tag: 'root', asset: generator.generate(assets.get('test.rect')) });
+    it('can xify a gizmo with asset ref', ()=>{
+        let g = new TSerializerGizmo({ gctx: gctx, tag: 'root', asset: actx.get('test.rect') });
         let rslt = Serializer.xify(sdata, g);
         expect(rslt).toEqual({ $gzx: true, cls: '$GizmoRef', gid: g.gid });
         expect(sdata.xgzos[g.gid]).toEqual({
@@ -156,7 +157,7 @@ describe('a serializer', () => {
                 gid: g.gid,
                 tag: g.tag,
                 data: undefined,
-                asset: { $gzx: true, cls: 'AssetRef', args: [{ assetTag: 'test.rect' }]},
+                asset: { $gzx: true, cls: '$Asset', args: [{ tag: 'test.rect' }]},
                 children: [],
             }],
         });
@@ -164,7 +165,7 @@ describe('a serializer', () => {
         let gzos = Serializer.restore(sdata, generator);
         expect(gzos.length).toEqual(1);
         expect(gzos[0].tag).toEqual('root');
-        expect(gzos[0].asset.assetTag).toEqual('test.rect');
+        expect(gzos[0].asset.tag).toEqual('test.rect');
     });
 
 });

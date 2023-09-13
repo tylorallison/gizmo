@@ -15,6 +15,7 @@ import { SfxSystem } from './sfxSystem.js';
 import { Config } from './config.js';
 import { ConfigCtx } from './configCtx.js';
 import { Util } from './util.js';
+import { AssetCtx } from './assetCtx.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -23,11 +24,11 @@ import { Util } from './util.js';
 class Game extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
     /**
-     * assetSpecs is an array of {@link GizmoSpec} specifications that define assets for the game.  These definitions
+     * xassets is an array of {@link GizmoSpec} specifications that define assets for the game.  These definitions
      * will be parsed and loaded during game startup.  Override this static variable in subclasses to define assets for specific game logic.
      * @static
      */
-    static assetSpecs = [];
+    static xassets = [];
 
     static {
         Config.setPathDefaults(this.cfgpath, {
@@ -54,14 +55,12 @@ class Game extends Gizmo {
     static { this.schema('frame', { eventable: false, dflt: 0}); }
     /** @member {float} Game#lastUpdate - time of last update */
     static { this.schema('lastUpdate', { eventable: false, dflt: 0}); }
-    /** @member {Assets} Game#assets - game assets */
-    static { this.schema('assets', { readonly: true, parser: (o,x) => new Assets()}); }
     /** @member {SystemMgr} Game#systems - game systems {@link System} */
     static { this.schema('systems', { readonly: true, parser: (o,x) => new SystemMgr({ gctx: o.gctx })}); }
     /** @member {StateMgr} Game#states - game states {@link GameState} */
     static { this.schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
     /** @member {Generator} Game#generator - generator for gizmos in game */
-    static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx, assets: o.assets })}); }
+    static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
@@ -80,12 +79,12 @@ class Game extends Gizmo {
         if (this.dbg) console.log(`${this.name} starting initialization`);
         UiCanvas.getCanvas().addEventListener('click', () => this.gctx.userActive = true, {once: true});
         EvtSystem.listen(this.gctx, this, 'key.down', () => this.gctx.userActive = true, {once: true});
-        // -- contexts
+        // load contexts
+        // -- config
         await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.instance.values, this.xcfgValues) }));
-
         // -- assets
-        this.assets.register(this.constructor.assetSpecs);
-
+        await AssetCtx.advance(new AssetCtx({ xassets: this.constructor.xassets }));
+        // game init
         await this.init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
         EvtSystem.trigger(this, 'game.inited');
@@ -103,7 +102,7 @@ class Game extends Gizmo {
 
     async doload() {
         if (this.dbg) console.log(`${this.name} starting loading`);
-        await this.assets.load();
+        //await this.assets.load();
         await this.load();
         if (this.dbg) console.log(`${this.name} loading complete`);
         EvtSystem.trigger(this, 'game.loaded');

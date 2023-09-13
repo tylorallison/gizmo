@@ -18,7 +18,7 @@ class Asset extends Gadget {
     static _gid = 1;
 
     static { this.schema('tag', { dflt: (o) => `${o.constructor.name}.${o.constructor._gid++}`}); }
-    static { this.schema('global', { readonly: true }); }
+    static { this.schema('contextable', { readonly: true, dflt: false }); }
 
     static from(src, spec={}) {
         let asset = new this(spec);
@@ -36,6 +36,10 @@ class Asset extends Gadget {
 
     async load() {
         return Promise.resolve();
+    }
+
+    copy(overrides={}) {
+        return new this.constructor(Object.assign({}, this.$store, overrides));
     }
 
     toString() {

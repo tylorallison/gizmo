@@ -8,7 +8,7 @@ class GizmoCtx {
     static get instance() {
         if (!this._instance) {
             this._instance = new this();
-            console.log(`instance: ${this._instance}`);
+            console.log(`setting ${this.name} instance to ${this._instance}`);
         }
         this._instance.advance();
         return this._instance;

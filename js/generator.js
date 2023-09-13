@@ -1,9 +1,9 @@
 export { Generator };
 
-import { Assets } from './assets.js';
 import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 import { Gadget, GizmoContext } from './gizmo.js';
+import { AssetCtx } from './assetCtx.js';
 
 /**
  * The Generator class creates instances of {@link Gadget} or {@link Gizmo} based on specified GadgetSpec object specification.
@@ -34,16 +34,16 @@ class Generator {
     constructor(spec={}) {
         this.registry = spec.registry || Gadget.$registry;
         this.gctx = spec.gctx || GizmoContext.dflt;
-        this.assets = spec.assets || ((this.gctx.game) ? this.gctx.game.assets : new Assets());
+        this.assets = spec.assets || AssetCtx.instance;
     }
 
     // METHODS -------------------------------------------------------------
     resolve(spec) {
         let nspec = Util.copy(spec);
         for (const [k,v,o] of Util.kvWalk(nspec)) {
-            if (v && v.cls === 'AssetRef') {
-                const assetTag = v.args[0].assetTag;
-                o[k] = this.generate(this.assets.get(assetTag));
+            if (v && v.cls === '$Asset') {
+                const tag = v.args[0].tag;
+                o[k] = this.assets.get(tag);
             } else if (v && typeof v === 'object' && v.$gzx) {
                 let nv = this.generate(v);
                 o[k] = nv;
