@@ -3,6 +3,9 @@ export { Animator };
 import { EvtSystem, ExtEvtReceiver } from './event.js';
 import { Sketch } from './sketch.js';
 import { Gadget } from './gizmo.js';
+import { ImageMedia } from './media.js';
+import { Asset } from './asset.js';
+import { Sprite } from './sprite.js';
 
 // =========================================================================
 /**
@@ -57,6 +60,26 @@ class Animator extends Sketch {
         if (EvtSystem.isEmitter(trunk)) {
             EvtSystem.ignore(trunk, this, 'gizmo.updated');
         }
+    }
+
+    static from(srcs, spec={}) {
+        let sketches = {};
+        if (typeof srcs === 'object') {
+            for (const [k,src] of Object.entries(srcs)) {
+                // source is media
+                if (src instanceof ImageMedia) {
+                    sketches[k] = Sprite.from(src);
+                // source is an asset
+                } else if (src instanceof Asset) {
+                    sketches[k] = src;
+                // source is a string or media spec ...
+                } else {
+                    sketches[k] = Sprite.from(src);
+                }
+            }
+        }
+        let asset = new this(Object.assign({}, spec, { sketches: sketches }));
+        return asset;
     }
 
     // METHODS -------------------------------------------------------------
@@ -125,6 +148,10 @@ class Animator extends Sketch {
         // disable current sketch
         if (this.sketch) this.sketch.disable();
         super.disable();
+    }
+
+    async load() {
+        return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => x.load()));
     }
 
     /**

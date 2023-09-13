@@ -3,6 +3,9 @@ export { Animation };
 import { Sketch } from './sketch.js';
 import { Timer } from './timer.js';
 import { Random } from './random.js';
+import { Asset } from './asset.js';
+import { ImageMedia } from './media.js';
+import { Sprite } from './sprite.js';
 
 // =========================================================================
 /** 
@@ -27,6 +30,25 @@ class Animation extends Sketch {
     static { this.schema('height', { getter: ((o,x) => ((o.sketch) ? o.sketch.height : 0)) }); }
     /** @member {integer} Sketch#ttl - time to live for current animation frame */
     static { this.schema('ttl', { getter: (o,x) => ( o.sketches.reduce((pv, cv) => pv+cv.ttl, 0 )) }); }
+
+    static from(srcs, spec={}) {
+        let sketches = [];
+        if (!Array.isArray(srcs)) srcs = [srcs];
+        for (const src of srcs) {
+            // source is media
+            if (src instanceof ImageMedia) {
+                sketches.push(Sprite.from(src));
+            // source is an asset
+            } else if (src instanceof Asset) {
+                sketches.push(src);
+            // source is a string or media spec ...
+            } else {
+                sketches.push(Sprite.from(src));
+            }
+        }
+        let asset = new this(Object.assign({}, spec, { sketches: sketches }));
+        return asset;
+    }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     /**
@@ -133,6 +155,10 @@ class Animation extends Sketch {
             this.sketch.enable();
         }
         return true;
+    }
+
+    async load() {
+        return Promise.all(this.sketches.map((x) => x.load()));
     }
 
     /**

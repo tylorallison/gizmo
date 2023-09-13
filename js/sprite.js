@@ -1,5 +1,6 @@
 export { Sprite };
 
+import { ImageMedia } from './media.js';
 import { Sketch } from './sketch.js';
 
 /** ========================================================================
@@ -8,14 +9,25 @@ import { Sketch } from './sketch.js';
 class Sprite extends Sketch {
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('img', {readonly: true});
-        this.schema('width', {getter: ((o,x) => ((o.img) ? o.img.width : 0)), readonly: true});
-        this.schema('height', {getter: ((o,x) => ((o.img) ? o.img.height : 0)), readonly: true});
+        this.schema('media', {readonly: true});
+        this.schema('width', {getter: ((o,x) => ((o.media && o.media.data) ? o.media.data.width : 0))});
+        this.schema('height', {getter: ((o,x) => ((o.media && o.media.data) ? o.media.data.height : 0))});
+    }
+
+    static from(src, spec={}) {
+        let media;
+        if (src instanceof ImageMedia) {
+            media = src;
+        } else {
+            media = ImageMedia.from(src);
+        }
+        let asset = new this(Object.assign({}, spec, { media: media }));
+        return asset;
     }
 
     // METHODS -------------------------------------------------------------
     subrender(ctx, x=0, y=0, width=0, height=0) {
-        if (!this.img) return;
+        if (!this.media || !this.media.data) return;
         // scale if necessary
         if ((width && width !== this.width) || (height && height !== this.height)) {
             if (this.width && this.height) {
@@ -31,6 +43,14 @@ class Sprite extends Sketch {
             }
         } else {
             ctx.drawImage(this.img, x, y);
+        }
+    }
+
+    async load() {
+        if (this.media) {
+            return this.media.load();
+        } else {
+            return Promise.resolve();
         }
     }
 

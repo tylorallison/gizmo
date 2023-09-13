@@ -1,8 +1,8 @@
-import { SheetRef, ImageRef, Asset, Sprite, GadgetRef } from '../js/asset.js';
+//import { SheetRef, ImageRef, Asset, Sprite, GadgetRef } from '../js/asset.js';
 import { AssetCtx } from '../js/assetCtx.js';
-import { FileLoader } from '../js/fileLoader.js';
+//import { FileLoader } from '../js/fileLoader.js';
 import { Game } from '../js/game.js';
-import { Hierarchy } from '../js/hierarchy.js';
+//import { Hierarchy } from '../js/hierarchy.js';
 import { ImageMedia } from '../js/media.js';
 import { UiPanel } from '../js/uiPanel.js';
 //import { ImageRef } from '../js/refs.js';

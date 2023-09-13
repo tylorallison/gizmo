@@ -1,7 +1,8 @@
 export { Sketch };
 
+import { Asset } from './asset.js';
 import { Fmt } from './fmt.js';
-import { Gadget } from './gizmo.js';
+//import { Gadget } from './gizmo.js';
 import { Stats } from './stats.js';
 
 /**
@@ -9,9 +10,9 @@ import { Stats } from './stats.js';
  * - an image (sprite)
  * - an animation
  * - simple js primitives (e.g.: rectangle) for drawing
- * @extends Gadget
+ * @extends Asset
  */
-class Sketch extends Gadget {
+class Sketch extends Asset {
 
     // STATIC VARIABLES ----------------------------------------------------
     /** @const {boolean} Sketch.renderable=true - indicates if instance of class is renderable by render system */
@@ -29,7 +30,7 @@ class Sketch extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {string} Sketch#assetTag - if sketch came from asset, tag associated with asset definition */
-    static { this.schema('assetTag', { readonly: true }); }
+    //static { this.schema('assetTag', { readonly: true }); }
     /** @member {number} Sketch#width=0 - width of sketch */
     static { this.schema('width', {dflt: 0, readonly: true}); }
     /** @member {number} Sketch#height=0 - height of sketch */
@@ -41,7 +42,7 @@ class Sketch extends Gadget {
     /** @member {float} Sketch#alpha=1 - transparency of sketch, 0 is not visible, 1 is no transparency */
     static { this.schema('alpha', {dflt: 1}); }
     /** @member {integer} Sketch#ttl - time to live for sketch */
-    static { this.schema('ttl', {readonly: true, parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL}); }
+    static { this.schema('ttl', {readonly: true, dflt: 0}); }
     /** @member {boolean} Sketch#done=false - if sketch has finished animation */
     static { this.schema('done', {parser: () => false}); }
 
