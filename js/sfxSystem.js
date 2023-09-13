@@ -1,6 +1,6 @@
 export { SfxSystem };
 
-import { Assets } from './assets.js';
+import { AssetCtx } from './assetCtx.js';
 import { EvtSystem } from './event.js';
 import { System } from './system.js';
 
@@ -10,7 +10,7 @@ class SfxSystem extends System {
         this.schema('ready', { serializeable: false, parser: false });
         this.schema('decodes', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
         this.schema('ctx', { eventable: false, serializeable: false, parser: (o,x) => null });
-        this.schema('assets', { eventable: false, serializeable: false, readonly: true, parser: (o,x) => x.assets || (o.gctx.game) ? o.gctx.game.assets : new Assets() });
+        this.schema('assets', { eventable: false, serializeable: false, readonly: true, dflt: () => AssetCtx.$instance });
         this.schema('streams', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
         this.schema('reqs', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
         this.schema('volumes', { eventable: false, serializeable: false, parser: (o,x) => (x.volumes || {}) });
@@ -87,15 +87,14 @@ class SfxSystem extends System {
             if (!this.ready) return;
         }
         // lookup asset
-        let x_sfx = this.assets.get(assetTag);
-        if (!x_sfx) return;
-        x_sfx = x_sfx.args[0];
+        let sfx = this.assets.get(assetTag);
+        if (!sfx || !sfx.media) return;
         // decode asset (or pull from cache)
         let decoded;
         if (!this.decodes[assetTag]) {
             // make a copy of audio buffer (can't be decoded twice)
-            let buffer = new ArrayBuffer(x_sfx.audio.byteLength);
-            new Uint8Array(buffer).set(new Uint8Array(x_sfx.audio));
+            let buffer = new ArrayBuffer(sfx.media.data.byteLength);
+            new Uint8Array(buffer).set(new Uint8Array(sfx.media.data));
             let p = this.ctx.decodeAudioData(buffer);
             p.then((d) => decoded = d);
             await p;
@@ -106,11 +105,11 @@ class SfxSystem extends System {
         // setup audio stream
         let stream = new AudioBufferSourceNode( this.ctx, {
             buffer: decoded,
-            loop: x_sfx.loop,
+            loop: sfx.loop,
         });
         let link = stream;
         // setup sfx volume gain
-        let volume = (options.hasOwnProperty('volume')) ? options.volume : (x_sfx.hasOwnProperty('volume')) ? x_sfx.volume : 1;
+        let volume = (options.hasOwnProperty('volume')) ? options.volume : (sfx.hasOwnProperty('volume')) ? sfx.volume : 1;
         if (volume !== 1) {
             let gainNode = this.ctx.createGain()
             gainNode.gain.value = volume;
@@ -118,7 +117,7 @@ class SfxSystem extends System {
             link = gainNode;
         }
         // get/setup sfx channel
-        let channel = (options.hasOwnProperty('channel')) ? options.channel : x_sfx.channel;
+        let channel = (options.hasOwnProperty('channel')) ? options.channel : sfx.channel;
         if (!this.gains[channel]) {
             if (!this.volumes.hasOwnProperty(channel)) {
                 this.volumes[channel] = 1;

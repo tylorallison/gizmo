@@ -1,23 +1,22 @@
 export { AssetCtx };
 
 import { Asset } from './asset.js';
+import { Fmt } from './fmt.js';
 import { Generator } from './generator.js';
 import { GizmoCtx } from './gizmoCtx.js';
 
 class AssetCtx extends GizmoCtx {
-    static _instance;
-
     // the raw media cache (shared for all contexts)
     static media = {};
 
     static get(tag, overrides={}) {
-        return this.instance.get(tag, overrides);
+        return this.$instance.get(tag, overrides);
     }
     static add(xasset) {
-        return this.instance.add(xasset);
+        return this.$instance.add(xasset);
     }
     static async load() {
-        return this.instance.load();
+        return this.$instance.load();
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
@@ -73,7 +72,6 @@ class AssetCtx extends GizmoCtx {
         // search for asset tag in asset context stack
         if (!asset) {
             for (const ctx of this.constructor.$stack) {
-                console.log(`ctx: ${ctx}`);
                 if (tag in (ctx.assets)) {
                     asset = ctx.assets[tag];
                     break;

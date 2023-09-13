@@ -2,23 +2,48 @@ export { GizmoCtx };
 import { Fmt } from './fmt.js';
 
 class GizmoCtx {
-    static _instance;
-    static _gid = 1;
-    static $stack = [];
-    static get instance() {
-        if (!this._instance) {
-            this._instance = new this();
-            console.log(`setting ${this.name} instance to ${this._instance}`);
+    static get $ctx() {
+        if (this.hasOwnProperty('_$ctx')) {
+            return this._$ctx;
         }
-        this._instance.advance();
-        return this._instance;
+        const ctx = {
+            instance: null,
+            gid: 1,
+            stack: [],
+        };
+        Object.defineProperty(this, '_$ctx', {
+            value: ctx,
+            writable: false,
+        });
+        ctx.instance = new this();
+        return ctx;
+    }
+    static get $instance() {
+        let ctx = this.$ctx;
+        if (!ctx.instance) {
+            ctx.instance = new this();
+            ctx.instance.advance();
+        }
+        return ctx.instance;
+    }
+    static set $instance(value) {
+        let ctx = this.$ctx;
+        ctx.instance = value;
+    }
+    static get $gid() {
+        let ctx = this.$ctx;
+        return ctx.gid++;
+    }
+    static get $stack() {
+        let ctx = this.$ctx;
+        return ctx.stack;
     }
 
     static async advance(ctx) {
-        let old = this.instance;
+        let old = this.$instance;
         old.suspend();
         this.$stack.push(old);
-        this._instance = ctx;
+        this.$instance = ctx;
         await ctx.advance();
         return Promise.resolve();
     }
@@ -28,9 +53,9 @@ class GizmoCtx {
             console.error(`${this} cannot withdraw root context`);
             return;
         }
-        this._instance.withdraw();
-        this._instance = this.$stack.pop();
-        this._instance.resume();
+        this.$instance.withdraw();
+        this.$instance = this.$stack.pop();
+        this.$instance.resume();
     }
 
     static doWith(ctx, fcn) {
@@ -40,7 +65,7 @@ class GizmoCtx {
     }
 
     constructor(spec={}) {
-        this.gid = ('gid' in spec) ? spec.gid : (this.constructor._gid)++;
+        this.gid = ('gid' in spec) ? spec.gid : this.constructor.$gid;
         this.tag = ('tag' in spec) ? spec.tag : `${this.constructor.name}.${this.gid}`;
     }
 

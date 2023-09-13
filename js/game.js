@@ -36,7 +36,7 @@ class Game extends Gizmo {
         });
     }
 
-    static xcfgValues = { 
+    static xcfgs = { 
         'game.dbg': true,
         'system.renderSystem.dbg': true,
     };
@@ -81,7 +81,7 @@ class Game extends Gizmo {
         EvtSystem.listen(this.gctx, this, 'key.down', () => this.gctx.userActive = true, {once: true});
         // load contexts
         // -- config
-        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.instance.values, this.xcfgValues) }));
+        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.$instance.values, this.xcfgs) }));
         // -- assets
         await AssetCtx.advance(new AssetCtx({ xassets: this.constructor.xassets }));
         // game init
@@ -102,7 +102,6 @@ class Game extends Gizmo {
 
     async doload() {
         if (this.dbg) console.log(`${this.name} starting loading`);
-        //await this.assets.load();
         await this.load();
         if (this.dbg) console.log(`${this.name} loading complete`);
         EvtSystem.trigger(this, 'game.loaded');

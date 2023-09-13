@@ -5,17 +5,18 @@ import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
 import { SfxRef } from '../js/refs.js';
 import { Sfx } from '../js/sfx.js';
+import { Media } from '../js/media.js';
 
 class SfxTest extends Game {
-    static assetSpecs = [
-        Sfx.xspec({ tag: 'test.sound', audio: new SfxRef({src: '../media/test.mp3'}) }),
+    static xassets = [
+        Sfx.xspec({ tag: 'test.sound', media: Media.from('../media/test.mp3') }),
     ];
 
     async prepare() {
         console.log(`${this} ready`);
         //let sys;
         EvtSystem.listen(this.gctx, this, 'key.down', (evt) => { 
-            console.log(`key event: ${Fmt.ofmt(evt)}`);
+            //console.log(`key event: ${Fmt.ofmt(evt)}`);
             //if (!sys) sys = new SfxSystem();
             SfxSystem.playSfx(this, 'test.sound', {});
         });

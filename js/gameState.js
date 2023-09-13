@@ -1,5 +1,6 @@
 export { GameState };
 
+import { AssetCtx } from './assetCtx.js';
 import { Assets } from './assets.js';
 import { ConfigCtx } from './configCtx.js';
 import { EvtSystem } from './event.js';
@@ -19,26 +20,19 @@ import { Util } from './util.js';
  */
 class GameState extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
-    static assetSpecs = [];
-    static xcfgValues = {};
+    static xassets = [];
+    static xcfgs = {};
 
     // SCHEMA --------------------------------------------------------------
     static {
         this.schema('dbg', {dflt: false});
         this.schema('state', {dflt: 'none'});
-        this.schema('assets', {link: false, parser: (o,x) => ((o.gctx.game && o.gctx.game.assets) ? o.gctx.game.assets: new Assets())});
-        this.schema('assetSpecs', {link: false, parser: (o,x) => {
-            if (x.assetSpecs) return x.assetSpecs;
-            if (o.constructor.assetSpecs) return o.constructor.assetSpecs;
-            return [];
-        }});
+        this.schema('xassets', {dflt: (o) => o.constructor.xassets});
     }
 
     // METHODS -------------------------------------------------------------
     async doinit(data) {
         if (this.dbg) console.log(`${this} starting initialization`);
-        // contexts
-        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.instance.values, this.xcfgValues) }));
         await this.init(data);
         if (this.dbg) console.log(`${this} initialization complete`);
         return Promise.resolve();
@@ -56,14 +50,18 @@ class GameState extends Gizmo {
 
     async doload(data) {
         if (this.dbg) console.log(`${this} starting loading`);
-        this.assets.register(this.assetSpecs);
-        await this.assets.load();
+        // contexts
+        // -- config
+        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.$instance.values, this.xcfgs) }));
+        // -- assets
+        await AssetCtx.advance(new AssetCtx({ xassets: this.xassets }));
+        // abstract load
         await this.load(data);
         if (this.dbg) console.log(`${this} loading complete`);
         return Promise.resolve();
     }
     /**
-     * load is called once during state lifetime (when state is first started during initialization)
+     * load is called every time a state transitions from initiated to started
      * - intended to load assets or other setup that needs to occur after initial state setup.
      * - override load() for state specific load functionality
      * @param {*} data - game specific data used during state setup
@@ -120,7 +118,7 @@ class GameState extends Gizmo {
     async stop() {
         this.state = 'initialized';
         EvtSystem.trigger(this, 'state.stopped');
-        this.assets.unregister(this.assetSpecs);
+        AssetCtx.withdraw();
         ConfigCtx.withdraw();
         return Promise.resolve();
     }

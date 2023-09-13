@@ -5,7 +5,7 @@ import { Gadget, Gizmo } from '../js/gizmo.js';
 describe('a config context', () => {
 
     it(`has a base/default context`, ()=>{
-        let ctx = ConfigCtx.instance;
+        let ctx = ConfigCtx.$instance;
         expect(ctx).toBeTruthy();
     });
 
