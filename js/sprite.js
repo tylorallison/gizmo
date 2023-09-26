@@ -47,6 +47,7 @@ class Sprite extends Sketch {
     }
 
     async load() {
+        console.log(`media: ${this.media}`);
         if (this.media) {
             return this.media.load();
         } else {

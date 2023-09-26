@@ -20,6 +20,7 @@ class Timer extends Gadget {
     constructor(spec={}) {
         super(spec);
         this.onTock = this.onTock.bind(this);
+        console.log(`timer ttl: ${this.ttl}`);
         EvtSystem.listen(this.gctx, this, 'game.tock', this.onTock);
     }
 
@@ -29,6 +30,7 @@ class Timer extends Gadget {
 
     onTock(evt) {
         Stats.count('timer.ontock');
+        console.log(`timer onTock ttl: ${this.ttl}`);
         this.ttl -= evt.deltaTime;
         if (this.ttl <= 0) {
             let overflow = -this.ttl;

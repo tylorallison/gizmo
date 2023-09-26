@@ -6,6 +6,7 @@ import { Gadget } from './gizmo.js';
 import { ImageMedia } from './media.js';
 import { Asset } from './asset.js';
 import { Sprite } from './sprite.js';
+import { Fmt } from './fmt.js';
 
 // =========================================================================
 /**
@@ -151,6 +152,8 @@ class Animator extends Sketch {
     }
 
     async load() {
+        console.log(`sketches: ${Fmt.ofmt(this.sketches)}`);
+        console.log(`transitions: ${Fmt.ofmt(this.transitions)}`);
         return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => x.load()));
     }
 

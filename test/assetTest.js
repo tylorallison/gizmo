@@ -14,6 +14,7 @@ import { Animator } from '../js/animator.js';
 import { Timer } from '../js/timer.js';
 import { CompositeSprite } from '../js/compositeSprite.js';
 import { Shape } from '../js/shape.js';
+import { ImageMedia } from '../js/media.js';
 
 
 class TestModel extends UiPanel {
@@ -30,17 +31,17 @@ class AssetTest extends Game {
         Rect.xspec({ tag: 'rect.two', color: 'rgba(0,255,0,.25)', borderColor: 'yellow', border: 2, width: 40, height: 40 }),
 
         Rect.xspec({ tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, width: 40, height: 40 }),
-        Sprite.xspec({tag: 'test.sprite', media: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
+        Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
 
         Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
 
         Animation.xspec({tag: 'test.animation', jitter: true, sketches: [
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: new SheetRef({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
         ]}),
 
         Animator.xspec({ 
