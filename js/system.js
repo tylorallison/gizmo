@@ -19,7 +19,7 @@ class System extends Gizmo {
         this.schema('matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
         this.schema('store', { link: false, readonly: true, parser: (o,x) => x.store || new Map()});
         this.schema('iterating', { eventable: false, dflt: false });
-        this.schema('timer', { readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
+        this.schema('timer', { order: 1, readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
     }
 
     // CONSTRUCTOR ---------------------------------------------------------

@@ -41,6 +41,7 @@ class GadgetSchemaEntry {
         // generated fields are not serializable
         this.serializable = (this.generator) ? false : ('serializable' in spec) ? spec.serializable : true;
         this.serializer = spec.serializer;
+        this.order = spec.order || 0;
     }
     getDefault(o) {
         if (ConfigCtx.hasForGdt(o, this.key)) {
@@ -55,7 +56,6 @@ class GadgetSchemaEntry {
 
 class GadgetSchema {
     constructor(base) {
-        //if (!base) base = {};
         this.map = {};
         this._entries = [];
         if (base) {
@@ -63,7 +63,6 @@ class GadgetSchema {
                 this.set(oentry.key, oentry);
             }
         }
-        //this.map = Object.assign({}, base.map);
     }
 
     get entries() {
@@ -78,14 +77,23 @@ class GadgetSchema {
         return this.map[key];
     }
 
+    /**
+     * assign class schema entry
+     * @param {*} key 
+     * @param {*} entry 
+     */
     set(key, entry) {
+        // if schema already exists for given key, strip the old schema from the current schema list (_entries)
         if (key in this.map) {
             let oentry = this.map[key];
             let idx = this._entries.indexOf(oentry);
-            if (!idx !== -1) this._entries.splice(idx, 1);
+            if (idx !== -1) this._entries.splice(idx, 1);
         }
         this.map[key] = entry;
-        this._entries.push(entry);
+        // add entry to current schema list (_entries), minding entry order
+        let idx;
+        for (idx=0; (idx<this._entries.length) && (entry.order>=this._entries[idx].order); idx++);
+        this._entries.splice(idx, 0, entry);
     }
 
     clear(key) {

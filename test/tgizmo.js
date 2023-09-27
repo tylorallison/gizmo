@@ -40,6 +40,34 @@ describe('gadgets', () => {
         expect(o3.var3).toEqual(undefined);
     });
 
+    it('can have ordered schema', ()=>{
+        class tBase extends gadgetClass {
+            static { this.schema('var2', { dflt: 'bar', order: 2} ); }
+            static { this.schema('var1', { dflt: 'bar', order: 1} ); }
+            static { this.schema('var0', { dflt: 'foo', order: 0} ); }
+        }
+        expect(tBase.prototype.$schema._entries[0].key).toEqual('var0');
+        expect(tBase.prototype.$schema._entries[1].key).toEqual('var1');
+        expect(tBase.prototype.$schema._entries[2].key).toEqual('var2');
+    });
+
+    it('subclass schema can be reordered', ()=>{
+        class tBase extends gadgetClass {
+            static { this.schema('var2', { dflt: 'bar', order: 2} ); }
+            static { this.schema('var1', { dflt: 'bar', order: 1} ); }
+            static { this.schema('var0', { dflt: 'foo', order: 0} ); }
+        }
+        class tSub extends tBase {
+            static { this.schema('var2', { dflt: 'bar', order: -1} ); }
+        }
+        expect(tBase.prototype.$schema._entries[0].key).toEqual('var0');
+        expect(tBase.prototype.$schema._entries[1].key).toEqual('var1');
+        expect(tBase.prototype.$schema._entries[2].key).toEqual('var2');
+        expect(tSub.prototype.$schema._entries[0].key).toEqual('var2');
+        expect(tSub.prototype.$schema._entries[1].key).toEqual('var0');
+        expect(tSub.prototype.$schema._entries[2].key).toEqual('var1');
+    });
+
     it('can be linked', ()=>{
         class TGizmoDataSub extends gadgetClass {
             static { this.schema('data'); };

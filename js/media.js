@@ -10,7 +10,7 @@ import { AssetCtx } from './assetCtx.js';
 class Media extends Asset {
     static { this.schema('src', { readonly: true }); }
     static { this.schema('data', {}); }
-    static { this.schema('tag', { dflt: (o) => o.src }); }
+    static { this.schema('tag', { order: 1, dflt: (o) => o.src }); }
 
     static from(src) {
         let mediaSpec;
@@ -119,6 +119,7 @@ class ImageMedia extends Media {
                 img.src = this.src;
             });
             // file loading can be cached to asset context -- cache store
+            console.log(`tag: ${this.tag}`);
             AssetCtx.media[this.tag] = promise;
         }
 

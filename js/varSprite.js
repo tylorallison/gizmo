@@ -29,9 +29,7 @@ class VarSprite extends Sprite {
         } else {
             choice = src;
         }
-        console.log(`choice: ${choice}`);
         let media = ImageMedia.from(choice);
-        console.log(`varsprite media: ${media}`);
         let asset = new this(Object.assign({}, spec, { media: media }));
         return asset;
     }

@@ -1,4 +1,5 @@
 import { AssetCtx } from '../js/assetCtx.js';
+import { Fmt } from '../js/fmt.js';
 import { Media, ImageMedia } from '../js/media.js';
 
 describe('media assets', () => {
@@ -48,6 +49,8 @@ describe('image media assets', () => {
     it('can be async loaded', async ()=>{
         let media = await ImageMedia.load('../media/token.png');
         expect(media.data instanceof Image).toBeTruthy();
+        console.log(`media.src: ${media.src}`);
+        console.log(`AssetCtx.media: ${Fmt.ofmt(AssetCtx.media)}`);
         expect(media.src in AssetCtx.media).toBeTruthy();
         let media2 = await ImageMedia.load('../media/token.png');
         expect(media2.data instanceof Image).toBeTruthy();

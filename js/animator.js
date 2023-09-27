@@ -152,8 +152,7 @@ class Animator extends Sketch {
     }
 
     async load() {
-        console.log(`sketches: ${Fmt.ofmt(this.sketches)}`);
-        console.log(`transitions: ${Fmt.ofmt(this.transitions)}`);
+        // FIXME: transitions
         return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => x.load()));
     }
 
