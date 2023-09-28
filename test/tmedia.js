@@ -14,7 +14,7 @@ describe('media assets', () => {
 
     it('can be async loaded', async ()=>{
         let media = await Media.load('../media/test.mp3');
-        console.log(`media.data: ${media.data}`);
+        //console.log(`media.data: ${media.data}`);
         expect(media.data instanceof ArrayBuffer).toBeTruthy();
         expect(media.src in AssetCtx.media).toBeTruthy();
         let media2 = await Media.load('../media/test.mp3');
@@ -49,8 +49,8 @@ describe('image media assets', () => {
     it('can be async loaded', async ()=>{
         let media = await ImageMedia.load('../media/token.png');
         expect(media.data instanceof Image).toBeTruthy();
-        console.log(`media.src: ${media.src}`);
-        console.log(`AssetCtx.media: ${Fmt.ofmt(AssetCtx.media)}`);
+        //console.log(`media.src: ${media.src}`);
+        //console.log(`AssetCtx.media: ${Fmt.ofmt(AssetCtx.media)}`);
         expect(media.src in AssetCtx.media).toBeTruthy();
         let media2 = await ImageMedia.load('../media/token.png');
         expect(media2.data instanceof Image).toBeTruthy();

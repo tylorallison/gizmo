@@ -31,18 +31,6 @@ class Config {
         return undefined;
     }
 
-    /*
-    static $stack = [];
-    static $instance = new Config();
-    static runWith(fcn, cfg) {
-        // config activate
-        this.$stack.push(this.$instance);
-        this.$instance = cfg;
-        // run
-        // context deactivate
-    }
-    */
-
     constructor(spec={}) {
         this.$path;
         this.values = {};

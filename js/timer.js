@@ -1,30 +1,30 @@
-import { EvtSystem, ExtEvtReceiver } from './event.js';
-import { Gadget, GizmoContext } from './gizmo.js';
-import { Stats } from './stats.js';
-
 export { Timer };
+import { Gadget } from './gizmo.js';
+import { EventCtx } from './eventCtx.js';
+import { Stats } from './stats.js';
 
 class Timer extends Gadget {
     static dfltTTL = 1000;
+    static gid = 0;
 
     static {
-        this.schema('gctx', { readonly: true, parser: (o, x) => x.gctx || GizmoContext.dflt });
+        /** @member {int} Timer#gid - unique timer id used for event handling */
+        this.schema('gid', { readonly: true, dflt: () => (Timer.gid++) });
         this.schema('ttl', { eventable: false, dflt: this.dfltTTL });
         this.schema('startTTL', { readonly: true, parser: (o,x) => o.ttl });
         this.schema('loop', { readonly: true, dflt: false });
         this.schema('cb', { readonly: true, dflt: () => false });
         this.schema('data', { readonly: true });
-        ExtEvtReceiver.apply(this);
     }
 
     constructor(spec={}) {
         super(spec);
         this.onTock = this.onTock.bind(this);
-        EvtSystem.listen(this.gctx, this, 'game.tock', this.onTock);
+        EventCtx.listen(null, 'game.tock', this.onTock, this);
     }
 
     destroy() {
-        EvtSystem.clearReceiverLinks(this);
+        EventCtx.clearFor(this);
     }
 
     onTock(evt) {
@@ -36,7 +36,7 @@ class Timer extends Gadget {
                 this.ttl += this.startTTL;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
-                EvtSystem.ignore(this.gctx, this, 'game.tock', this.onTock);
+                EventCtx.ignore(null, 'game.tock', this.onTock, this);
             }
             this.cb(Object.assign( { overflow: overflow, elapsed: this.startTTL + overflow }, evt, this.data));
         }

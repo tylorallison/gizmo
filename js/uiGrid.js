@@ -1,7 +1,6 @@
 export { UiGrid };
 
 import { Bounds } from './bounds.js';
-import { EvtSystem } from './event.js';
 import { Fmt } from './fmt.js';
 import { Stats } from './stats.js';
 import { UiView } from './uiView.js';
@@ -9,6 +8,7 @@ import { Direction } from './direction.js';
 import { Grid } from './grid.js';
 import { HexGrid } from './hexgrid.js';
 import { Overlaps } from './intersect.js';
+import { EventCtx } from './eventCtx.js';
 
 class UiGrid extends UiView {
     // FIXME: move all functions from schema to be static methods of the class.  You can change behavior by subclassing and overriding static functions.  
@@ -69,10 +69,9 @@ class UiGrid extends UiView {
         //console.log(`${this} size ${this.xform.width},${this.xform.height} dim: ${this.chunks.cols},${this.chunks.rows} csize: ${this.chunks.colSize},${this.chunks.rowSize}`)
         // handle view creation event handling
         if (this.createFilter) {
-            EvtSystem.listen(this.gctx, this, 'gizmo.created', this.onViewCreated, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
+            EventCtx.listen(null, 'gizmo.created', this.onViewCreated, this, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
         }
     }
-    
 
     // EVENT HANDLERS ------------------------------------------------------
     onViewCreated(evt) {
@@ -96,7 +95,7 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
+        if (needsUpdate) EventCtx.trigger(this, 'gizmo.updated');
     }
 
     onChildDestroyed(evt) {
@@ -167,10 +166,10 @@ class UiGrid extends UiView {
             this.chunkUpdates.add(idx);
         }
         // listen for gizmo events
-        EvtSystem.listen(gzo, this, 'gizmo.updated', this.onChildUpdate);
-        EvtSystem.listen(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+        EventCtx.listen(gzo, 'gizmo.updated', this.onChildUpdate, this);
+        EventCtx.listen(gzo, 'gizmo.destroyed', this.onChildDestroyed, this);
         // if chunkUpdates have been set, trigger update for grid
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
+        if (needsUpdate) EventCtx.trigger(this, 'gizmo.updated');
     }
 
     remove(gzo) {
@@ -180,14 +179,14 @@ class UiGrid extends UiView {
         // remove from grid
         this.chunks.remove(gzo);
         // ignore gizmo events
-        EvtSystem.ignore(gzo, this, 'gizmo.updated', this.onChildUpdate);
-        EvtSystem.ignore(gzo, this, 'gizmo.destroyed', this.onChildDestroyed);
+        EventCtx.ignore(gzo, 'gizmo.updated', this.onChildUpdate, this);
+        EventCtx.ignore(gzo, 'gizmo.destroyed', this.onChildDestroyed, this);
         let needsUpdate = false;
         for (const idx of gidxs) {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) EvtSystem.trigger(this, 'gizmo.updated');
+        if (needsUpdate) EventCtx.trigger(this, 'gizmo.updated');
     }
 
     resize() {

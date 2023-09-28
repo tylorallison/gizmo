@@ -1,11 +1,10 @@
-import { GizmoContext } from '../js/gizmo.js';
-import { EvtSystem } from '../js/event.js';
-import { UpdateSystem } from '../js/updateSystem.js';
 import { Rect } from '../js/rect.js';
 import { Animation } from '../js/animation.js';
 import { UiView } from '../js/uiView.js';
 import { ImageMedia } from '../js/media.js';
 import { Sprite } from '../js/sprite.js';
+import { EventCtx } from '../js/eventCtx.js';
+import { Fmt } from '../js/fmt.js';
 
 class TSketchView extends UiView {
     static {
@@ -22,26 +21,29 @@ class TSketchView extends UiView {
 
 describe('an animation', () => {
 
-    let gctx, sys, receiver, tevts, anim, view;
+    let ectx, anim, view;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
         anim = new Animation({jitter: true, sketches: [
             new Rect({ tag: 'rect.blue', color: 'blue', borderColor: 'red', border: 2, width: 20, height: 20, ttl: 100 }),
             new Rect({ tag: 'rect.green', color: 'green', borderColor: 'red', border: 2, width: 20, height: 20, ttl: 100 }),
         ]});
-        view = new TSketchView({ gctx: gctx, sketch: anim });
-        sys = new UpdateSystem( { gctx: gctx });
+        view = new TSketchView({ sketch: anim });
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('timer stops when animation is destroyed', ()=>{
-        let links = EvtSystem.findLinksForEvt(gctx, { tag: 'game.tock' });
-        expect(links.length).toEqual(1);
+        let links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        expect(links.length).toEqual(0);
         anim.enable();
-        links = EvtSystem.findLinksForEvt(gctx, { tag: 'game.tock' });
-        expect(links.length).toEqual(2);
+        links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        expect(links.length).toEqual(1);
         view.destroy();
-        links = EvtSystem.findLinksForEvt(gctx, { tag: 'game.tock' });
-        expect(links.length).toEqual(1); // update system has listener
+        links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        expect(links.length).toEqual(0); // update system has listener
     });
 
     it('can be async loaded from list of URLs', async ()=>{

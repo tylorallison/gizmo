@@ -1,16 +1,16 @@
 export { StateMgr };
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { Fmt } from './fmt.js';
 import { GameState } from './gameState.js';
-import { Gizmo, GizmoContext } from './gizmo.js';
+import { Gizmo } from './gizmo.js';
 import { Timer } from './timer.js';
+
 
 class StateMgr extends Gizmo {
 
-    static start(state, data, gctx) {
-        if (!gctx) gctx = GizmoContext.dflt;
-        EvtSystem.trigger(gctx, 'state.wanted', { state: state, data: data });
+    static start(state, data) {
+        EventCtx.trigger(null, 'state.wanted', { state: state, data: data });
     }
         
     // SCHEMA --------------------------------------------------------------
@@ -30,9 +30,9 @@ class StateMgr extends Gizmo {
 
     cpost(spec) {
         super.cpost(spec);
-        EvtSystem.listen(this.gctx, this, 'gizmo.created', this.onGizmoCreated)
-        EvtSystem.listen(this.gctx, this, 'gizmo.destroyed', this.onGizmoDestroyed)
-        EvtSystem.listen(this.gctx, this, 'state.wanted', this.onStateWanted)
+        EventCtx.listen(null, 'gizmo.created', this.onGizmoCreated, this);
+        EventCtx.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
+        EventCtx.listen(null, 'state.wanted', this.onStateWanted, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------
@@ -60,7 +60,7 @@ class StateMgr extends Gizmo {
         let data = evt.data;
         if (this.dbg) console.log(`${this} onStateWanted: ${Fmt.ofmt(evt)} current: ${this.current} new: ${newState}`);
         if (newState && newState !== this.current) {
-            new Timer({gctx: this.gctx, ttl: 0, cb: () => {this.startState(newState, data)}});
+            new Timer({ttl: 0, cb: () => {this.startState(newState, data)}});
         }
     }
 

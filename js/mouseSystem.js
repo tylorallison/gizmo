@@ -3,11 +3,10 @@ export { MouseSystem };
 import { Hierarchy } from './hierarchy.js';
 import { System } from './system.js';
 import { UiCanvas } from './uiCanvas.js';
-import { EvtSystem } from './event.js';
 import { Vect } from './vect.js';
-import { Bounds } from './bounds.js';
-import { Fmt } from './fmt.js';
 import { Contains } from './intersect.js';
+import { EventCtx } from './eventCtx.js';
+
 
 class MouseSystem extends System {
     // STATIC VARIABLES ----------------------------------------------------
@@ -65,7 +64,7 @@ class MouseSystem extends System {
         this.active = true;
         this.clicked = true;
         // trigger event
-        EvtSystem.trigger(this, 'mouse.clicked', data);
+        EventCtx.trigger(this, 'mouse.clicked', data);
     }
     onMoved(evt) {
         // capture event data...
@@ -81,7 +80,7 @@ class MouseSystem extends System {
         this.y = evt.offsetY;
         this.active = true;
         // trigger event
-        EvtSystem.trigger(this, 'mouse.moved', data);
+        EventCtx.trigger(this, 'mouse.moved', data);
     }
 
     onPressed(evt) {
@@ -128,7 +127,7 @@ class MouseSystem extends System {
                 // trigger clicked
                 if (this.clicked) {
                     if (this.dbg) console.log(`${this} mouse clicked: ${e}`);
-                    EvtSystem.trigger(e, 'mouse.clicked', { mouse: mouseData });
+                    EventCtx.trigger(e, 'mouse.clicked', { mouse: mouseData });
                 }
                 if (!e.mouseOver) {
                     e.mouseOver = true;

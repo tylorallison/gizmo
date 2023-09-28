@@ -1,7 +1,5 @@
 export { Game };
 
-import { Assets } from './assets.js';
-import { EvtSystem } from './event.js';
 import { Gizmo } from './gizmo.js';
 import { KeySystem } from './keySystem.js';
 import { MouseSystem } from './mouseSystem.js';
@@ -12,10 +10,10 @@ import { SystemMgr } from './systemMgr.js';
 import { Generator } from './generator.js';
 import { UiCanvas } from './uiCanvas.js';
 import { SfxSystem } from './sfxSystem.js';
-import { Config } from './config.js';
 import { ConfigCtx } from './configCtx.js';
 import { Util } from './util.js';
 import { AssetCtx } from './assetCtx.js';
+import { EventCtx } from './eventCtx.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -30,13 +28,8 @@ class Game extends Gizmo {
      */
     static xassets = [];
 
-    static {
-        Config.setPathDefaults(this.cfgpath, {
-            'maxDeltaTime': 50,
-        });
-    }
-
     static xcfgs = { 
+        'game.maxDeltaTime': 50,
         'game.dbg': true,
         'system.renderSystem.dbg': true,
     };
@@ -78,7 +71,7 @@ class Game extends Gizmo {
     async doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
         UiCanvas.getCanvas().addEventListener('click', () => this.gctx.userActive = true, {once: true});
-        EvtSystem.listen(this.gctx, this, 'key.down', () => this.gctx.userActive = true, {once: true});
+        EventCtx.listen(null, 'key.down', () => this.gctx.userActive = true, this, {once: true});
         // load contexts
         // -- config
         await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.$instance.values, this.xcfgs) }));
@@ -87,7 +80,7 @@ class Game extends Gizmo {
         // game init
         await this.init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
-        EvtSystem.trigger(this, 'game.inited');
+        EventCtx.trigger(this, 'game.inited');
         return Promise.resolve();
     }
 
@@ -104,7 +97,7 @@ class Game extends Gizmo {
         if (this.dbg) console.log(`${this.name} starting loading`);
         await this.load();
         if (this.dbg) console.log(`${this.name} loading complete`);
-        EvtSystem.trigger(this, 'game.loaded');
+        EventCtx.trigger(this, 'game.loaded');
         return Promise.resolve();
     }
 
@@ -131,7 +124,7 @@ class Game extends Gizmo {
         // -- game specific prepare
         await this.prepare();
         if (this.dbg) console.log(`${this.name} prepare complete`);
-        EvtSystem.trigger(this, 'game.prepared');
+        EventCtx.trigger(this, 'game.prepared');
         return Promise.resolve();
     }
 
@@ -156,7 +149,7 @@ class Game extends Gizmo {
         await this.doload();
         // prepare
         await this.doprepare();
-        EvtSystem.trigger(this, 'game.started');
+        EventCtx.trigger(this, 'game.started');
         // start the game loop
         window.requestAnimationFrame(this.loop);
         return Promise.resolve();
@@ -169,7 +162,7 @@ class Game extends Gizmo {
         // compute delta time
         const dt = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
         this.lastUpdate = timestamp;
-        EvtSystem.trigger(this, 'game.tock', { deltaTime: parseInt(dt), frame: this.frame });
+        EventCtx.trigger(this, 'game.tock', { deltaTime: parseInt(dt), frame: this.frame });
         // next iteration
         window.requestAnimationFrame(this.loop);
     }

@@ -1,24 +1,25 @@
-import { GizmoContext } from '../js/gizmo.js';
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { UiView } from '../js/uiView.js';
-import { Helpers } from '../js/helpers.js';
+import { EventCtx } from '../js/eventCtx.js';
 
 describe('a view', () => {
 
-    let view, gctx, sys, receiver, tevts;
+    let view, ectx, sys, tevts;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
-        view = new UiView({gctx: gctx});
-        sys = new UpdateSystem( { gctx: gctx });
-        receiver = Helpers.genEvtReceiver();
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        view = new UiView();
+        sys = new UpdateSystem();
         tevts = [];
-        EvtSystem.listen(view, receiver, 'gizmo.updated', (evt) => tevts.push(evt));
+        EventCtx.listen(view, 'gizmo.updated', (evt) => tevts.push(evt));
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('xform updates trigger view event', ()=>{
         view.xform.x = 1;
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(view);
@@ -29,7 +30,7 @@ describe('a view', () => {
     it('destroyed view does not trigger events', ()=>{
         view.destroy();
         view.visible = false;
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(0);
     });
 

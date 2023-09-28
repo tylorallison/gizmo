@@ -26,7 +26,7 @@ describe('a generator', () => {
     });
 
     // FIXME
-    xit('can create gizmos with nested dependencies', ()=>{
+    it('can create gizmos with nested dependencies', ()=>{
         let spec = TBase.xspec({ 
             field2: 'hello',
             tgen: TGen.xspec({

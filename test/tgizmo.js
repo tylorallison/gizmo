@@ -1,12 +1,19 @@
-import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from '../js/event.js';
+import { EventCtx } from '../js/eventCtx.js';
 import { Fmt } from '../js/fmt.js';
-import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
-import { Helpers } from '../js/helpers.js';
+import { Gizmo, Gadget } from '../js/gizmo.js';
 
 const gadgetClass = Gadget;
 const gSetter = (o, k, v) => o[k] = v;
 
 describe('gadgets', () => {
+    var ectx;
+    beforeEach(() => {
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
+    });
 
     it('can be registered', ()=>{
         let cls = class TRegister extends gadgetClass {};
@@ -258,16 +265,17 @@ describe('gadgets', () => {
     });
 
     it('root changes trigger events', ()=>{
+        var gid = 0;
         class TRoot extends gadgetClass {
+            static { this.prototype.$emitter = true}
             static { this.schema('data'); }
             static { this.schema('ndata', { eventable: false }); }
-            static { ExtEvtEmitter.apply(this) }
+            static { this.schema('gid', { dflt: () => gid++ }); }
         };
         let o = new TRoot({data: 'foo', ndata: 'ok'});
         expect(o.data).toEqual('foo');
-        let receiver = Helpers.genEvtReceiver();
         let tevt;
-        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
+        EventCtx.listen(o, 'gizmo.set', (evt) => tevt = evt);
         gSetter(o, 'data', 'bar');
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(o);
@@ -279,21 +287,22 @@ describe('gadgets', () => {
     });
 
     it('leaf changes trigger events', ()=>{
+        var gid = 0;
         class TLeaf extends gadgetClass {
             static { this.schema('data'); };
             static { this.schema('ndata', { eventable: false }); };
         };
         class TRoot extends gadgetClass {
+            static { this.prototype.$emitter = true}
             static { this.schema('sub', { link: true }); }
             static { this.schema('nsub', { link: true, eventable: false }); }
-            static { ExtEvtEmitter.apply(this); }
+            static { this.schema('gid', { dflt: () => gid++ }); }
         };
         let o = new TRoot({sub: new TLeaf({data: 'foo', ndata: 'nfoo'}), nsub: new TLeaf({data: 'nfoo'})});
         expect(o.sub.data).toEqual('foo');
         expect(o.sub.ndata).toEqual('nfoo');
-        let receiver = Helpers.genEvtReceiver();
         let tevt = {};
-        EvtSystem.listen(o, receiver, 'gizmo.set', (evt) => tevt = evt);
+        EventCtx.listen(o, 'gizmo.set', (evt) => tevt = evt);
         gSetter(o.sub, 'data', 'bar');
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(o);
@@ -315,66 +324,57 @@ describe('gadgets', () => {
 });
 
 describe('gizmos', () => {
-    let receiver;
+    var counter, ectx;
     beforeEach(() => {
-        receiver = Helpers.genEvtReceiver();
+        counter = 0;
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('can trigger events', ()=>{
         let g = new Gizmo();
-        let counter = 0;
-        let incr = () => counter++;
-        EvtSystem.listen(g, receiver, 'test', incr);
-        EvtSystem.trigger(g, 'test');
+        EventCtx.listen(g, 'test', () => counter++);
+        EventCtx.trigger(g, 'test');
         expect(counter).toBe(1);
     });
 
     it('triggers creation event when created', ()=>{
-        let counter = 0;
-        let incr = () => counter++;
-        Gizmo.listen(receiver, 'gizmo.created', incr)
+        EventCtx.listen(null, 'gizmo.created', () => counter++);
         let g = new Gizmo();
         expect(counter).toBe(1);
     });
 
     it('can receive global gizmo events', ()=>{
         let g = new Gizmo();
-        let counter = 0;
-        let incr = () => counter++;
-        Gizmo.listen(receiver, 'test', incr)
-        EvtSystem.trigger(g, 'test');
+        EventCtx.listen(null, 'test', () => counter++);
+        EventCtx.trigger(g, 'test');
+        expect(counter).toBe(1);
+        EventCtx.ignore(null, 'test');
+        EventCtx.trigger(g, 'test');
         expect(counter).toBe(1);
     });
 
     it('can receive global/local gizmo events', ()=>{
         let g = new Gizmo();
-        let counter = 0;
-        let incr = () => counter++;
-        Gizmo.listen(receiver, 'test', incr);
-        EvtSystem.listen(g, receiver, 'test', incr);
-        EvtSystem.trigger(g, 'test');
+        EventCtx.listen(null, 'test', () => counter++);
+        EventCtx.listen(g, 'test', () => counter++);
+        EventCtx.trigger(g, 'test');
         expect(counter).toBe(2);
-    });
-
-    it('can listen/ignore global gizmo events', ()=>{
-        let g = new Gizmo();
-        let counter = 0;
-        let incr = () => counter++;
-        Gizmo.listen(receiver, 'test', incr)
-        EvtSystem.trigger(g, 'test');
-        Gizmo.ignore(receiver, 'test');
-        EvtSystem.trigger(g, 'test');
-        expect(counter).toBe(1);
+        EventCtx.ignore(null, 'test');
+        EventCtx.ignore(g, 'test');
+        EventCtx.trigger(g, 'test');
+        expect(counter).toBe(2);
     });
 
     it('can auto-release listeners', ()=>{
         let g = new Gizmo();
-        let counter = 0;
-        let incr = () => counter++;
-        Gizmo.listen(g, 'test', incr)
-        EvtSystem.trigger(g, 'test');
+        EventCtx.listen(g, 'test', () => counter++);
+        EventCtx.trigger(g, 'test');
         g.destroy();
-        EvtSystem.trigger(g, 'test');
+        EventCtx.trigger(g, 'test');
         expect(counter).toBe(1);
     });
 
@@ -391,21 +391,28 @@ describe('gizmos', () => {
 });
 
 describe('gadget arrays', () => {
+
+    var gid = 0;
     class TRef extends gadgetClass {
+        static { this.prototype.$emitter = true}
         static { 
             this.schema('items', { link: true, dflt: () => [] }); 
             this.schema('auto', { generator: (o,v) => {
                 return (o.items.length) ? 'hello:there' : 'wait';
             }}); 
-            ExtEvtEmitter.apply(this)
         };
+        static { this.schema('gid', { dflt: () => gid++ }); }
     };
-    let gzd, receiver, tevt;
+    let gzd, tevt, ectx;
     beforeEach(() => {
         gzd = new TRef();
-        receiver = Helpers.genEvtReceiver();
-        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        EventCtx.listen(gzd, 'gizmo.set', (evt) => tevt = evt);
     });
+    afterEach(() => {
+        EventCtx.withdraw();
+    })
 
     it('causes gizmo events when k/v set', ()=>{
         gzd.items[0] = 'foo';
@@ -504,18 +511,22 @@ describe('gadget arrays', () => {
 });
 
 describe('gadget objects', () => {
+    var gid = 0;
     class TRef extends gadgetClass {
-        static { 
-            this.schema('atts', { dflt: () => ({}), link: true }); 
-            ExtEvtEmitter.apply(this)
-        };
+        static { this.prototype.$emitter = true}
+        static { this.schema('atts', { dflt: () => ({}), link: true }); };
+        static { this.schema('gid', { dflt: () => gid++ }); }
     };
-    let gzd, receiver, tevt = {};
+    let gzd, tevt = {}, ectx;
     beforeEach(() => {
         gzd = new TRef();
-        receiver = Helpers.genEvtReceiver();
-        EvtSystem.listen(gzd, receiver, 'gizmo.set', (evt) => tevt = evt);
-        EvtSystem.listen(gzd, receiver, 'gizmo.delete', (evt) => tevt = evt);
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        EventCtx.listen(gzd, 'gizmo.set', (evt) => tevt = evt);
+        EventCtx.listen(gzd, 'gizmo.delete', (evt) => tevt = evt);
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('causes gizmo events when k/v set', ()=>{
@@ -540,20 +551,6 @@ describe('gadget objects', () => {
         expect(tevt.tag).toEqual('gizmo.set');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
-    });
-
-});
-
-describe('gizmo contexts', () => {
-
-    it('can trigger events', ()=>{
-        let gctx = new GizmoContext();
-        let receiver = Helpers.genEvtReceiver();
-        let counter = 0;
-        let incr = () => counter++;
-        EvtSystem.listen(gctx, receiver, 'test', incr);
-        EvtSystem.trigger(gctx, 'test');
-        expect(counter).toBe(1);
     });
 
 });

@@ -1,8 +1,6 @@
 import { AssetCtx } from '../js/assetCtx.js';
-import { Assets } from '../js/assets.js';
-import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
-import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
+import { Gizmo, Gadget } from '../js/gizmo.js';
 import { Rect } from '../js/rect.js';
 import { SerialData, Serializer } from '../js/serializer.js';
 import { XForm } from '../js/xform.js';
@@ -23,19 +21,18 @@ class TSerializerGizmo extends Gizmo {
 }
 
 describe('a serializer', () => {
-    let gctx, actx, sdata, generator;
+    let actx, sdata, generator;
     beforeEach(async () => {
-        gctx = new GizmoContext({tag: 'test'});
         sdata = new SerialData();
         actx = new AssetCtx({ xassets: [
             Rect.xspec({tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, xform: XForm.xspec({ fixedWidth: 32, fixedHeight: 32 })}),
         ]});
         await actx.load();
-        generator = new Generator({gctx: gctx, assets: actx});
+        generator = new Generator({assets: actx});
     });
 
     it('can xify a basic gizmo', ()=>{
-        let g = new Gizmo({ gctx: gctx, tag: 'root' });
+        let g = new Gizmo({ tag: 'root' });
         let rslt = Serializer.xify(sdata, g);
         expect(rslt).toEqual({ 
             $gzx: true,
@@ -46,6 +43,7 @@ describe('a serializer', () => {
             $gzx: true,
             cls: 'Gizmo',
             args: [{
+                gctx: 1,
                 gid: g.gid,
                 tag: g.tag,
                 children: [],
@@ -58,9 +56,9 @@ describe('a serializer', () => {
     });
 
     it('can xify a gizmo chain', ()=>{
-        let sub2 = new Gizmo({ gctx: gctx, tag: 'sub2' });
-        let sub1 = new Gizmo({ gctx: gctx, tag: 'sub1', children: [ sub2 ] });
-        let root = new Gizmo({ gctx: gctx, tag: 'root', children: [ sub1 ] });
+        let sub2 = new Gizmo({ tag: 'sub2' });
+        let sub1 = new Gizmo({ tag: 'sub1', children: [ sub2 ] });
+        let root = new Gizmo({ tag: 'root', children: [ sub1 ] });
         let rslt = Serializer.xify(sdata, root);
         expect(rslt).toEqual({ 
             $gzx: true,
@@ -71,6 +69,7 @@ describe('a serializer', () => {
             $gzx: true,
             cls: 'Gizmo',
             args: [{
+                gctx: 1,
                 gid: sub2.gid,
                 tag: sub2.tag,
                 children: [],
@@ -80,6 +79,7 @@ describe('a serializer', () => {
             $gzx: true,
             cls: 'Gizmo',
             args: [{
+                gctx: 1,
                 gid: sub1.gid,
                 tag: sub1.tag,
                 children: [ { $gzx: true, cls: '$GizmoRef', gid: sub2.gid }],
@@ -89,6 +89,7 @@ describe('a serializer', () => {
             $gzx: true,
             cls: 'Gizmo',
             args: [{
+                gctx: 1,
                 gid: root.gid,
                 tag: root.tag,
                 children: [ { $gzx: true, cls: '$GizmoRef', gid: sub1.gid }],
@@ -104,7 +105,6 @@ describe('a serializer', () => {
 
     it('can xify a data chain', ()=>{
         let root = new TSerializerGizmo({ 
-            gctx: gctx, 
             tag: 'root', 
             data: new TSerializerData({
                 sub: new TSerializerSub({
@@ -118,6 +118,7 @@ describe('a serializer', () => {
             $gzx: true,
             cls: 'TSerializerGizmo',
             args: [{
+                gctx: 1,
                 gid: root.gid,
                 tag: root.tag,
                 children: [],
@@ -147,13 +148,14 @@ describe('a serializer', () => {
 
     // FIXME
     it('can xify a gizmo with asset ref', ()=>{
-        let g = new TSerializerGizmo({ gctx: gctx, tag: 'root', asset: actx.get('test.rect') });
+        let g = new TSerializerGizmo({ tag: 'root', asset: actx.get('test.rect') });
         let rslt = Serializer.xify(sdata, g);
         expect(rslt).toEqual({ $gzx: true, cls: '$GizmoRef', gid: g.gid });
         expect(sdata.xgzos[g.gid]).toEqual({
             $gzx: true,
             cls: 'TSerializerGizmo',
             args: [{
+                gctx: 1,
                 gid: g.gid,
                 tag: g.tag,
                 data: undefined,

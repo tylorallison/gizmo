@@ -1,9 +1,10 @@
 import { AssetCtx } from '../js/assetCtx.js';
-import { Game } from '../js/game.js';
 import { ImageMedia } from '../js/media.js';
-import { UiPanel } from '../js/uiPanel.js';
 import { Sprite } from '../js/sprite.js';
 import { Asset } from '../js/asset.js';
+
+//import { Game } from '../js/game.js';
+//import { UiPanel } from '../js/uiPanel.js';
 
 describe('an asset context', () => {
     let ctx;

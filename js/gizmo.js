@@ -1,10 +1,11 @@
-export { Gadget, GadgetArray, GadgetObject, Gizmo, GizmoContext };
+export { Gadget, GadgetArray, GadgetObject, Gizmo };
 
 import { Fmt } from './fmt.js';
-import { EvtSystem, ExtEvtEmitter, ExtEvtReceiver } from './event.js';
-import { ExtHierarchy, Hierarchy } from './hierarchy.js';
+import { Hierarchy } from './hierarchy.js';
 import { Serializer } from './serializer.js';
+import { EventCtx } from './eventCtx.js';
 import { ConfigCtx } from './configCtx.js';
+import { GizmoCtx } from './gizmoCtx.js';
 
 const FDEFINED=1;
 const FREADONLY=2;
@@ -194,7 +195,7 @@ class Gadget {
         target.$trunkSentry = null;
         target.$path = null;
         target.$v++;
-        let eventable = EvtSystem.isEmitter(target);
+        let eventable = (target && target.$emitter);
         let readonly = false;
         target.$flags = (eventable) ? (target.$flags|FEVENTABLE) : (target.$flags&~FEVENTABLE);
         target.$flags = (readonly) ? (target.$flags|FREADONLY) : (target.$flags&~FREADONLY);
@@ -261,9 +262,9 @@ class Gadget {
                 pgdt.$v++;
             }
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
-                let gemitter = this.findInPath(target, (gdt) => EvtSystem.isEmitter(gdt));
+                let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) EvtSystem.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
+                if (gemitter) EventCtx.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
             }
         }
         return true;
@@ -283,9 +284,9 @@ class Gadget {
                 pgdt.$v++;
             }
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
-                let gemitter = this.findInPath(target, (gdt) => EvtSystem.isEmitter(gdt));
+                let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) EvtSystem.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
+                if (gemitter) EventCtx.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
             }
         }
 
@@ -375,7 +376,7 @@ class Gadget {
 
     constructor(...args) {
         if (!this.$registered) this.constructor.register();
-        if (EvtSystem.isEmitter(this)) this.$flags |= FEVENTABLE;
+        if (this.$emitter) this.$flags |= FEVENTABLE;
         this.cpre(...args);
         this.cparse(...args);
         this.$flags |= FDEFINED;
@@ -462,113 +463,35 @@ class Gadget {
 }
 
 /**
- * The GizmoContext class provides a global context that is attached to all classes derived from the {@link Gizmo} class.  It groups
- * all Gizmo instances to the context as well as provides access to global context variables such as the main {@link Game} class.
- * @extends Gadget
- * @mixes ExtEvtEmitter
- */
-class GizmoContext extends Gadget {
-    // STATIC VARIABLES ----------------------------------------------------
-    static _dflt;
-    static gid = 1;
-
-    // STATIC PROPERTIES ---------------------------------------------------
-    /**
-     * @member {GizmoContext} - get/set global/default instance of GizmoContext
-     */
-    static get dflt() {
-        if (!this._dflt) {
-            this._dflt = new GizmoContext();
-        }
-        return this._dflt;
-    }
-    static set dflt(v) {
-        this._dflt = v;
-    }
-
-    // SCHEMA --------------------------------------------------------------
-    /** @member {int} GizmoContext#gid - global id associated with context */
-    /** @member {string} GizmoContext#tag - tag associated with context */
-    /** @member {Game} GizmoContext#game - game instance */
-    /** @member {boolean} GizmoContext#userActive - indicates if user has interacted with UI/game by clicking or pressing a key */
-    static {
-        this.schema('gid', { readonly: true, parser: (gdt, x) => gdt.constructor.gid++ });
-        this.schema('tag', { readonly: true, parser: (gdt, x) => x.tag || `${gdt.constructor.name}.${gdt.gid}` });
-        this.schema('game', { dflt: null });
-        this.schema('userActive', { dflt: false });
-        ExtEvtEmitter.apply(this);
-    }
-
-    // METHODS -------------------------------------------------------------
-    /**
-     * returns string representation of object
-     * @returns {string}
-     */
-    toString() {
-        return Fmt.toString(this.constructor.name, this.tag);
-    }
-
-}
-
-/**
  * Gizmo is the base class for all game state objects, including game model and view components.
  * - Global gizmo events are triggered on creation/destruction.
- * - Every gizmo is associated with a {@link GizmoContext} that provides access to the global run environment and events.
+ * - Every gizmo is associated with a {@link GizmoCtx} that provides access to the global run environment and events.
  * - Gizmos can have parent/child hierarchical relationships
  * @extends Gadget
  */
 class Gizmo extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
-    /** @member {GizmoContext} Gizmo#gctx - reference to gizmo context */
-    static { this.schema('gctx', { readonly: true, serializable: false, link: false, parser: (gdt, x) => (x.gctx || GizmoContext.dflt )}); }
+    /** @member {int} Gizmo#gctx - reference to gizmo context */
+    static { this.schema('gctx', { readonly: true, dflt: () => GizmoCtx.$instance.gid }); }
     /** @member {int} Gizmo#gid - unique gizmo identifier*/
-    static { this.schema('gid', { readonly: true, parser: (gdt, x) => (Gizmo.gid++) }); }
+    static { this.schema('gid', { readonly: true, dflt: () => (Gizmo.gid++) }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
-    static { this.schema('tag', { readonly: true, parser: (gdt, x) => x.tag || `${gdt.constructor.name}.${gdt.gid}` }); }
-    static {
-        ExtEvtEmitter.apply(this);
-        ExtEvtReceiver.apply(this);
-        ExtHierarchy.apply(this);
+    static { this.schema('tag', { order: 1, readonly: true, dflt: (gdt) => `${gdt.constructor.name}.${gdt.gid}` }); }
+    static { this.schema('parent', { link: false, serializable: false, parser: () => null }); }
+    static { this.schema('children', { link: false, parser: (o,x) => { 
+            let v = x.children || [];
+            for (const el of v) Hierarchy.adopt(o, el);
+            return v;
+        }, readonly: true });
     }
 
     // STATIC VARIABLES ----------------------------------------------------
     static gid = 1;
     static cfgpathskip = true;
+    static { this.prototype.$emitter = true; }
 
     // STATIC METHODS ------------------------------------------------------
-
-    /**
-     * listen sets a new event handler for an event, where the emitter is the global game context {@link GizmoContext} and
-     * the receiver is given along with the event tag and event handler function {@link EvtSystem~handler}.
-     * @param {ExtEvtReceiver} receiver - event receiver, which object is "listening" for this event?
-     * @param {string} tag - event tag to listen for
-     * @param {EvtSystem~handler} fcn - event handler function
-     * @param {Object} [opts] - options for event listen
-     * @param {int} opts.priority - priority associated with listener, event callbacks will be sorted based on ascending priority.
-     * @param {boolean} opts.once - indicates if event listener should only be triggered once (after which the listener will automatically be removed).
-     * @param {EvtSystem~filter} opts.filter - event filter for listener allowing for fine-grained event management.
-     * @param {GizmoContext} [gctx] - gizmo context
-     */
-    static listen(receiver, tag, fcn, opts={}, gctx) {
-        if (!gctx) gctx = GizmoContext.dflt;
-        EvtSystem.listen(gctx, receiver, tag, fcn, opts);
-    }
-
-    /**
-     * ignore removes an event handler for an event, where the emitter is the global game context {@link GizmoContext} and
-     * the receiver is given.
-     * @param {ExtEvtReceiver} receiver - event receiver, which object is "listening" for this event?
-     * @param {*} [tag] - optional event tag associated with listener to remove.  If not specified, all events associated with receiver
-     * will be removed.
-     * @param {EvtSystem~handler} [fcn] - optional event handler function, specifying specific event callback to remove.  If not specified, 
-     * all events associated with the receiver and the given tag will be removed.
-     * @param {GizmoContext} [gctx] - gizmo context
-     */
-    static ignore(receiver, tag, fcn, gctx) {
-        if (!gctx) gctx = GizmoContext.dflt;
-        EvtSystem.ignore(gctx, receiver, tag, fcn);
-    }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     /**
@@ -581,7 +504,7 @@ class Gizmo extends Gadget {
         this.cpost(spec);
         this.cfinal(spec);
         // -- trigger creation event
-        EvtSystem.trigger(this, 'gizmo.created');
+        EventCtx.trigger(this, 'gizmo.created');
     }
     
     /**
@@ -593,9 +516,7 @@ class Gizmo extends Gadget {
             child.destroy();
         }
         Hierarchy.orphan(this);
-        EvtSystem.trigger(this, 'gizmo.destroyed');
-        EvtSystem.clearEmitterLinks(this);
-        EvtSystem.clearReceiverLinks(this);
+        EventCtx.trigger(this, 'gizmo.destroyed');
     }
 
     // -- overridable constructor functions

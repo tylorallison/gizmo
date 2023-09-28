@@ -119,7 +119,7 @@ class ImageMedia extends Media {
                 img.src = this.src;
             });
             // file loading can be cached to asset context -- cache store
-            console.log(`tag: ${this.tag}`);
+            //console.log(`tag: ${this.tag}`);
             AssetCtx.media[this.tag] = promise;
         }
 

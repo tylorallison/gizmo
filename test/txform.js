@@ -1,10 +1,10 @@
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
 import { Fmt } from '../js/fmt.js';
 import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Vect } from '../js/vect.js';
-import { Helpers } from '../js/helpers.js';
+import { EventCtx } from '../js/eventCtx.js';
+
 
 class TXFormRoot extends Gizmo {
     static {
@@ -13,7 +13,7 @@ class TXFormRoot extends Gizmo {
 
     cpost(spec={}) {
         super.cpost(spec);
-        EvtSystem.listen(this, this, 'gizmo.rooted', this.onRooted.bind(this));
+        EventCtx.listen(this, 'gizmo.rooted', this.onRooted.bind(this), this);
     }
 
     onRooted(evt) {
@@ -23,14 +23,18 @@ class TXFormRoot extends Gizmo {
 
 describe('xforms', () => {
 
-    let root, receiver, tevts;
+    let ectx, root, tevts;
     beforeEach(() => {
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
         root = new TXFormRoot({ xform: new XForm()});
-        receiver = Helpers.genEvtReceiver();
         tevts = [];
-        EvtSystem.listen(root, receiver, 'gizmo.set', (evt) => {
+        EventCtx.listen(root, 'gizmo.set', (evt) => {
             tevts.push(evt);
         });
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('updates triggered to bound gizmo', ()=>{

@@ -1,12 +1,11 @@
 export { Animator };
 
-import { EvtSystem, ExtEvtReceiver } from './event.js';
 import { Sketch } from './sketch.js';
 import { Gadget } from './gizmo.js';
 import { ImageMedia } from './media.js';
 import { Asset } from './asset.js';
 import { Sprite } from './sprite.js';
-import { Fmt } from './fmt.js';
+import { EventCtx } from './eventCtx.js';
 
 // =========================================================================
 /**
@@ -14,8 +13,11 @@ import { Fmt } from './fmt.js';
  * @extends Sketch
  */
 class Animator extends Sketch {
+    static gid = 0;
 
     // SCHEMA --------------------------------------------------------------
+    /** @member {int} Animator#gid - unique id used for event handling */
+    static { this.schema('gid', { readonly: true, dflt: () => (Animator.gid++) }); }
     /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
     static { this.schema('trunkKey', { dflt: 'state', readonly: true }); }
     /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */
@@ -34,7 +36,6 @@ class Animator extends Sketch {
     static { this.schema('ttl', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.ttl : 0 )}); }
     /** @member {integer} Sketch#done - is current animator sketch marked as done */
     static { this.schema('done', { readonly: true, getter: (o,x) => ( (o.sketch) ? o.sketch.done : false )}); }
-    static { ExtEvtReceiver.apply(this); }
 
     // DATA CHANGE HANDLERS ------------------------------------------------
     /**
@@ -45,10 +46,10 @@ class Animator extends Sketch {
         // if linked to gizmo
         let self = this;
         let trunkKey = this.trunkKey;
-        if (EvtSystem.isEmitter(trunk)) {
-            EvtSystem.listen(trunk, this, 'gizmo.updated', (evt) => { 
+        if (trunk.$emiiter) {
+            EventCtx.listen(trunk, 'gizmo.updated', (evt) => { 
                 self.state = evt.update[trunkKey]; 
-            }, { filter: (evt) => (trunkKey in evt.update) });
+            }, this, { filter: (evt) => (trunkKey in evt.update) });
         }
         if (this.state !== trunk[this.trunkKey]) this.state = trunk[trunkKey];
     }
@@ -58,8 +59,8 @@ class Animator extends Sketch {
      * @param {Gadget} trunk - trunk data object that has been linked to the current object.
      */
     atUnlinkTrunk(trunk) {
-        if (EvtSystem.isEmitter(trunk)) {
-            EvtSystem.ignore(trunk, this, 'gizmo.updated');
+        if (trunk.$emiiter) {
+            EventCtx.ignore(trunk, 'gizmo.updated', null, this);
         }
     }
 
@@ -115,15 +116,15 @@ class Animator extends Sketch {
             if (transition) {
                 let root = Gadget.root(this);
                 let path = `${this.$path}.done`;
-                if (EvtSystem.isEmitter(root)) {
-                    EvtSystem.listen(root, this, 'gizmo.updated', (evt) => {
+                if (root.$emiiter) {
+                    EventCtx.listen(root, 'gizmo.updated', (evt) => {
                         if (this.state === state) {
                             this.sketch.disable();
                             this.sketch = this.sketches[state];
                             this.sketch.reset();
                             this.sketch.enable();
                         }
-                    }, { once: true, filter: (evt) => (path in evt.update) });
+                    }, this, { once: true, filter: (evt) => (path in evt.update) });
                 }
             }
             this.sketch.reset();

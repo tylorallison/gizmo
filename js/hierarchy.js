@@ -1,7 +1,6 @@
 export { Hierarchy, ExtHierarchy }
 
-import { EvtSystem } from './event.js';
-import { Fmt } from './fmt.js';
+import { EventCtx } from './eventCtx.js';
 
 class Hierarchy {
 
@@ -27,12 +26,12 @@ class Hierarchy {
         child.parent = parent;
         if (Array.isArray(parent.children)) parent.children.push(child);
         // event handling
-        EvtSystem.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
-        EvtSystem.trigger(parent, 'gizmo.childed', {parent: parent, child: child});
+        EventCtx.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
+        EventCtx.trigger(parent, 'gizmo.childed', {parent: parent, child: child});
         let root = this.root(parent);
-        EvtSystem.trigger(child, 'gizmo.rooted', {root: root});
+        EventCtx.trigger(child, 'gizmo.rooted', {root: root});
         for (const dec of this.children(child)) {
-            EvtSystem.trigger(dec, 'gizmo.rooted', {root: root});
+            EventCtx.trigger(dec, 'gizmo.rooted', {root: root});
         }
     }
 
@@ -47,8 +46,8 @@ class Hierarchy {
             }
             child.parent = null;
             // trigger events
-            EvtSystem.trigger(child, 'gizmo.orphaned', {parent: parent, child: child});
-            EvtSystem.trigger(parent, 'gizmo.unchilded', {parent: parent, child: child});
+            EventCtx.trigger(child, 'gizmo.orphaned', {parent: parent, child: child});
+            EventCtx.trigger(parent, 'gizmo.unchilded', {parent: parent, child: child});
         }
     }
 

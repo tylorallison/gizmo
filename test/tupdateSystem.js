@@ -1,6 +1,5 @@
-import { EvtSystem } from '../js/event.js';
-import { Gizmo, GizmoContext, Gadget } from '../js/gizmo.js';
-import { Helpers } from '../js/helpers.js';
+import { EventCtx } from '../js/eventCtx.js';
+import { Gizmo, Gadget } from '../js/gizmo.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 
 class TUpdateRoot extends Gizmo {
@@ -15,24 +14,27 @@ class TUpdateSub extends Gadget {
 
 describe('an update system', () => {
 
-    let gctx, receiver, tevts, sys, g;
+    let ectx, tevts, sys, g;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
-        sys = new UpdateSystem( { gctx: gctx });
-        g = new TUpdateRoot({ gctx: gctx, sub: new TUpdateSub({ data: 'hello world'}), psub: new TUpdateSub({ data: 'nihao' }) });
-        receiver = Helpers.genEvtReceiver();
-        EvtSystem.listen(gctx, receiver, 'gizmo.updated', (tevt) => tevts.push(tevt));
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        sys = new UpdateSystem();
+        g = new TUpdateRoot({ sub: new TUpdateSub({ data: 'hello world'}), psub: new TUpdateSub({ data: 'nihao' }) });
+        EventCtx.listen(null, 'gizmo.updated', (tevt) => tevts.push(tevt));
         tevts = [];
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('gizmos trigger updates', ()=>{
         g.sub.var1 = 'bar';
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
         expect(tevt.update).toEqual({ 'sub.var1': 'bar'});
         g.psub.var1 = 'zaijian';
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
         expect(tevt.update).toEqual({ 'psub.var1': 'zaijian'});
@@ -42,7 +44,7 @@ describe('an update system', () => {
         g.psub.var1 = 'foo';
         g.psub.var2 = 'bar';
         g.psub.var1 = 'baz';
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
@@ -50,11 +52,9 @@ describe('an update system', () => {
     });
 
     it('destroyed system does not trigger updates', ()=>{
-        expect(gctx.evtEmitterLinks.get('gizmo.set').length).toEqual(1);
         sys.destroy();
-        expect(gctx.evtEmitterLinks.get('gizmo.set')).ToBeFalsey;
         g.psub.var1 = 'bar';
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(tevts.length).toEqual(0);
     });
 

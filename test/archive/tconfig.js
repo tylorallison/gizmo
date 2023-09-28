@@ -9,7 +9,7 @@ class TConfig {
     static has(o,key) {
         let path = `${o.constructor.cfgpath}.${key}`;
         if (Util.haspath(this.$values, path)) {
-            console.log(`config has: ${path}`);
+            //console.log(`config has: ${path}`);
             return true;
         }
         return false;
@@ -17,13 +17,13 @@ class TConfig {
 
     static get(o,key,dflt) {
         let path = `${o.constructor.cfgpath}.${key}`;
-        console.log(`TConfig.get: ${o} key: ${key}`);
+        //console.log(`TConfig.get: ${o} key: ${key}`);
         if (Util.haspath(this.$values, path)) return Util.getpath(this.$values, path, dflt);
         return undefined;
     }
 
     static set(path, value) {
-        console.log(`setting: ${path} value: ${value}`)
+        //console.log(`setting: ${path} value: ${value}`)
         Util.setpath(this.$values, path, value);
     }
 }
@@ -32,7 +32,7 @@ class TBase extends Gadget {
     static dflter(o,key,dflt) {
         //console.log(`p: ${p}`);
         if (TConfig.has(o, key)) {
-            console.log(`parser: ${o} key: ${key} config'd`);
+            //console.log(`parser: ${o} key: ${key} config'd`);
             dflt = TConfig.get(o, key);
         }
         return dflt;
@@ -80,14 +80,14 @@ describe('config', () => {
 describe('tconfig', () => {
     it(`test`, ()=>{
         let b = new TBase();
-        console.log(`b: ${Fmt.ofmt(b.$store)}`);
+        //console.log(`b: ${Fmt.ofmt(b.$store)}`);
 
         let e = new TExt();
-        console.log(`e: ${Fmt.ofmt(e.$store)}`);
+        //console.log(`e: ${Fmt.ofmt(e.$store)}`);
 
         TConfig.set('tBase.dbg', 'yeah');
         let b2 = new TBase();
-        console.log(`b2: ${Fmt.ofmt(b2.$store)}`);
+        //console.log(`b2: ${Fmt.ofmt(b2.$store)}`);
         
 
     });

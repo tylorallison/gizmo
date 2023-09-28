@@ -1,9 +1,8 @@
 export { GameState };
 
 import { AssetCtx } from './assetCtx.js';
-import { Assets } from './assets.js';
 import { ConfigCtx } from './configCtx.js';
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Util } from './util.js';
@@ -55,6 +54,7 @@ class GameState extends Gizmo {
         await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.$instance.values, this.xcfgs) }));
         // -- assets
         await AssetCtx.advance(new AssetCtx({ xassets: this.xassets }));
+        // FIXME: event context
         // abstract load
         await this.load(data);
         if (this.dbg) console.log(`${this} loading complete`);
@@ -107,7 +107,7 @@ class GameState extends Gizmo {
             await this.doprepare(data);
             this.state = 'started';
         }
-        EvtSystem.trigger(this, 'state.started');
+        EventCtx.trigger(this, 'state.started');
         return Promise.resolve();
     }
 
@@ -117,7 +117,7 @@ class GameState extends Gizmo {
      */
     async stop() {
         this.state = 'initialized';
-        EvtSystem.trigger(this, 'state.stopped');
+        EventCtx.trigger(this, 'state.stopped');
         AssetCtx.withdraw();
         ConfigCtx.withdraw();
         return Promise.resolve();

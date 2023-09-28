@@ -1,8 +1,6 @@
 import { Bounds } from '../js/bounds.js';
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
+import { EventCtx } from '../js/eventCtx.js';
 import { Fmt } from '../js/fmt.js';
-import { GizmoContext } from '../js/gizmo.js';
-import { Helpers } from '../js/helpers.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { UpdateSystem } from '../js/updateSystem.js';
@@ -10,22 +8,25 @@ import { XForm } from '../js/xform.js';
 
 describe('a UI grid', () => {
 
-    let grid, gctx, sys, receiver, tevts;
+    let grid, ectx, sys, tevts;
     let g1, g2, g3, g4;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
-        grid = new UiGrid({gctx: gctx, alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
-        sys = new UpdateSystem( { gctx: gctx, dbg: false });
-        receiver = Helpers.genEvtReceiver();
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        grid = new UiGrid({alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
+        sys = new UpdateSystem( { dbg: false });
         tevts = [];
-        EvtSystem.listen(grid, receiver, 'gizmo.updated', (evt) => {
+        EventCtx.listen(grid, 'gizmo.updated', (evt) => {
             //console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
             tevts.push(evt);
         });
-        g1 = new UiView({gctx: gctx, tag: 'g1', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
-        g2 = new UiView({gctx: gctx, tag: 'g2', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 96, y: 32})});
-        g3 = new UiView({gctx: gctx, tag: 'g3', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 96})});
-        g4 = new UiView({gctx: gctx, tag: 'g4', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 64, y: 64})});
+        g1 = new UiView({tag: 'g1', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
+        g2 = new UiView({tag: 'g2', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 96, y: 32})});
+        g3 = new UiView({tag: 'g3', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 96})});
+        g4 = new UiView({tag: 'g4', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 64, y: 64})});
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('gzos can be iterating from grid', ()=>{
@@ -137,16 +138,16 @@ describe('a UI grid', () => {
         grid.add(g1);
         grid.add(g2);
         //console.log(`-- before game tock 1`);
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.xform.x = 96;
         g2.xform.x = 32;
         //console.log(`-- before game tock 2`);
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         //console.log(`-- before game tock 3`);
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([1]);
         expect(grid.idxof(g2)).toEqual([0]);
         expect(tevts.length).toEqual(2);
@@ -155,12 +156,12 @@ describe('a UI grid', () => {
     it('grid tracks gzo destroy', ()=>{
         grid.add(g1);
         grid.add(g2);
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.destroy();
-        EvtSystem.trigger(gctx, 'game.tock', { deltaTime: 100 });
+        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([]);
         expect(grid.idxof(g2)).toEqual([1]);
         expect(tevts.length).toEqual(1);

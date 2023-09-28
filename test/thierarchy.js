@@ -1,22 +1,24 @@
-import { EvtSystem, ExtEvtReceiver } from '../js/event.js';
-import { Gizmo, GizmoContext } from '../js/gizmo.js';
+import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
-import { Helpers } from '../js/helpers.js';
+import { EventCtx } from '../js/eventCtx.js';
 
 describe('hierarchies', () => {
 
-    let gctx, receiver, parent, child, child2;
+    let ectx, parent, child, child2;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
-        receiver = Helpers.genEvtReceiver();
-        parent = new Gizmo({gctx: gctx, tag: 'parent'});
-        child = new Gizmo({gctx: gctx, tag: 'child'});
-        child2 = new Gizmo({gctx: gctx, tag: 'child2'});
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
+        parent = new Gizmo({tag: 'parent'});
+        child = new Gizmo({tag: 'child'});
+        child2 = new Gizmo({tag: 'child2'});
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('can create parent child relationships', ()=>{
         let tevt = {};
-        EvtSystem.listen(gctx, receiver, 'gizmo.adopted', (evt) => tevt = evt);
+        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         Hierarchy.adopt(parent, child);
         expect(tevt.actor).toEqual(child);
         expect(tevt.child).toEqual(child);
@@ -27,7 +29,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in parent', ()=>{
         let tevt = {};
-        EvtSystem.listen(gctx, receiver, 'gizmo.adopted', (evt) => tevt = evt);
+        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         parent.children.push(child);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});
@@ -35,7 +37,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in child', ()=>{
         let tevt = {};
-        EvtSystem.listen(gctx, receiver, 'gizmo.adopted', (evt) => tevt = evt);
+        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         child.children.push(parent);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});

@@ -1,30 +1,29 @@
-import { GizmoContext } from '../js/gizmo.js';
 import { GameState } from '../js/gameState.js';
-import { EvtSystem } from '../js/event.js';
-import { Helpers } from '../js/helpers.js';
 import { AssetCtx } from '../js/assetCtx.js';
 import { Rect } from '../js/rect.js';
+import { EventCtx } from '../js/eventCtx.js';
 
 describe('a game state', () => {
 
-    let gctx;
-    let receiver;
-    let tevt;
+    let ectx, tevt;
     beforeEach(() => {
-        gctx = new GizmoContext({tag: 'test'});
-        let receiver = Helpers.genEvtReceiver();
+        ectx = new EventCtx();
+        EventCtx.advance(ectx);
         tevt = {};
-        EvtSystem.listen(gctx, receiver, 'state.started', (evt) => tevt = evt);
+        EventCtx.listen(null, 'state.started', (evt) => tevt = evt);
+    });
+    afterEach(() => {
+        EventCtx.withdraw();
     });
 
     it('can be started', async ()=>{
-        let state = new GameState( { gctx: gctx });
+        let state = new GameState( {} );
         await state.start();
         expect(tevt.tag).toEqual('state.started');
     });
 
     it('registers assets', async ()=>{
-        let state = new GameState( { gctx: gctx, xassets: [
+        let state = new GameState( { xassets: [
             Rect.xspec({tag: 'test'}),
         ] });
         await state.start();
@@ -36,7 +35,7 @@ describe('a game state', () => {
     });
 
     it('can be restarted', async ()=>{
-        let state = new GameState( { gctx: gctx, xassets: [
+        let state = new GameState( { xassets: [
             Rect.xspec({tag: 'test'}),
         ] });
         expect(state.state).toEqual('none');

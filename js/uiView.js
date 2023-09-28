@@ -1,6 +1,6 @@
 export { UiView };
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Hierarchy } from './hierarchy.js';
@@ -48,11 +48,11 @@ class UiView extends Gizmo {
 
     cpost(spec={}) {
         super.cpost(spec);
-        EvtSystem.listen(this, this, 'mouse.clicked', this.onMouseClicked);
-        EvtSystem.listen(this, this, 'gizmo.updated', this.onMouseEntered, { filter: (evt) => evt.update && evt.update.mouseOver === true});
-        EvtSystem.listen(this, this, 'gizmo.updated', this.onMouseExited, { filter: (evt) => evt.update && evt.update.mouseOver === false});
-        EvtSystem.listen(this, this, 'gizmo.rooted', this.onRooted);
-        EvtSystem.listen(this, this, 'gizmo.orphaned', this.onOrphaned);
+        EventCtx.listen(this, 'mouse.clicked', this.onMouseClicked, this);
+        EventCtx.listen(this, 'gizmo.updated', this.onMouseEntered, this, { filter: (evt) => evt.update && evt.update.mouseOver === true});
+        EventCtx.listen(this, 'gizmo.updated', this.onMouseExited, this, { filter: (evt) => evt.update && evt.update.mouseOver === false});
+        EventCtx.listen(this, 'gizmo.rooted', this.onRooted, this);
+        EventCtx.listen(this, 'gizmo.orphaned', this.onOrphaned, this);
 
     }
     cfinal(spec) {

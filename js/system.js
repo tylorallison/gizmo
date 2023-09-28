@@ -1,6 +1,6 @@
 export { System }
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Stats } from './stats.js';
@@ -19,7 +19,7 @@ class System extends Gizmo {
         this.schema('matchFcn', { eventable: false, parser: (o,x) => x.hasOwnProperty('matchFcn') ? x.matchFcn : (o.constructor.dfltMatchFcn || (() => false)) });
         this.schema('store', { link: false, readonly: true, parser: (o,x) => x.store || new Map()});
         this.schema('iterating', { eventable: false, dflt: false });
-        this.schema('timer', { order: 1, readonly: true, parser: (o,x) => new Timer({gctx: o.gctx, ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
+        this.schema('timer', { order: 1, readonly: true, parser: (o,x) => new Timer({ttl: o.iterateTTL, cb: o.onTimer, loop: true})});
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
@@ -31,8 +31,8 @@ class System extends Gizmo {
     cpost(spec) {
         super.cpost(spec);
         // -- setup event handlers
-        EvtSystem.listen(this.gctx, this, 'gizmo.created', this.onGizmoCreated);
-        EvtSystem.listen(this.gctx, this, 'gizmo.destroyed', this.onGizmoDestroyed);
+        EventCtx.listen(null, 'gizmo.created', this.onGizmoCreated, this);
+        EventCtx.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

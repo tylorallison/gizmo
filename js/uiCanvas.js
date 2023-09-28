@@ -1,6 +1,6 @@
 export { UiCanvas };
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { UiView } from './uiView.js';
 import { XForm } from './xform.js';
 
@@ -72,7 +72,7 @@ class UiCanvas extends UiView {
         this.canvas.height = height;
         this.xform.fixedWidth = width;
         this.xform.fixedHeight = height;
-        EvtSystem.trigger(this, 'gizmo.resized', { width: width, height: height });
+        EventCtx.trigger(this, 'gizmo.resized', { width: width, height: height });
         // FIXME: remove?
         /*
         for (const child of Hierarchy.children(this)) {
