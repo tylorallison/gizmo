@@ -3,9 +3,9 @@ export { Gadget, GadgetArray, GadgetObject, Gizmo };
 import { Fmt } from './fmt.js';
 import { Hierarchy } from './hierarchy.js';
 import { Serializer } from './serializer.js';
-import { EventCtx } from './eventCtx.js';
-import { ConfigCtx } from './configCtx.js';
-import { GizmoCtx } from './gizmoCtx.js';
+import { Evts } from './evt.js';
+import { Configs } from './config.js';
+//import { GizmoCtx } from './gizmoCtx.js';
 
 const FDEFINED=1;
 const FREADONLY=2;
@@ -45,8 +45,8 @@ class GadgetSchemaEntry {
         this.order = spec.order || 0;
     }
     getDefault(o) {
-        if (ConfigCtx.hasForGdt(o, this.key)) {
-            return ConfigCtx.getForGdt(o, this.key);
+        if (Configs.hasForGdt(o, this.key)) {
+            return Configs.getForGdt(o, this.key);
         }
         return (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
     }
@@ -264,7 +264,7 @@ class Gadget {
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) EventCtx.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
+                if (gemitter) Evts.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
             }
         }
         return true;
@@ -286,7 +286,7 @@ class Gadget {
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) EventCtx.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
+                if (gemitter) Evts.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
             }
         }
 
@@ -473,7 +473,7 @@ class Gizmo extends Gadget {
 
     // SCHEMA --------------------------------------------------------------
     /** @member {int} Gizmo#gctx - reference to gizmo context */
-    static { this.schema('gctx', { readonly: true, dflt: () => GizmoCtx.$instance.gid }); }
+    //static { this.schema('gctx', { readonly: true, dflt: () => GizmoCtx.$instance.gid }); }
     /** @member {int} Gizmo#gid - unique gizmo identifier*/
     static { this.schema('gid', { readonly: true, dflt: () => (Gizmo.gid++) }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
@@ -504,7 +504,7 @@ class Gizmo extends Gadget {
         this.cpost(spec);
         this.cfinal(spec);
         // -- trigger creation event
-        EventCtx.trigger(this, 'gizmo.created');
+        Evts.trigger(this, 'gizmo.created');
     }
     
     /**
@@ -516,7 +516,7 @@ class Gizmo extends Gadget {
             child.destroy();
         }
         Hierarchy.orphan(this);
-        EventCtx.trigger(this, 'gizmo.destroyed');
+        Evts.trigger(this, 'gizmo.destroyed');
     }
 
     // -- overridable constructor functions

@@ -1,6 +1,6 @@
 export { SystemMgr };
 
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { Gizmo } from './gizmo.js';
 import { System } from './system.js';
 
@@ -18,8 +18,8 @@ class SystemMgr extends Gizmo {
     }
 
     cpost(spec) {
-        EventCtx.listen(null, 'gizmo.created', this.onGizmoCreated, this);
-        EventCtx.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
+        Evts.listen(null, 'gizmo.created', this.onGizmoCreated, this);
+        Evts.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

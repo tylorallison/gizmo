@@ -1,6 +1,6 @@
 export { Timer };
 import { Gadget } from './gizmo.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { Stats } from './stats.js';
 
 class Timer extends Gadget {
@@ -20,11 +20,11 @@ class Timer extends Gadget {
     constructor(spec={}) {
         super(spec);
         this.onTock = this.onTock.bind(this);
-        EventCtx.listen(null, 'game.tock', this.onTock, this);
+        Evts.listen(null, 'game.tock', this.onTock, this);
     }
 
     destroy() {
-        EventCtx.clearFor(this);
+        Evts.clearFor(this);
     }
 
     onTock(evt) {
@@ -36,7 +36,7 @@ class Timer extends Gadget {
                 this.ttl += this.startTTL;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
-                EventCtx.ignore(null, 'game.tock', this.onTock, this);
+                Evts.ignore(null, 'game.tock', this.onTock, this);
             }
             this.cb(Object.assign( { overflow: overflow, elapsed: this.startTTL + overflow }, evt, this.data));
         }

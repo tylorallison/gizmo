@@ -2,7 +2,7 @@ export { GameState };
 
 import { AssetCtx } from './assetCtx.js';
 import { ConfigCtx } from './configCtx.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './event.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Util } from './util.js';
@@ -107,7 +107,7 @@ class GameState extends Gizmo {
             await this.doprepare(data);
             this.state = 'started';
         }
-        EventCtx.trigger(this, 'state.started');
+        Evts.trigger(this, 'state.started');
         return Promise.resolve();
     }
 
@@ -117,7 +117,7 @@ class GameState extends Gizmo {
      */
     async stop() {
         this.state = 'initialized';
-        EventCtx.trigger(this, 'state.stopped');
+        Evts.trigger(this, 'state.stopped');
         AssetCtx.withdraw();
         ConfigCtx.withdraw();
         return Promise.resolve();

@@ -1,6 +1,6 @@
 export { System }
 
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
 import { Stats } from './stats.js';
@@ -31,8 +31,8 @@ class System extends Gizmo {
     cpost(spec) {
         super.cpost(spec);
         // -- setup event handlers
-        EventCtx.listen(null, 'gizmo.created', this.onGizmoCreated, this);
-        EventCtx.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
+        Evts.listen(null, 'gizmo.created', this.onGizmoCreated, this);
+        Evts.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

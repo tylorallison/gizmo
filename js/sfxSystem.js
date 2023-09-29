@@ -1,7 +1,7 @@
 export { SfxSystem };
 
 import { AssetCtx } from './assetCtx.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { System } from './system.js';
 
 class SfxSystem extends System {
@@ -23,14 +23,14 @@ class SfxSystem extends System {
 
     // STATIC METHODS ------------------------------------------------------
     static playSfx( actor, tag, options={} ) {
-        EventCtx.trigger(actor, 'sfx.play.requested', {
+        Evts.trigger(actor, 'sfx.play.requested', {
             assetTag: tag,
             options: options,
         });
     }
 
     static stopSfx( actor, tag ) {
-        EventCtx.trigger(actor, 'sfx.stop.requested', {
+        Evts.trigger(actor, 'sfx.stop.requested', {
             assetTag: tag,
         });
     }
@@ -43,8 +43,8 @@ class SfxSystem extends System {
     cpost(spec) {
         super.cpost(spec);
         // setup event handlers
-        EventCtx.listen(null, 'sfx.play.requested', this.onSfxRequested, this);
-        EventCtx.listen(null, 'sfx.stop.requested', this.onSfxRequested, this);
+        Evts.listen(null, 'sfx.play.requested', this.onSfxRequested, this);
+        Evts.listen(null, 'sfx.stop.requested', this.onSfxRequested, this);
         // assign master volume
         if (!this.volumes.hasOwnProperty('master')) this.volumes.master = 1;
     }

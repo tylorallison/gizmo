@@ -1,6 +1,6 @@
 export { StateMgr };
 
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 import { GameState } from './gameState.js';
 import { Gizmo } from './gizmo.js';
@@ -10,7 +10,7 @@ import { Timer } from './timer.js';
 class StateMgr extends Gizmo {
 
     static start(state, data) {
-        EventCtx.trigger(null, 'state.wanted', { state: state, data: data });
+        Evts.trigger(null, 'state.wanted', { state: state, data: data });
     }
         
     // SCHEMA --------------------------------------------------------------
@@ -30,9 +30,9 @@ class StateMgr extends Gizmo {
 
     cpost(spec) {
         super.cpost(spec);
-        EventCtx.listen(null, 'gizmo.created', this.onGizmoCreated, this);
-        EventCtx.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
-        EventCtx.listen(null, 'state.wanted', this.onStateWanted, this);
+        Evts.listen(null, 'gizmo.created', this.onGizmoCreated, this);
+        Evts.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
+        Evts.listen(null, 'state.wanted', this.onStateWanted, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

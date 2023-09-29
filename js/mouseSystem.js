@@ -5,7 +5,7 @@ import { System } from './system.js';
 import { UiCanvas } from './uiCanvas.js';
 import { Vect } from './vect.js';
 import { Contains } from './intersect.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './event.js';
 
 
 class MouseSystem extends System {
@@ -64,7 +64,7 @@ class MouseSystem extends System {
         this.active = true;
         this.clicked = true;
         // trigger event
-        EventCtx.trigger(this, 'mouse.clicked', data);
+        Evts.trigger(this, 'mouse.clicked', data);
     }
     onMoved(evt) {
         // capture event data...
@@ -80,7 +80,7 @@ class MouseSystem extends System {
         this.y = evt.offsetY;
         this.active = true;
         // trigger event
-        EventCtx.trigger(this, 'mouse.moved', data);
+        Evts.trigger(this, 'mouse.moved', data);
     }
 
     onPressed(evt) {
@@ -127,7 +127,7 @@ class MouseSystem extends System {
                 // trigger clicked
                 if (this.clicked) {
                     if (this.dbg) console.log(`${this} mouse clicked: ${e}`);
-                    EventCtx.trigger(e, 'mouse.clicked', { mouse: mouseData });
+                    Evts.trigger(e, 'mouse.clicked', { mouse: mouseData });
                 }
                 if (!e.mouseOver) {
                     e.mouseOver = true;

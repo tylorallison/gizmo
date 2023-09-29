@@ -1,6 +1,6 @@
 export { UpdateSystem };
 
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 import { System } from './system.js';
 import { Util } from './util.js';
@@ -28,7 +28,7 @@ class UpdateSystem extends System {
         this.active = false;
         // -- handle events
         this.onSet = this.onSet.bind(this);
-        EventCtx.listen(null, 'gizmo.set', this.onSet, this);
+        Evts.listen(null, 'gizmo.set', this.onSet, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------
@@ -68,7 +68,7 @@ class UpdateSystem extends System {
         if (!updates) return;
         // trigger entity updates
         let data = { frame: evt.frame, update: updates };
-        EventCtx.trigger(e, 'gizmo.updated', data);
+        Evts.trigger(e, 'gizmo.updated', data);
     }
 
     finalize(evt) {

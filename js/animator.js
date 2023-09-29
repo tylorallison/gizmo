@@ -5,7 +5,7 @@ import { Gadget } from './gizmo.js';
 import { ImageMedia } from './media.js';
 import { Asset } from './asset.js';
 import { Sprite } from './sprite.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './event.js';
 
 // =========================================================================
 /**
@@ -47,7 +47,7 @@ class Animator extends Sketch {
         let self = this;
         let trunkKey = this.trunkKey;
         if (trunk.$emiiter) {
-            EventCtx.listen(trunk, 'gizmo.updated', (evt) => { 
+            Evts.listen(trunk, 'gizmo.updated', (evt) => { 
                 self.state = evt.update[trunkKey]; 
             }, this, { filter: (evt) => (trunkKey in evt.update) });
         }
@@ -60,7 +60,7 @@ class Animator extends Sketch {
      */
     atUnlinkTrunk(trunk) {
         if (trunk.$emiiter) {
-            EventCtx.ignore(trunk, 'gizmo.updated', null, this);
+            Evts.ignore(trunk, 'gizmo.updated', null, this);
         }
     }
 
@@ -117,7 +117,7 @@ class Animator extends Sketch {
                 let root = Gadget.root(this);
                 let path = `${this.$path}.done`;
                 if (root.$emiiter) {
-                    EventCtx.listen(root, 'gizmo.updated', (evt) => {
+                    Evts.listen(root, 'gizmo.updated', (evt) => {
                         if (this.state === state) {
                             this.sketch.disable();
                             this.sketch = this.sketches[state];

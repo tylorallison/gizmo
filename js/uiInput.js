@@ -8,7 +8,7 @@ import { Timer } from './timer.js';
 import { Util } from './util.js';
 import { UiPanel } from './uiPanel.js';
 import { UiView } from './uiView.js';
-import { EventCtx } from './eventCtx.js';
+import { Evts } from './evt.js';
 
 class UiInputText extends UiView {
     // STATIC VARIABLES ----------------------------------------------------
@@ -102,8 +102,8 @@ class UiInput extends UiPanel {
 
     cpost(spec) {
         super.cpost(spec);
-        EventCtx.listen(null, 'key.down', this.onKeyDown, this);
-        EventCtx.listen(null, 'mouse.clicked', this.onSystemMouseClicked, this);
+        Evts.listen(null, 'key.down', this.onKeyDown, this);
+        Evts.listen(null, 'mouse.clicked', this.onSystemMouseClicked, this);
         Hierarchy.adopt(this, this.ttext);
     }
 

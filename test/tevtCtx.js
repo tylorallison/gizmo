@@ -1,4 +1,4 @@
-import { EventCtx } from '../js/eventCtx.js';
+import { EvtCtx } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { Gizmo } from '../js/gizmo.js';
 
@@ -7,7 +7,7 @@ describe('an event context', () => {
     let emitter, receiver, ctx, counter;
     beforeEach(() => {
         counter = 0;
-        ctx = new EventCtx();
+        ctx = new EvtCtx();
         emitter = new Gizmo();
         receiver = new Gizmo();
     });
