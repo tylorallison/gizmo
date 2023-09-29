@@ -32,7 +32,7 @@ class KeySystem extends System {
         if (!this.pressed.has(evt.key)) {
             if (this.dbg) console.log(`${this} evt.key down: ${evt.key}`);
             this.pressed.set(evt.key);
-            Evts.trigger(this, 'key.down', { key:evt.key });
+            Evts.trigger(this, 'KeyDown', { key:evt.key });
         }
     }
 
@@ -40,7 +40,7 @@ class KeySystem extends System {
         if (this.pressed.has(evt.key)) {
             if (this.dbg) console.log(`${this} evt.key up: ${evt.key}`);
             this.pressed.delete(evt.key);
-            Evts.trigger(this, 'key.up', { key:evt.key });
+            Evts.trigger(this, 'KeyUp', { key:evt.key });
         }
     }
 

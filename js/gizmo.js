@@ -528,6 +528,7 @@ class Gizmo extends Gadget {
      */
     cpost(spec) {
     }
+
     /**
      * To allow for more flexible constructor methods, three sub constructors are used in all classes derived by the {@link Gizmo} class: cpre, cpost, cfinal.  
      * cfinal is called directly after cpost.

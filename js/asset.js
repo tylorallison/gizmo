@@ -114,6 +114,10 @@ class AssetCtx extends GizmoCtx {
             } else {
                 let idx = this.xassets.indexOf(xasset);
                 if (idx !== -1) this.xassets.splice(idx, 1);
+                if (xasset.args && xasset.args.length) {
+                    let tag = xasset.args[0].tag;
+                    if (tag) delete this.assets[tag];
+                }
             }
         }
     }

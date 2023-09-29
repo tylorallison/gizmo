@@ -16,7 +16,7 @@ describe('a state manager', () => {
     it('can watch for new states', ()=>{
         let state = new GameState({ tag: 'test'});
         expect(mgr.get('test')).toBe(state);
-        expect(state.state).toEqual('none');
+        expect(state.state).toEqual('inactive');
     });
 
     it('can watch for destroyed states', ()=>{
@@ -28,34 +28,34 @@ describe('a state manager', () => {
 
     it('can start a new state', async ()=>{
         let state = new GameState({ tag: 'test'});
-        Evts.trigger(null, 'state.wanted', {state: 'test'});
-        Evts.trigger(null, 'game.tock', { deltaTime: 100 });
-        await new Promise(resolve => Evts.listen(state, 'state.started', (evt) => resolve(), state));
-        expect(state.state).toEqual('started');
+        Evts.trigger(null, 'StateWanted', {state: 'test'});
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        await new Promise(resolve => Evts.listen(state, 'StateStarted', (evt) => resolve(), state));
+        expect(state.state).toEqual('active');
         expect(mgr.current).toBe(state);
     });
 
     it('can start a new state from static fcn', async ()=>{
         let state = new GameState({ tag: 'test'});
         StateMgr.start('test', null);
-        Evts.trigger(null, 'game.tock', { deltaTime: 100 });
-        await new Promise(resolve => Evts.listen(state, 'state.started', (evt) => resolve(), state));
-        expect(state.state).toEqual('started');
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        await new Promise(resolve => Evts.listen(state, 'StateStarted', (evt) => resolve(), state));
+        expect(state.state).toEqual('active');
         expect(mgr.current).toBe(state);
     });
 
     it('can start a second state', async ()=>{
         let state = new GameState({ tag: 'test'});
         let state2 = new GameState({ tag: 'test2'});
-        Evts.trigger(null, 'state.wanted', {state: 'test'});
-        Evts.trigger(null, 'game.tock', { deltaTime: 100 });
-        await new Promise(resolve => Evts.listen(state, 'state.started', (evt) => resolve(), state));
-        expect(state.state).toEqual('started');
+        Evts.trigger(null, 'StateWanted', {state: 'test'});
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        await new Promise(resolve => Evts.listen(state, 'StateStarted', (evt) => resolve(), state));
+        expect(state.state).toEqual('active');
         expect(mgr.current).toBe(state);
-        Evts.trigger(null, 'state.wanted', {state: 'test2'});
-        Evts.trigger(null, 'game.tock', { deltaTime: 100 });
-        await new Promise(resolve => Evts.listen(state2, 'state.started', (evt) => resolve(), state2));
-        expect(state.state).toEqual('initialized');
+        Evts.trigger(null, 'StateWanted', {state: 'test2'});
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        await new Promise(resolve => Evts.listen(state2, 'StateStarted', (evt) => resolve(), state2));
+        expect(state.state).toEqual('inactive');
         expect(mgr.current).toBe(state2);
     });
 

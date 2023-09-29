@@ -1,25 +1,24 @@
 import { GameState } from '../js/gameState.js';
-import { AssetCtx } from '../js/assetCtx.js';
+import { Assets } from '../js/asset.js';
 import { Rect } from '../js/rect.js';
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 
 describe('a game state', () => {
 
-    let ectx, tevt;
+    let tevt;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         tevt = {};
-        EventCtx.listen(null, 'state.started', (evt) => tevt = evt);
+        Evts.listen(null, 'StateStarted', (evt) => tevt = evt);
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Assets.clear();
+        Evts.clear();
     });
 
     it('can be started', async ()=>{
         let state = new GameState( {} );
         await state.start();
-        expect(tevt.tag).toEqual('state.started');
+        expect(tevt.tag).toEqual('StateStarted');
     });
 
     it('registers assets', async ()=>{
@@ -27,25 +26,25 @@ describe('a game state', () => {
             Rect.xspec({tag: 'test'}),
         ] });
         await state.start();
-        expect(tevt.tag).toEqual('state.started');
-        let asset = AssetCtx.get('test');
+        expect(tevt.tag).toEqual('StateStarted');
+        let asset = Assets.get('test');
         expect(asset).toBeTruthy();
         await state.stop();
-        expect(AssetCtx.get('test')).toBeFalsy();
+        expect(Assets.get('test')).toBeFalsy();
     });
 
     it('can be restarted', async ()=>{
         let state = new GameState( { xassets: [
             Rect.xspec({tag: 'test'}),
         ] });
-        expect(state.state).toEqual('none');
+        expect(state.state).toEqual('inactive');
         await state.start();
-        expect(state.state).toEqual('started');
+        expect(state.state).toEqual('active');
         await state.stop();
-        expect(state.state).toEqual('initialized');
+        expect(state.state).toEqual('inactive');
         await state.start();
-        expect(state.state).toEqual('started');
-        expect(AssetCtx.get('test')).toBeTruthy();
+        expect(state.state).toEqual('active');
+        expect(Assets.get('test')).toBeTruthy();
         await state.stop();
     });
 

@@ -3,6 +3,7 @@ export { SfxSystem };
 import { Assets } from './asset.js';
 import { Evts } from './evt.js';
 import { System } from './system.js';
+import { Global } from './global.js';
 
 class SfxSystem extends System {
     // SCHEMA --------------------------------------------------------------
@@ -75,7 +76,7 @@ class SfxSystem extends System {
     }
 
     initialize() {
-        if (!this.gctx.userActive) return;
+        if (!Global.game.userActive) return;
         this.ctx = new AudioContext();
         this.ready = true;
     }

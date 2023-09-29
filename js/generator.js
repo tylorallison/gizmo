@@ -10,21 +10,6 @@ import { GizmoSingleton } from './singleton.js';
  * The Generator class creates instances of {@link Gadget} or {@link Gizmo} based on specified GadgetSpec object specification.
  */
 class Generator extends GizmoSingleton {
-    /*
-    // STATIC VARIABLES ----------------------------------------------------
-    static _dflt;
-
-    // STATIC PROPERTIES ---------------------------------------------------
-    static get dflt() {
-        if (!this._dflt) {
-            this._dflt = new this();
-        }
-        return this._dflt;
-    }
-    static set dflt(v) {
-        this._dflt = v;
-    }
-    */
 
     // STATIC METHODS ------------------------------------------------------
     static generate(spec={}) {

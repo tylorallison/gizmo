@@ -10,10 +10,11 @@ import { SystemMgr } from './systemMgr.js';
 import { Generator } from './generator.js';
 import { UiCanvas } from './uiCanvas.js';
 import { SfxSystem } from './sfxSystem.js';
-import { ConfigCtx } from './configCtx.js';
+import { Configs } from './config.js';
 import { Util } from './util.js';
-import { AssetCtx } from './assetCtx.js';
-import { Evts } from './event.js';
+import { Assets } from './asset.js';
+import { Evts } from './evt.js';
+import { Global } from './global.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -21,6 +22,7 @@ import { Evts } from './event.js';
  */
 class Game extends Gizmo {
     // STATIC VARIABLES ----------------------------------------------------
+
     /**
      * xassets is an array of {@link GizmoSpec} specifications that define assets for the game.  These definitions
      * will be parsed and loaded during game startup.  Override this static variable in subclasses to define assets for specific game logic.
@@ -28,14 +30,7 @@ class Game extends Gizmo {
      */
     static xassets = [];
 
-    static xcfgs = { 
-        'game.maxDeltaTime': 50,
-        'game.dbg': true,
-        'system.renderSystem.dbg': true,
-    };
-
-    // max allowed delta time (in ms)
-    static dfltMaxDeltaTime = 50;
+    static xcfgs = {};
 
     // SCHEMA --------------------------------------------------------------
     /** @member {*} Game#dbg - enables debugging for gizmo */
@@ -43,7 +38,7 @@ class Game extends Gizmo {
     /** @member {string} Game#name - name for game */
     static { this.schema('name', { dflt: this.name, readonly: true}); }
     /** @member {int} Game#maxDeltaTime - max value for a single frame delta time */
-    static { this.schema('maxDeltaTime', { eventable: false, dflt: this.dfltMaxDeltaTime}); }
+    static { this.schema('maxDeltaTime', { eventable: false, dflt: 50 }); }
     /** @member {int} Game#frame - frame counter */
     static { this.schema('frame', { eventable: false, dflt: 0}); }
     /** @member {float} Game#lastUpdate - time of last update */
@@ -54,33 +49,36 @@ class Game extends Gizmo {
     static { this.schema('states', { readonly: true, parser: (o,x) => new StateMgr({ gctx: o.gctx })}); }
     /** @member {Generator} Game#generator - generator for gizmos in game */
     static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
+    /** @member {bool} Game#userActive - boolean tracking if player has interacted w/ game interface */
+    static { this.schema('userActive', { dflt: false }); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
         super.cpre(spec);
         this.loop = this.loop.bind(this);
+        Global.game = this;
     }
     cpost(spec) {
         super.cpost(spec);
         // -- build out game state
-        this.gctx.game = this;
         Generator.dflt = this.generator;
     }
 
     // METHODS -------------------------------------------------------------
     async doinit() {
         if (this.dbg) console.log(`${this.name} starting initialization`);
-        UiCanvas.getCanvas().addEventListener('click', () => this.gctx.userActive = true, {once: true});
-        Evts.listen(null, 'key.down', () => this.gctx.userActive = true, this, {once: true});
-        // load contexts
+        // listen for user interaction w/ UI (click or key press)
+        UiCanvas.getCanvas().addEventListener('click', () => this.userActive = true, {once: true});
+        Evts.listen(null, 'KeyDown', () => this.userActive = true, this, {once: true});
+        // init contexts
         // -- config
-        await ConfigCtx.advance(new ConfigCtx({ values: Util.update({}, ConfigCtx.$instance.values, this.xcfgs) }));
+        if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
-        await AssetCtx.advance(new AssetCtx({ xassets: this.constructor.xassets }));
+        if (this.xassets) Assets.add(this.xassets);
         // game init
         await this.init();
         if (this.dbg) console.log(`${this.name} initialization complete`);
-        Evts.trigger(this, 'game.inited');
+        Evts.trigger(this, 'GameInited');
         return Promise.resolve();
     }
 
@@ -97,7 +95,7 @@ class Game extends Gizmo {
         if (this.dbg) console.log(`${this.name} starting loading`);
         await this.load();
         if (this.dbg) console.log(`${this.name} loading complete`);
-        Evts.trigger(this, 'game.loaded');
+        Evts.trigger(this, 'GameLoaded');
         return Promise.resolve();
     }
 
@@ -124,7 +122,7 @@ class Game extends Gizmo {
         // -- game specific prepare
         await this.prepare();
         if (this.dbg) console.log(`${this.name} prepare complete`);
-        Evts.trigger(this, 'game.prepared');
+        Evts.trigger(this, 'GamePrepared');
         return Promise.resolve();
     }
 
@@ -149,7 +147,7 @@ class Game extends Gizmo {
         await this.doload();
         // prepare
         await this.doprepare();
-        Evts.trigger(this, 'game.started');
+        Evts.trigger(this, 'GameStarted');
         // start the game loop
         window.requestAnimationFrame(this.loop);
         return Promise.resolve();
@@ -167,5 +165,5 @@ class Game extends Gizmo {
         window.requestAnimationFrame(this.loop);
     }
 
-
 }
+
