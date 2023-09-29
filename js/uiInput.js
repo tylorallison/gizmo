@@ -1,6 +1,5 @@
 export { UiInput, UiInputText };
 
-import { EvtSystem } from './event.js';
 import { Hierarchy } from './hierarchy.js';
 import { Rect } from './rect.js';
 import { TextFormat } from './textFormat.js';
@@ -9,6 +8,7 @@ import { Timer } from './timer.js';
 import { Util } from './util.js';
 import { UiPanel } from './uiPanel.js';
 import { UiView } from './uiView.js';
+import { EventCtx } from './eventCtx.js';
 
 class UiInputText extends UiView {
     // STATIC VARIABLES ----------------------------------------------------
@@ -102,8 +102,8 @@ class UiInput extends UiPanel {
 
     cpost(spec) {
         super.cpost(spec);
-        EvtSystem.listen(this.gctx, this, 'key.down', this.onKeyDown);
-        EvtSystem.listen(this.gctx, this, 'mouse.clicked', this.onSystemMouseClicked);
+        EventCtx.listen(null, 'key.down', this.onKeyDown, this);
+        EventCtx.listen(null, 'mouse.clicked', this.onSystemMouseClicked, this);
         Hierarchy.adopt(this, this.ttext);
     }
 

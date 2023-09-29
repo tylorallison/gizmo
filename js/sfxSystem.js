@@ -43,8 +43,8 @@ class SfxSystem extends System {
     cpost(spec) {
         super.cpost(spec);
         // setup event handlers
-        EventCtx.listen(this.gctx, 'sfx.play.requested', this.onSfxRequested, this);
-        EventCtx.listen(this.gctx, 'sfx.stop.requested', this.onSfxRequested, this);
+        EventCtx.listen(null, 'sfx.play.requested', this.onSfxRequested, this);
+        EventCtx.listen(null, 'sfx.stop.requested', this.onSfxRequested, this);
         // assign master volume
         if (!this.volumes.hasOwnProperty('master')) this.volumes.master = 1;
     }

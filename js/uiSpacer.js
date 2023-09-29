@@ -1,6 +1,6 @@
 export { UiVerticalSpacer, UiHorizontalSpacer }
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { UiView } from './uiView.js';
 
 class UiVerticalSpacer extends UiView {
@@ -11,8 +11,8 @@ class UiVerticalSpacer extends UiView {
         super.cpost(spec);
         this.onChilded = this.onChilded.bind(this);
         this.onUnchilded = this.onUnchilded.bind(this);
-        EvtSystem.listen(this, this, 'gizmo.childed', this.onChilded);
-        EvtSystem.listen(this, this, 'gizmo.unchilded', this.onUnchilded);
+        EventCtx.listen(this, 'gizmo.childed', this.onChilded, this);
+        EventCtx.listen(this, 'gizmo.unchilded', this.onUnchilded, this);
         this.resize();
     }
 
@@ -59,8 +59,8 @@ class UiHorizontalSpacer extends UiView {
         super.cpost(spec);
         this.onChilded = this.onChilded.bind(this);
         this.onUnchilded = this.onUnchilded.bind(this);
-        EvtSystem.listen(this, this, 'gizmo.childed', this.onChilded);
-        EvtSystem.listen(this, this, 'gizmo.unchilded', this.onUnchilded);
+        EventCtx.listen(this, 'gizmo.childed', this.onChilded, this);
+        EventCtx.listen(this, 'gizmo.unchilded', this.onUnchilded, this);
         this.resize();
     }
 

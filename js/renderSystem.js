@@ -1,9 +1,9 @@
 export { RenderSystem };
 
 import { System } from './system.js';
-import { EvtSystem } from './event.js';
 import { Hierarchy } from './hierarchy.js';
 import { Fmt } from './fmt.js';
+import { EventCtx } from './eventCtx.js';
 
 class RenderSystem extends System {
 
@@ -22,9 +22,9 @@ class RenderSystem extends System {
     cpost(spec) {
         super.cpost(spec);
         // -- listen on events
-        EvtSystem.listen(this.gctx, this, 'gizmo.updated', this.onViewUpdated);
-        EvtSystem.listen(this.gctx, this, 'render.needed', this.onRenderNeeded);
-        EvtSystem.listen(this.gctx, this, 'gizmo.adopted', this.onEntityAdopted);
+        EventCtx.listen(null, 'gizmo.updated', this.onViewUpdated, this);
+        EventCtx.listen(null, 'render.needed', this.onRenderNeeded, this);
+        EventCtx.listen(null, 'gizmo.adopted', this.onEntityAdopted, this);
         this.stayActive = false;
     }
 

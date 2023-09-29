@@ -1,6 +1,6 @@
 export { KeySystem }
 
-import { EvtSystem } from './event.js';
+import { EventCtx } from './eventCtx.js';
 import { System } from './system.js';
 
 class KeySystem extends System {
@@ -32,7 +32,7 @@ class KeySystem extends System {
         if (!this.pressed.has(evt.key)) {
             if (this.dbg) console.log(`${this} evt.key down: ${evt.key}`);
             this.pressed.set(evt.key);
-            EvtSystem.trigger(this, 'key.down', { key:evt.key });
+            EventCtx.trigger(this, 'key.down', { key:evt.key });
         }
     }
 
@@ -40,7 +40,7 @@ class KeySystem extends System {
         if (this.pressed.has(evt.key)) {
             if (this.dbg) console.log(`${this} evt.key up: ${evt.key}`);
             this.pressed.delete(evt.key);
-            EvtSystem.trigger(this, 'key.up', { key:evt.key });
+            EventCtx.trigger(this, 'key.up', { key:evt.key });
         }
     }
 
