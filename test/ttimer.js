@@ -1,18 +1,16 @@
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { Timer } from '../js/timer.js';
 
 describe('timers', () => {
 
-    let counter, incr, ectx;
+    let counter, incr;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         counter = 0;
         incr = () => counter++;
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('can be triggered by game ticker', ()=>{
@@ -20,7 +18,7 @@ describe('timers', () => {
             cb: incr,
             ttl: 500,
         });
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
         expect(counter).toBe(1);
     });
 
@@ -31,8 +29,8 @@ describe('timers', () => {
             ttl: 500,
             loop: true,
         });
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 500 });
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
         expect(counter).toBe(2);
     });
 
@@ -42,11 +40,11 @@ describe('timers', () => {
             ttl: 150,
             loop: true,
         });
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(counter).toBe(0);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(counter).toBe(1);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(counter).toBe(2);
     });
 
@@ -57,7 +55,7 @@ describe('timers', () => {
             loop: true,
         });
         timer.destroy();
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
         expect(counter).toBe(0);
     });
 

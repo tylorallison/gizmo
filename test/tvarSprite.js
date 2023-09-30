@@ -1,16 +1,7 @@
-import { AssetCtx } from '../js/assetCtx.js';
 import { ImageMedia, Media } from '../js/media.js';
 import { VarSprite } from '../js/varSprite.js';
 
 describe('varsprite assets', () => {
-    let ctx;
-    beforeEach(() => {
-        ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-    });
-    afterEach(() => {
-        AssetCtx.withdraw();
-    });
 
     it('can be async loaded from URL', async ()=>{
         let asset = await VarSprite.load(['../media/token.png', '../media/token.png']);

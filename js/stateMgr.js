@@ -10,7 +10,7 @@ import { Timer } from './timer.js';
 class StateMgr extends Gizmo {
 
     static start(state, data) {
-        Evts.trigger(null, 'state.wanted', { state: state, data: data });
+        Evts.trigger(null, 'StateWanted', { state: state, data: data });
     }
         
     // SCHEMA --------------------------------------------------------------
@@ -30,9 +30,9 @@ class StateMgr extends Gizmo {
 
     cpost(spec) {
         super.cpost(spec);
-        Evts.listen(null, 'gizmo.created', this.onGizmoCreated, this);
-        Evts.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
-        Evts.listen(null, 'state.wanted', this.onStateWanted, this);
+        Evts.listen(null, 'GizmoCreated', this.onGizmoCreated, this);
+        Evts.listen(null, 'GizmoDestroyed', this.onGizmoDestroyed, this);
+        Evts.listen(null, 'StateWanted', this.onStateWanted, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

@@ -3,7 +3,7 @@ export { Generator };
 import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 import { Gadget } from './gizmo.js';
-import { AssetCtx } from './assetCtx.js';
+import { Assets } from './asset.js';
 import { GizmoSingleton } from './singleton.js';
 
 /**
@@ -35,7 +35,7 @@ class Generator extends GizmoSingleton {
     constructor(spec={}) {
         super();
         this.registry = spec.registry || Gadget.$registry;
-        this.assets = spec.assets || AssetCtx.instance;
+        this.assets = spec.assets || Assets;
     }
 
     // METHODS -------------------------------------------------------------

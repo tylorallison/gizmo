@@ -1,5 +1,5 @@
 import { Bounds } from '../js/bounds.js';
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
@@ -8,15 +8,13 @@ import { XForm } from '../js/xform.js';
 
 describe('a UI grid', () => {
 
-    let grid, ectx, sys, tevts;
+    let grid, sys, tevts;
     let g1, g2, g3, g4;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         grid = new UiGrid({alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
         sys = new UpdateSystem( { dbg: false });
         tevts = [];
-        EventCtx.listen(grid, 'gizmo.updated', (evt) => {
+        Evts.listen(grid, 'GizmoUpdated', (evt) => {
             //console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
             tevts.push(evt);
         });
@@ -26,7 +24,7 @@ describe('a UI grid', () => {
         g4 = new UiView({tag: 'g4', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 64, y: 64})});
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('gzos can be iterating from grid', ()=>{
@@ -138,16 +136,16 @@ describe('a UI grid', () => {
         grid.add(g1);
         grid.add(g2);
         //console.log(`-- before game tock 1`);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.xform.x = 96;
         g2.xform.x = 32;
         //console.log(`-- before game tock 2`);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         //console.log(`-- before game tock 3`);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([1]);
         expect(grid.idxof(g2)).toEqual([0]);
         expect(tevts.length).toEqual(2);
@@ -156,12 +154,12 @@ describe('a UI grid', () => {
     it('grid tracks gzo destroy', ()=>{
         grid.add(g1);
         grid.add(g2);
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.destroy();
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(grid.idxof(g1)).toEqual([]);
         expect(grid.idxof(g2)).toEqual([1]);
         expect(tevts.length).toEqual(1);

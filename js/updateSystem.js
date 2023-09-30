@@ -28,7 +28,7 @@ class UpdateSystem extends System {
         this.active = false;
         // -- handle events
         this.onSet = this.onSet.bind(this);
-        Evts.listen(null, 'gizmo.set', this.onSet, this);
+        Evts.listen(null, 'GizmoSet', this.onSet, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------
@@ -68,7 +68,7 @@ class UpdateSystem extends System {
         if (!updates) return;
         // trigger entity updates
         let data = { frame: evt.frame, update: updates };
-        Evts.trigger(e, 'gizmo.updated', data);
+        Evts.trigger(e, 'GizmoUpdated', data);
     }
 
     finalize(evt) {

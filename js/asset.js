@@ -82,37 +82,49 @@ class AssetCtx extends GizmoCtx {
         return Promise.all(Object.values(this.assets || {}).map((x) => x.load()));
     }
 
-    async withdraw() {
-        return Promise.resolve();
-    }
-
-    add(xasset) {
-        if (xasset instanceof Asset) {
-            if (xasset.tag in this.assets) {
-                console.error(`duplicate asset tag detected: ${xasset.tag}, previous asset: ${this.assets[xasset.tag]}, new asset: ${xasset}`);
+    add(xassets) {
+        if (!Array.isArray(xassets)) xassets = [xassets];
+        for (const xasset of xassets) {
+            if (xasset instanceof Asset) {
+                if (xasset.tag in this.assets) {
+                    console.error(`duplicate asset tag detected: ${xasset.tag}, previous asset: ${this.assets[xasset.tag]}, new asset: ${xasset}`);
+                }
+                this.assets[xasset.tag] = xasset;
+            } else {
+                this.xassets.push(xasset);
             }
-            this.assets[xasset.tag] = xasset;
-        } else {
-            this.xassets.push(xasset);
         }
     }
 
     get(tag, overrides={}) {
+        // search for asset tag
         let asset = this.assets[tag];
-        // search for asset tag in asset context stack
-        if (!asset) {
-            for (const ctx of this.constructor.$stack) {
-                if (tag in (ctx.assets)) {
-                    asset = ctx.assets[tag];
-                    break;
-                }
-            }
-        }
         if (!asset) {
             console.error(`-- missing asset for ${tag}`);
             return null;
         }
         return asset.copy(Object.assign({}, overrides, { contextable: true }));
+    }
+
+    delete(xassets) {
+        if (!Array.isArray(xassets)) xassets = [xassets];
+        for (const xasset of xassets) {
+            if (xasset instanceof Asset) {
+                if (xasset.tag in this.assets) delete this.assets[xasset.tag];
+            } else {
+                let idx = this.xassets.indexOf(xasset);
+                if (idx !== -1) this.xassets.splice(idx, 1);
+            }
+        }
+    }
+
+    deleteTag(tag) {
+        if (tag in this.assets) delete this.assets[tag];
+    }
+
+    clear() {
+        this.xassets = [];
+        this.assets = {};
     }
 
 }

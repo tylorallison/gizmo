@@ -162,7 +162,7 @@ class Game extends Gizmo {
         // compute delta time
         const dt = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
         this.lastUpdate = timestamp;
-        Evts.trigger(this, 'game.tock', { deltaTime: parseInt(dt), frame: this.frame });
+        Evts.trigger(this, 'GameTock', { deltaTime: parseInt(dt), frame: this.frame });
         // next iteration
         window.requestAnimationFrame(this.loop);
     }

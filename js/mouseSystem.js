@@ -5,7 +5,7 @@ import { System } from './system.js';
 import { UiCanvas } from './uiCanvas.js';
 import { Vect } from './vect.js';
 import { Contains } from './intersect.js';
-import { Evts } from './event.js';
+import { Evts } from './evt.js';
 
 
 class MouseSystem extends System {
@@ -28,8 +28,7 @@ class MouseSystem extends System {
         let canvasId = spec.canvasId || UiCanvas.dfltCanvasID;
         this.canvas = spec.canvas || UiCanvas.getCanvas(canvasId);
         // -- mouse state
-        this.x = 0;
-        this.y = 0;
+        this.pos = new Vect();
         this.pressed = false;
         this.clicked = false;
         this.dbg = spec.dbg;
@@ -53,34 +52,34 @@ class MouseSystem extends System {
         // capture event data...
         let data = {
             actor: this,
-            old_x: this.x,
-            old_y: this.y,
+            old_x: this.pos.x,
+            old_y: this.pos.y,
             x: evt.offsetX,
             y: evt.offsetY,
         }
         // update mouse state
-        this.x = evt.offsetX;
-        this.y = evt.offsetY;
+        this.pos.x = evt.offsetX;
+        this.pos.y = evt.offsetY;
         this.active = true;
         this.clicked = true;
         // trigger event
-        Evts.trigger(this, 'mouse.clicked', data);
+        Evts.trigger(this, 'MouseClicked', data);
     }
     onMoved(evt) {
         // capture event data...
         let data = {
             actor: this,
-            old_x: this.x,
-            old_y: this.y,
+            old_x: this.pos.x,
+            old_y: this.pos.y,
             x: evt.offsetX,
             y: evt.offsetY,
         }
         // update mouse state
-        this.x = evt.offsetX;
-        this.y = evt.offsetY;
+        this.pos.x = evt.offsetX;
+        this.pos.y = evt.offsetY;
         this.active = true;
         // trigger event
-        Evts.trigger(this, 'mouse.moved', data);
+        Evts.trigger(this, 'MouseMoved', data);
     }
 
     onPressed(evt) {
@@ -103,17 +102,19 @@ class MouseSystem extends System {
         if (Hierarchy.findInParent(e, (v) => !v.active)) return;
         // determine if view bounds contains mouse point (bounds is in world coords)
         // -- translate to local position
-        let lpos = e.xform.getLocal(new Vect({x:this.x, y:this.y}));
+        let lpos = e.xform.getLocal(this.pos);
         let contains = Contains.bounds(e.xform, lpos);
         if (contains) {
             this.targets.push(e);
         }
         if (e.mouseOver && !contains) {
             e.mouseOver = false;
+            Evts.trigger(e, 'MouseLeft', { mouse: this.pos });
             if (this.dbg) console.log(`${this} mouse left: ${e}`);
         }
         if (e.mousePressed && (!contains || !this.pressed)) {
             e.mousePressed = false;
+            Evts.trigger(e, 'MouseUnpressed', { mouse: this.pos });
             if (this.dbg) console.log(`${this} mouse unpressed: ${e}`);
         }
     }
@@ -122,19 +123,20 @@ class MouseSystem extends System {
         // handle targets (click, enter, down)
         if (this.targets.length) {
             this.targets.sort((a,b) => b.mousePriority-a.mousePriority);
-            let mouseData = { x: this.x, y: this.y };
             for (const e of this.targets) {
                 // trigger clicked
                 if (this.clicked) {
                     if (this.dbg) console.log(`${this} mouse clicked: ${e}`);
-                    Evts.trigger(e, 'mouse.clicked', { mouse: mouseData });
+                    Evts.trigger(e, 'MouseClicked', { mouse: this.pos });
                 }
                 if (!e.mouseOver) {
                     e.mouseOver = true;
+                    Evts.trigger(e, 'MouseEntered', { mouse: this.pos });
                     if (this.dbg) console.log(`${this} mouse entered: ${e}`);
                 }
                 if (this.pressed && !e.mousePressed) {
                     e.mousePressed = true;
+                    Evts.trigger(e, 'MousePressed', { mouse: this.pos });
                     if (this.dbg) console.log(`${this} mouse pressed: ${e}`);
                 }
                 if (e.mouseBlock) break;

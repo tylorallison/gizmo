@@ -18,7 +18,7 @@ class WaitAction extends Action {
 
     // METHODS -------------------------------------------------------------
     doperform(ctx) {
-        EvtSystem.listen(this.gctx, this, 'game.tock', (evt) => {
+        EvtSystem.listen(this.gctx, this, 'GameTock', (evt) => {
             this.ttl -= evt.deltaTime;
             if (this.ttl <= 0) this.finish(this.ok);
         });

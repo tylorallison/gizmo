@@ -1,6 +1,6 @@
 export { SfxSystem };
 
-import { AssetCtx } from './assetCtx.js';
+import { Assets } from './asset.js';
 import { Evts } from './evt.js';
 import { System } from './system.js';
 
@@ -10,7 +10,7 @@ class SfxSystem extends System {
         this.schema('ready', { serializeable: false, parser: false });
         this.schema('decodes', { eventable: false, serializeable: false, parser: (o,x) => ({}) });
         this.schema('ctx', { eventable: false, serializeable: false, parser: (o,x) => null });
-        this.schema('assets', { eventable: false, serializeable: false, readonly: true, dflt: () => AssetCtx.$instance });
+        this.schema('assets', { eventable: false, serializeable: false, readonly: true, dflt: () => Assets });
         this.schema('streams', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
         this.schema('reqs', { eventable: false, serializeable: false, parser: (o,x) => ([]) });
         this.schema('volumes', { eventable: false, serializeable: false, parser: (o,x) => (x.volumes || {}) });

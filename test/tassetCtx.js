@@ -1,4 +1,4 @@
-import { AssetCtx } from '../js/assetCtx.js';
+import { AssetCtx, Assets } from '../js/asset.js';
 import { ImageMedia } from '../js/media.js';
 import { Sprite } from '../js/sprite.js';
 import { Asset } from '../js/asset.js';
@@ -7,13 +7,8 @@ import { Asset } from '../js/asset.js';
 //import { UiPanel } from '../js/uiPanel.js';
 
 describe('an asset context', () => {
-    let ctx;
-    beforeEach(() => {
-        ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-    });
     afterEach(() => {
-        AssetCtx.withdraw();
+        Assets.clear();
     });
 
     xit('can be referenced via game asset specifications', async ()=>{
@@ -39,37 +34,36 @@ describe('an asset context', () => {
     });
 
     it('can add and load assets by spec', async ()=>{
-        AssetCtx.add(Sprite.xspec({
+        Assets.add(Sprite.xspec({
             media: ImageMedia.xspec({src: '../media/token.png'}),
             tag: 'token',
         }));
-        await AssetCtx.load();
-        let asset = AssetCtx.get('token');
+        await Assets.advance();
+        let asset = Assets.get('token');
         expect(asset instanceof Asset).toBeTruthy();
         expect(asset.height).toEqual(48);
         expect(asset.width).toEqual(96);
     });
 
     it('can add and load raw assets', async ()=>{
-        AssetCtx.add(Sprite.from('../media/token.png', { tag: 'token'}));
-        await AssetCtx.load();
-        let asset = AssetCtx.get('token');
+        Assets.add(Sprite.from('../media/token.png', { tag: 'token'}));
+        await Assets.advance();
+        let asset = Assets.get('token');
         expect(asset instanceof Asset).toBeTruthy();
         expect(asset.height).toEqual(48);
         expect(asset.width).toEqual(96);
     });
 
-    it('can unload assets when context is withdrawn', async ()=>{
-        let ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-        AssetCtx.add(Sprite.from('../media/token.png', { tag: 'token'}));
-        await AssetCtx.load();
-        let asset = AssetCtx.get('token');
+    it('can load/unload assets', async ()=>{
+        let xasset = Sprite.from('../media/token.png', { tag: 'token'});
+        Assets.add(xasset);
+        await Assets.advance();
+        let asset = Assets.get('token');
         expect(asset instanceof Asset).toBeTruthy();
         expect(asset.height).toEqual(48);
         expect(asset.width).toEqual(96);
-        AssetCtx.withdraw();
-        asset = AssetCtx.get('token');
+        Assets.delete(xasset);
+        asset = Assets.get('token');
         expect(asset).toBeFalsy();
     });
 

@@ -1,16 +1,11 @@
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 import { Gizmo } from '../js/gizmo.js';
 import { System } from '../js/system.js';
 
 describe('systems', () => {
 
-    let ectx;
-    beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
-    });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('automatically track entities based on match rules', ()=>{
@@ -19,12 +14,12 @@ describe('systems', () => {
         let system = new System({
             matchFcn: (e) => e.wanted,
         });
-        EventCtx.trigger(null, 'gizmo.created', { actor: e });
+        Evts.trigger(null, 'GizmoCreated', { actor: e });
         expect(system.store.has(1)).toBeTrue();
-        EventCtx.trigger(null, 'gizmo.destroyed', { actor: e });
+        Evts.trigger(null, 'GizmoDestroyed', { actor: e });
         expect(system.store.has(1)).toBeFalse();
         let other = { gid: 2, wanted: false };
-        EventCtx.trigger(null, 'gizmo.created', { actor: other });
+        Evts.trigger(null, 'GizmoCreated', { actor: other });
         expect(system.store.has(2)).toBeFalse();
     });
 
@@ -36,19 +31,19 @@ describe('systems', () => {
             iterateTTL: 100,
         });
         system.iterate = (evt, e) => e.visited = true;
-        EventCtx.trigger(null, 'gizmo.created', { actor: e });
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GizmoCreated', { actor: e });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(e.visited).toBeTrue();
     });
 
     it('system listeners cleared upon destroy', ()=>{
-        let links = EventCtx.$instance.findLinksForEvt(null, 'gizmo.created');
+        let links = Evts.findLinksForEvt(null, 'GizmoCreated');
         expect(links.length).toEqual(0);
         let system = new System({});
-        links = EventCtx.$instance.findLinksForEvt(null, 'gizmo.created');
+        links = Evts.findLinksForEvt(null, 'GizmoCreated');
         expect(links.length).toEqual(1);
         system.destroy();
-        links = EventCtx.$instance.findLinksForEvt(null, 'gizmo.created');
+        links = Evts.findLinksForEvt(null, 'GizmoCreated');
         expect(links.length).toEqual(0);
     });
 

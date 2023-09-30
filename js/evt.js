@@ -77,8 +77,8 @@ class EvtCtx extends GizmoCtx {
                 emitter[handlerTag](evt);
             }
         }
-        // special case -- gizmo.destroy
-        if (emitter && (tag === 'gizmo.destroyed')) {
+        // special case -- gizmo destroy
+        if (emitter && (tag === 'GizmoDestroyed')) {
             this.clearFor(emitter);
         }
     }

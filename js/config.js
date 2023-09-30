@@ -40,11 +40,24 @@ class ConfigCtx extends GizmoCtx {
     set(path, value) {
         Util.setpath(this.values, path, value);
     }
+    delete(path) {
+        Util.delpath(this.values, path);
+    }
     setValues(values) {
         for (const [key, value] of Object.entries(values)) {
             Util.setpath(this.values, key, value);
         }
     }
+    deleteValues(values) {
+        for (const key of Object.keys(values)) {
+            Util.delpath(this.values, key);
+        }
+    }
+
+    clear() {
+        this.values = {};
+    }
+    
 
 }
 

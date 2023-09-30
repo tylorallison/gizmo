@@ -31,8 +31,8 @@ class System extends Gizmo {
     cpost(spec) {
         super.cpost(spec);
         // -- setup event handlers
-        Evts.listen(null, 'gizmo.created', this.onGizmoCreated, this);
-        Evts.listen(null, 'gizmo.destroyed', this.onGizmoDestroyed, this);
+        Evts.listen(null, 'GizmoCreated', this.onGizmoCreated, this);
+        Evts.listen(null, 'GizmoDestroyed', this.onGizmoDestroyed, this);
     }
 
     // EVENT HANDLERS ------------------------------------------------------

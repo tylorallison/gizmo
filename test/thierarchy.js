@@ -1,24 +1,22 @@
 import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 
 describe('hierarchies', () => {
 
-    let ectx, parent, child, child2;
+    let parent, child, child2;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         parent = new Gizmo({tag: 'parent'});
         child = new Gizmo({tag: 'child'});
         child2 = new Gizmo({tag: 'child2'});
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('can create parent child relationships', ()=>{
         let tevt = {};
-        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         Hierarchy.adopt(parent, child);
         expect(tevt.actor).toEqual(child);
         expect(tevt.child).toEqual(child);
@@ -29,7 +27,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in parent', ()=>{
         let tevt = {};
-        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         parent.children.push(child);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});
@@ -37,7 +35,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in child', ()=>{
         let tevt = {};
-        EventCtx.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
         child.children.push(parent);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});

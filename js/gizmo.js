@@ -264,7 +264,7 @@ class Gadget {
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) Evts.trigger(gemitter, 'gizmo.set', { 'set': { [path]: value }});
+                if (gemitter) Evts.trigger(gemitter, 'GizmoSet', { 'set': { [path]: value }});
             }
         }
         return true;
@@ -286,7 +286,7 @@ class Gadget {
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
                 let path = (target.$path) ? `${target.$path}.${key}` : key;
-                if (gemitter) Evts.trigger(gemitter, 'gizmo.set', { 'set': { [path]: undefined }});
+                if (gemitter) Evts.trigger(gemitter, 'GizmoSet', { 'set': { [path]: undefined }});
             }
         }
 
@@ -504,7 +504,7 @@ class Gizmo extends Gadget {
         this.cpost(spec);
         this.cfinal(spec);
         // -- trigger creation event
-        Evts.trigger(this, 'gizmo.created');
+        Evts.trigger(this, 'GizmoCreated');
     }
     
     /**
@@ -516,7 +516,7 @@ class Gizmo extends Gadget {
             child.destroy();
         }
         Hierarchy.orphan(this);
-        Evts.trigger(this, 'gizmo.destroyed');
+        Evts.trigger(this, 'GizmoDestroyed');
     }
 
     // -- overridable constructor functions

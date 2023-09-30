@@ -72,7 +72,7 @@ class UiCanvas extends UiView {
         this.canvas.height = height;
         this.xform.fixedWidth = width;
         this.xform.fixedHeight = height;
-        Evts.trigger(this, 'gizmo.resized', { width: width, height: height });
+        Evts.trigger(this, 'GizmoResized', { width: width, height: height });
         // FIXME: remove?
         /*
         for (const child of Hierarchy.children(this)) {

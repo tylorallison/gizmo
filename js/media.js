@@ -1,7 +1,6 @@
 export { Media, ImageMedia };
 
-import { Asset } from './asset.js';
-import { AssetCtx } from './assetCtx.js';
+import { Asset, AssetCtx } from './asset.js';
 
 /**
  * Media assets are any assets loaded from a file, URI, or data buffer

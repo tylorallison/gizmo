@@ -3,7 +3,7 @@ import { Gizmo } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { XForm } from '../js/xform.js';
 import { Vect } from '../js/vect.js';
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 
 
 class TXFormRoot extends Gizmo {
@@ -13,7 +13,7 @@ class TXFormRoot extends Gizmo {
 
     cpost(spec={}) {
         super.cpost(spec);
-        EventCtx.listen(this, 'gizmo.rooted', this.onRooted.bind(this), this);
+        Evts.listen(this, 'GizmoRooted', this.onRooted.bind(this), this);
     }
 
     onRooted(evt) {
@@ -23,18 +23,16 @@ class TXFormRoot extends Gizmo {
 
 describe('xforms', () => {
 
-    let ectx, root, tevts;
+    let root, tevts;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         root = new TXFormRoot({ xform: new XForm()});
         tevts = [];
-        EventCtx.listen(root, 'gizmo.set', (evt) => {
+        Evts.listen(root, 'GizmoSet', (evt) => {
             tevts.push(evt);
         });
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('updates triggered to bound gizmo', ()=>{
@@ -42,7 +40,7 @@ describe('xforms', () => {
         //console.log(`tevts: ${Fmt.ofmt(tevts)}`);
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
-        expect(tevt.tag).toEqual('gizmo.set'); 
+        expect(tevt.tag).toEqual('GizmoSet'); 
         expect(tevt.actor).toEqual(root); 
         expect(tevt.set).toEqual( { 'xform.gripOffsetLeft':  5 } );
     });

@@ -20,7 +20,7 @@ class Timer extends Gadget {
     constructor(spec={}) {
         super(spec);
         this.onTock = this.onTock.bind(this);
-        Evts.listen(null, 'game.tock', this.onTock, this);
+        Evts.listen(null, 'GameTock', this.onTock, this);
     }
 
     destroy() {
@@ -36,7 +36,7 @@ class Timer extends Gadget {
                 this.ttl += this.startTTL;
                 if (this.ttl < 0) this.ttl = 0;
             } else {
-                Evts.ignore(null, 'game.tock', this.onTock, this);
+                Evts.ignore(null, 'GameTock', this.onTock, this);
             }
             this.cb(Object.assign( { overflow: overflow, elapsed: this.startTTL + overflow }, evt, this.data));
         }

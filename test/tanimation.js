@@ -3,8 +3,7 @@ import { Animation } from '../js/animation.js';
 import { UiView } from '../js/uiView.js';
 import { ImageMedia } from '../js/media.js';
 import { Sprite } from '../js/sprite.js';
-import { EventCtx } from '../js/eventCtx.js';
-import { Fmt } from '../js/fmt.js';
+import { Evts } from '../js/evt.js';
 
 class TSketchView extends UiView {
     static {
@@ -21,10 +20,8 @@ class TSketchView extends UiView {
 
 describe('an animation', () => {
 
-    let ectx, anim, view;
+    let anim, view;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         anim = new Animation({jitter: true, sketches: [
             new Rect({ tag: 'rect.blue', color: 'blue', borderColor: 'red', border: 2, width: 20, height: 20, ttl: 100 }),
             new Rect({ tag: 'rect.green', color: 'green', borderColor: 'red', border: 2, width: 20, height: 20, ttl: 100 }),
@@ -32,17 +29,17 @@ describe('an animation', () => {
         view = new TSketchView({ sketch: anim });
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('timer stops when animation is destroyed', ()=>{
-        let links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        let links = Evts.findLinksForEvt(null, 'GameTock');
         expect(links.length).toEqual(0);
         anim.enable();
-        links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        links = Evts.findLinksForEvt(null, 'GameTock');
         expect(links.length).toEqual(1);
         view.destroy();
-        links = EventCtx.$instance.findLinksForEvt(null, 'game.tock');
+        links = Evts.findLinksForEvt(null, 'GameTock');
         expect(links.length).toEqual(0); // update system has listener
     });
 

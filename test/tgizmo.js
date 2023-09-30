@@ -270,9 +270,9 @@ describe('gadgets', () => {
         let o = new TRoot({data: 'foo', ndata: 'ok'});
         expect(o.data).toEqual('foo');
         let tevt;
-        Evts.listen(o, 'gizmo.set', (evt) => tevt = evt);
+        Evts.listen(o, 'GizmoSet', (evt) => tevt = evt);
         gSetter(o, 'data', 'bar');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(o);
         expect(tevt.set['data']).toEqual('bar');
         tevt = undefined;
@@ -297,9 +297,9 @@ describe('gadgets', () => {
         expect(o.sub.data).toEqual('foo');
         expect(o.sub.ndata).toEqual('nfoo');
         let tevt = {};
-        Evts.listen(o, 'gizmo.set', (evt) => tevt = evt);
+        Evts.listen(o, 'GizmoSet', (evt) => tevt = evt);
         gSetter(o.sub, 'data', 'bar');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(o);
         expect(tevt.set['sub.data']).toEqual('bar');
         tevt = {};
@@ -335,7 +335,7 @@ describe('gizmos', () => {
     });
 
     it('triggers creation event when created', ()=>{
-        Evts.listen(null, 'gizmo.created', () => counter++);
+        Evts.listen(null, 'GizmoCreated', () => counter++);
         let g = new Gizmo();
         expect(counter).toBe(1);
     });
@@ -399,7 +399,7 @@ describe('gadget arrays', () => {
     let gzd, tevt;
     beforeEach(() => {
         gzd = new TRef();
-        Evts.listen(gzd, 'gizmo.set', (evt) => tevt = evt);
+        Evts.listen(gzd, 'GizmoSet', (evt) => tevt = evt);
     });
     afterEach(() => {
         Evts.clear();
@@ -407,7 +407,7 @@ describe('gadget arrays', () => {
 
     it('causes gizmo events when k/v set', ()=>{
         gzd.items[0] = 'foo';
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.0']).toEqual('foo');
         expect(gzd.items[0]).toEqual('foo');
@@ -415,7 +415,7 @@ describe('gadget arrays', () => {
 
     it('causes gizmo events when items pushed', ()=>{
         gzd.items.push('foo');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.0']).toEqual('foo');
         expect(gzd.items[0]).toEqual('foo');
@@ -425,7 +425,7 @@ describe('gadget arrays', () => {
 
     it('causes gizmo events when items unshifted', ()=>{
         gzd.items.unshift('foo');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.0']).toEqual('foo');
         expect(gzd.items[0]).toEqual('foo');
@@ -441,7 +441,7 @@ describe('gadget arrays', () => {
         gzd.items.push('foo', 'bar', 'baz');
         let v = gzd.items.pop();
         expect(v).toEqual('baz');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.2']).toEqual(undefined);
         expect(gzd.items.length).toEqual(2);
@@ -456,7 +456,7 @@ describe('gadget arrays', () => {
         gzd.items.push('foo', 'bar', 'baz');
         let v = gzd.items.shift();
         expect(v).toEqual('foo');
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.0']).toEqual(undefined);
         expect(gzd.items.length).toEqual(2);
@@ -470,7 +470,7 @@ describe('gadget arrays', () => {
     it('causes gizmo events when items spliced', ()=>{
         gzd.items.push('foo', 'bar', 'baz');
         let v = gzd.items.splice(1, 1);
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['items.1']).toEqual(undefined);
         expect(v).toEqual(['bar']);
@@ -511,8 +511,8 @@ describe('gadget objects', () => {
     let gzd, tevt = {};
     beforeEach(() => {
         gzd = new TRef();
-        Evts.listen(gzd, 'gizmo.set', (evt) => tevt = evt);
-        Evts.listen(gzd, 'gizmo.delete', (evt) => tevt = evt);
+        Evts.listen(gzd, 'GizmoSet', (evt) => tevt = evt);
+        Evts.listen(gzd, 'GizmoDelete', (evt) => tevt = evt);
     });
     afterEach(() => {
         Evts.clear();
@@ -520,7 +520,7 @@ describe('gadget objects', () => {
 
     it('causes gizmo events when k/v set', ()=>{
         gzd.atts['foo'] = 'bar';
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
     });
@@ -528,7 +528,7 @@ describe('gadget objects', () => {
     it('causes gizmo events when k deleted', ()=>{
         gzd.atts['foo'] = 'bar';
         delete gzd.atts['foo'];
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual(undefined);
         expect(gzd.atts.foo).toBeFalsy();
@@ -537,7 +537,7 @@ describe('gadget objects', () => {
     it('can use gizmodata.set', ()=>{
         gSetter(gzd.atts, 'foo', 'bar');
         expect(gzd.atts.foo).toBeTruthy();
-        expect(tevt.tag).toEqual('gizmo.set');
+        expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
     });

@@ -5,7 +5,7 @@ import { Gadget } from './gizmo.js';
 import { ImageMedia } from './media.js';
 import { Asset } from './asset.js';
 import { Sprite } from './sprite.js';
-import { Evts } from './event.js';
+import { Evts } from './evt.js';
 
 // =========================================================================
 /**

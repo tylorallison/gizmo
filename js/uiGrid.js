@@ -69,7 +69,7 @@ class UiGrid extends UiView {
         //console.log(`${this} size ${this.xform.width},${this.xform.height} dim: ${this.chunks.cols},${this.chunks.rows} csize: ${this.chunks.colSize},${this.chunks.rowSize}`)
         // handle view creation event handling
         if (this.createFilter) {
-            Evts.listen(null, 'gizmo.created', this.onViewCreated, this, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
+            Evts.listen(null, 'GizmoCreated', this.onViewCreated, this, { filter: (evt) => evt.actor && this.createFilter(evt.actor) });
         }
     }
 
@@ -95,7 +95,7 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) Evts.trigger(this, 'gizmo.updated');
+        if (needsUpdate) Evts.trigger(this, 'GizmoUpdated');
     }
 
     onChildDestroyed(evt) {
@@ -166,10 +166,10 @@ class UiGrid extends UiView {
             this.chunkUpdates.add(idx);
         }
         // listen for gizmo events
-        Evts.listen(gzo, 'gizmo.updated', this.onChildUpdate, this);
-        Evts.listen(gzo, 'gizmo.destroyed', this.onChildDestroyed, this);
+        Evts.listen(gzo, 'GizmoUpdated', this.onChildUpdate, this);
+        Evts.listen(gzo, 'GizmoDestroyed', this.onChildDestroyed, this);
         // if chunkUpdates have been set, trigger update for grid
-        if (needsUpdate) Evts.trigger(this, 'gizmo.updated');
+        if (needsUpdate) Evts.trigger(this, 'GizmoUpdated');
     }
 
     remove(gzo) {
@@ -186,7 +186,7 @@ class UiGrid extends UiView {
             needsUpdate = true;
             this.chunkUpdates.add(idx);
         }
-        if (needsUpdate) Evts.trigger(this, 'gizmo.updated');
+        if (needsUpdate) Evts.trigger(this, 'GizmoUpdated');
     }
 
     resize() {

@@ -1,17 +1,11 @@
-import { UpdateSystem } from '../js/updateSystem.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { XForm } from '../js/xform.js';
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 
 describe('a ux canvas', () => {
 
-    let ectx;
-    beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
-    });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('can be constructed w/ specified dimensions', ()=>{

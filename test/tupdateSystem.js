@@ -1,4 +1,4 @@
-import { EventCtx } from '../js/eventCtx.js';
+import { Evts } from '../js/evt.js';
 import { Gizmo, Gadget } from '../js/gizmo.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 
@@ -14,27 +14,25 @@ class TUpdateSub extends Gadget {
 
 describe('an update system', () => {
 
-    let ectx, tevts, sys, g;
+    let tevts, sys, g;
     beforeEach(() => {
-        ectx = new EventCtx();
-        EventCtx.advance(ectx);
         sys = new UpdateSystem();
         g = new TUpdateRoot({ sub: new TUpdateSub({ data: 'hello world'}), psub: new TUpdateSub({ data: 'nihao' }) });
-        EventCtx.listen(null, 'gizmo.updated', (tevt) => tevts.push(tevt));
+        Evts.listen(null, 'GizmoUpdated', (tevt) => tevts.push(tevt));
         tevts = [];
     });
     afterEach(() => {
-        EventCtx.withdraw();
+        Evts.clear();
     });
 
     it('gizmos trigger updates', ()=>{
         g.sub.var1 = 'bar';
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
         expect(tevt.update).toEqual({ 'sub.var1': 'bar'});
         g.psub.var1 = 'zaijian';
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
         expect(tevt.update).toEqual({ 'psub.var1': 'zaijian'});
@@ -44,7 +42,7 @@ describe('an update system', () => {
         g.psub.var1 = 'foo';
         g.psub.var2 = 'bar';
         g.psub.var1 = 'baz';
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(g);
@@ -54,7 +52,7 @@ describe('an update system', () => {
     it('destroyed system does not trigger updates', ()=>{
         sys.destroy();
         g.psub.var1 = 'bar';
-        EventCtx.trigger(null, 'game.tock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
         expect(tevts.length).toEqual(0);
     });
 

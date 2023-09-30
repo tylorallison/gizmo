@@ -1,7 +1,7 @@
 export { GameState };
 
-import { AssetCtx } from './assetCtx.js';
-import { ConfigCtx } from './configCtx.js';
+import { Assets } from './asset.js';
+import { Configs } from './config.js';
 import { Evts } from './event.js';
 import { Fmt } from './fmt.js';
 import { Gizmo } from './gizmo.js';
@@ -26,6 +26,7 @@ class GameState extends Gizmo {
     static {
         this.schema('dbg', {dflt: false});
         this.schema('state', {dflt: 'none'});
+        this.schema('xcfgs', {dflt: (o) => o.constructor.xcfgs});
         this.schema('xassets', {dflt: (o) => o.constructor.xassets});
     }
 

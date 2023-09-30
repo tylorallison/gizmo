@@ -1,15 +1,9 @@
-import { AssetCtx } from '../js/assetCtx.js';
-import { Fmt } from '../js/fmt.js';
+import { Assets, AssetCtx } from '../js/asset.js';
 import { Media, ImageMedia } from '../js/media.js';
 
 describe('media assets', () => {
-    let ctx;
-    beforeEach(() => {
-        ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-    });
     afterEach(() => {
-        AssetCtx.withdraw();
+        Assets.clear();
     });
 
     it('can be async loaded', async ()=>{
@@ -37,13 +31,8 @@ describe('media assets', () => {
 });
 
 describe('image media assets', () => {
-    let ctx;
-    beforeEach(() => {
-        ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-    });
     afterEach(() => {
-        AssetCtx.withdraw();
+        Assets.clear();
     });
 
     it('can be async loaded', async ()=>{

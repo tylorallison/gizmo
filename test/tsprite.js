@@ -1,16 +1,7 @@
-import { AssetCtx } from '../js/assetCtx.js';
 import { ImageMedia, Media } from '../js/media.js';
 import { Sprite } from '../js/sprite.js';
 
 describe('sprite assets', () => {
-    let ctx;
-    beforeEach(() => {
-        ctx = new AssetCtx();
-        AssetCtx.advance(ctx);
-    });
-    afterEach(() => {
-        AssetCtx.withdraw();
-    });
 
     it('can be async loaded from URL', async ()=>{
         let asset = await Sprite.load('../media/token.png');
