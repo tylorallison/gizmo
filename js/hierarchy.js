@@ -26,12 +26,12 @@ class Hierarchy {
         child.parent = parent;
         if (Array.isArray(parent.children)) parent.children.push(child);
         // event handling
-        Evts.trigger(child, 'gizmo.adopted', {parent: parent, child: child});
-        Evts.trigger(parent, 'gizmo.childed', {parent: parent, child: child});
+        Evts.trigger(child, 'GizmoAdopted', {parent: parent, child: child});
+        Evts.trigger(parent, 'GizmoChilded', {parent: parent, child: child});
         let root = this.root(parent);
-        Evts.trigger(child, 'gizmo.rooted', {root: root});
+        Evts.trigger(child, 'GizmoRooted', {root: root});
         for (const dec of this.children(child)) {
-            Evts.trigger(dec, 'gizmo.rooted', {root: root});
+            Evts.trigger(dec, 'GizmoRooted', {root: root});
         }
     }
 
@@ -46,8 +46,8 @@ class Hierarchy {
             }
             child.parent = null;
             // trigger events
-            Evts.trigger(child, 'gizmo.orphaned', {parent: parent, child: child});
-            Evts.trigger(parent, 'gizmo.unchilded', {parent: parent, child: child});
+            Evts.trigger(child, 'GizmoOrphaned', {parent: parent, child: child});
+            Evts.trigger(parent, 'GizmoUnchilded', {parent: parent, child: child});
         }
     }
 

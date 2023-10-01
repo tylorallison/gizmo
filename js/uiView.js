@@ -39,20 +39,20 @@ class UiView extends Gizmo {
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     cpre(spec={}) {
         super.cpre(spec);
-        this.onMouseEntered = this.onMouseEntered.bind(this);
-        this.onMouseExited = this.onMouseExited.bind(this);
-        this.onMouseClicked = this.onMouseClicked.bind(this);
-        this.onRooted = this.onRooted.bind(this);
-        this.onOrphaned = this.onOrphaned.bind(this);
+        //this.onMouseEntered = this.onMouseEntered.bind(this);
+        //this.onMouseExited = this.onMouseExited.bind(this);
+        //this.onMouseClicked = this.onMouseClicked.bind(this);
+        //this.onRooted = this.onRooted.bind(this);
+        //this.onOrphaned = this.onOrphaned.bind(this);
     }
 
     cpost(spec={}) {
         super.cpost(spec);
-        Evts.listen(this, 'mouse.clicked', this.onMouseClicked, this);
-        Evts.listen(this, 'gizmo.updated', this.onMouseEntered, this, { filter: (evt) => evt.update && evt.update.mouseOver === true});
-        Evts.listen(this, 'gizmo.updated', this.onMouseExited, this, { filter: (evt) => evt.update && evt.update.mouseOver === false});
-        Evts.listen(this, 'gizmo.rooted', this.onRooted, this);
-        Evts.listen(this, 'gizmo.orphaned', this.onOrphaned, this);
+        //Evts.listen(this, 'MouseClicked', this.onMouseClicked, this);
+        //Evts.listen(this, 'GizmoUpdated', this.onMouseEntered, this, { filter: (evt) => evt.update && evt.update.mouseOver === true});
+        //Evts.listen(this, 'GizmoUpdated', this.onMouseExited, this, { filter: (evt) => evt.update && evt.update.mouseOver === false});
+        //Evts.listen(this, 'GizmoRooted', this.onRooted, this);
+        //Evts.listen(this, 'GizmoOrphaned', this.onOrphaned, this);
 
     }
     cfinal(spec) {
@@ -78,7 +78,7 @@ class UiView extends Gizmo {
         if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
     }
 
-    onRooted(evt) {
+    onGizmoRooted(evt) {
         this.xform.$regen();
         if (evt.root.constructor.canvasable && !this.active) {
             this.active = true;
@@ -86,7 +86,7 @@ class UiView extends Gizmo {
         }
     }
 
-    onOrphaned(evt) {
+    onGizmoOrphaned(evt) {
         if (this.xform) this.xform.$regen();
         if (this.active) {
             this.disable();
@@ -152,10 +152,12 @@ class UiView extends Gizmo {
         if (!this.parent) ctx.restore();
     }
 
+    /*
     resize(width, height) {
         if (width != this.xform.width || height != this.xform.height) {
             this.xform.width = width;
             this.xform.height = height;
+            Evts.trigger(this, 'ViewResized', {width: width, height: height});
             this.evt.trigger(this.constructor.evtResized, {actor: this, width: width, height: height});
             for (const child of Hierarchy.children(this)) {
                 child.evt.trigger(child.constructor.evtResized, {actor: child, root: this});
@@ -163,5 +165,6 @@ class UiView extends Gizmo {
             this.evt.trigger(this.constructor.evtUpdated, {actor: this});
         }
     }
+    */
 
 }

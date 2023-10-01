@@ -102,8 +102,8 @@ class UiInput extends UiPanel {
 
     cpost(spec) {
         super.cpost(spec);
-        Evts.listen(null, 'key.down', this.onKeyDown, this);
-        Evts.listen(null, 'mouse.clicked', this.onSystemMouseClicked, this);
+        Evts.listen(null, 'KeyDown', this.onKeyDown, this);
+        Evts.listen(null, 'MouseClicked', this.onSystemMouseClicked, this);
         Hierarchy.adopt(this, this.ttext);
     }
 

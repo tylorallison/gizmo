@@ -85,6 +85,7 @@ class AssetCtx extends GizmoCtx {
     add(xassets) {
         if (!Array.isArray(xassets)) xassets = [xassets];
         for (const xasset of xassets) {
+            console.log(`adding: ${Fmt.ofmt(xasset)}`);
             if (xasset instanceof Asset) {
                 if (xasset.tag in this.assets) {
                     console.error(`duplicate asset tag detected: ${xasset.tag}, previous asset: ${this.assets[xasset.tag]}, new asset: ${xasset}`);

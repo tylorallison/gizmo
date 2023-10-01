@@ -24,14 +24,14 @@ class SfxSystem extends System {
 
     // STATIC METHODS ------------------------------------------------------
     static playSfx( actor, tag, options={} ) {
-        Evts.trigger(actor, 'sfx.play.requested', {
+        Evts.trigger(actor, 'SfxPlay', {
             assetTag: tag,
             options: options,
         });
     }
 
     static stopSfx( actor, tag ) {
-        Evts.trigger(actor, 'sfx.stop.requested', {
+        Evts.trigger(actor, 'SfxStop', {
             assetTag: tag,
         });
     }
@@ -44,8 +44,8 @@ class SfxSystem extends System {
     cpost(spec) {
         super.cpost(spec);
         // setup event handlers
-        Evts.listen(null, 'sfx.play.requested', this.onSfxRequested, this);
-        Evts.listen(null, 'sfx.stop.requested', this.onSfxRequested, this);
+        Evts.listen(null, 'SfxPlay', this.onSfxRequested, this);
+        Evts.listen(null, 'SfxStop', this.onSfxRequested, this);
         // assign master volume
         if (!this.volumes.hasOwnProperty('master')) this.volumes.master = 1;
     }

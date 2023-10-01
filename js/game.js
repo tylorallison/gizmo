@@ -15,6 +15,7 @@ import { Util } from './util.js';
 import { Assets } from './asset.js';
 import { Evts } from './evt.js';
 import { Global } from './global.js';
+import { Fmt } from './fmt.js';
 
 /**
  * class for static/global game state management, including initial game loading of assets, initializating and starting of global game state
@@ -51,6 +52,8 @@ class Game extends Gizmo {
     static { this.schema('generator', { readonly: true, parser: (o,x) => new Generator({ gctx: o.gctx })}); }
     /** @member {bool} Game#userActive - boolean tracking if player has interacted w/ game interface */
     static { this.schema('userActive', { dflt: false }); }
+    static { this.schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
+    static { this.schema('xassets', {dflt: (o) => o.constructor.xassets}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
@@ -74,6 +77,7 @@ class Game extends Gizmo {
         // -- config
         if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
+        console.log(`xassets: ${Fmt.ofmt(this.xassets)}`);
         if (this.xassets) Assets.add(this.xassets);
         // game init
         await this.init();
@@ -93,6 +97,7 @@ class Game extends Gizmo {
 
     async doload() {
         if (this.dbg) console.log(`${this.name} starting loading`);
+        await Assets.advance();
         await this.load();
         if (this.dbg) console.log(`${this.name} loading complete`);
         Evts.trigger(this, 'GameLoaded');

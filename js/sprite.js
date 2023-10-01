@@ -27,6 +27,7 @@ class Sprite extends Sketch {
 
     // METHODS -------------------------------------------------------------
     subrender(ctx, x=0, y=0, width=0, height=0) {
+        console.log(`subrender sprite: ${x},${y}, ${width},${height}`);
         if (!this.media || !this.media.data) return;
         // scale if necessary
         if ((width && width !== this.width) || (height && height !== this.height)) {
@@ -37,12 +38,12 @@ class Sprite extends Sketch {
                 // dst dims
                 let dw = width;
                 let dh = height;
-                ctx.drawImage(this.img, 
+                ctx.drawImage(this.media.data, 
                     0, 0, sw, sh, 
                     x, y, dw, dh);
             }
         } else {
-            ctx.drawImage(this.img, x, y);
+            ctx.drawImage(this.media.data, x, y);
         }
     }
 

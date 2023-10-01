@@ -47,7 +47,7 @@ class Animator extends Sketch {
         let self = this;
         let trunkKey = this.trunkKey;
         if (trunk.$emiiter) {
-            Evts.listen(trunk, 'gizmo.updated', (evt) => { 
+            Evts.listen(trunk, 'GizmoUpdated', (evt) => { 
                 self.state = evt.update[trunkKey]; 
             }, this, { filter: (evt) => (trunkKey in evt.update) });
         }
@@ -60,7 +60,7 @@ class Animator extends Sketch {
      */
     atUnlinkTrunk(trunk) {
         if (trunk.$emiiter) {
-            Evts.ignore(trunk, 'gizmo.updated', null, this);
+            Evts.ignore(trunk, 'GizmoUpdated', null, this);
         }
     }
 
@@ -117,7 +117,7 @@ class Animator extends Sketch {
                 let root = Gadget.root(this);
                 let path = `${this.$path}.done`;
                 if (root.$emiiter) {
-                    Evts.listen(root, 'gizmo.updated', (evt) => {
+                    Evts.listen(root, 'GizmoUpdated', (evt) => {
                         if (this.state === state) {
                             this.sketch.disable();
                             this.sketch = this.sketches[state];

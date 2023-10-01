@@ -22,9 +22,9 @@ class RenderSystem extends System {
     cpost(spec) {
         super.cpost(spec);
         // -- listen on events
-        Evts.listen(null, 'gizmo.updated', this.onViewUpdated, this);
-        Evts.listen(null, 'render.needed', this.onRenderNeeded, this);
-        Evts.listen(null, 'gizmo.adopted', this.onEntityAdopted, this);
+        Evts.listen(null, 'GizmoUpdated', this.onViewUpdated, this);
+        Evts.listen(null, 'RenderNeeded', this.onRenderNeeded, this);
+        Evts.listen(null, 'GizmoAdopted', this.onEntityAdopted, this);
         this.stayActive = false;
     }
 

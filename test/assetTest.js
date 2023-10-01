@@ -1,7 +1,7 @@
 import { SheetRef } from '../js/refs.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
-import { EvtSystem } from '../js/event.js';
+import { Evts } from '../js/evt.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { Rect } from '../js/rect.js';
 import { Hierarchy } from '../js/hierarchy.js';
@@ -15,7 +15,7 @@ import { Timer } from '../js/timer.js';
 import { CompositeSprite } from '../js/compositeSprite.js';
 import { Shape } from '../js/shape.js';
 import { ImageMedia } from '../js/media.js';
-
+import { Assets } from '../js/asset.js';
 
 class TestModel extends UiPanel {
     static {
@@ -29,12 +29,9 @@ class AssetTest extends Game {
 
         Rect.xspec({ tag: 'rect.one', color: 'rgba(255,0,0,.5)', borderColor: 'red', border: 2, width: 40, height: 40 }),
         Rect.xspec({ tag: 'rect.two', color: 'rgba(0,255,0,.25)', borderColor: 'yellow', border: 2, width: 40, height: 40 }),
-
         Rect.xspec({ tag: 'test.rect', color: 'blue', borderColor: 'red', border: 2, width: 40, height: 40 }),
         Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
-
         Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
-
         Animation.xspec({tag: 'test.animation', jitter: true, sketches: [
             Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
             Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
@@ -44,6 +41,7 @@ class AssetTest extends Game {
             Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
         ]}),
 
+        /*
         Animator.xspec({ 
             tag: 'test.animator', state: 'on', 
             sketches: {
@@ -56,34 +54,33 @@ class AssetTest extends Game {
                 ]}) }],
             },
         }),
+        */
 
     ];
 
     async prepare() {
-        EvtSystem.listen(this.gctx, this, 'key.down', (evt) => { console.log(`key pressed: ${Fmt.ofmt(evt)}`)});
+        Evts.listen(null, 'KeyDown', (evt) => { console.log(`key pressed: ${Fmt.ofmt(evt)}`)});
 
-        let cvs = new UiCanvas({ gctx: this.gctx });
-        let r = new Rect(this.assets.get('test.rect'));
-        let s = new Sprite(this.assets.get('test.sprite'));
+        let cvs = new UiCanvas({ });
+        let rect = Assets.get('test.rect');
+        let sprite = Assets.get('test.sprite');
+        let shape = Assets.get('test.shape');
+        let anim = Assets.get('test.animation');
+
+        /*
         let c = new CompositeSprite();
-        c.add('one', Generator.generate(this.assets.get('rect.one')));
-        c.add('two', Generator.generate(this.assets.get('rect.two')));
-        let a = Generator.generate(this.assets.get('test.animation'));
-        let x = Generator.generate(this.assets.get('test.animator'));
-        let shape = Generator.generate(this.assets.get('test.shape'));
+        c.add('one', Generator.generate(Assets.get('rect.one')));
+        c.add('two', Generator.generate(Assets.get('rect.two')));
+        let x = Generator.generate(Assets.get('test.animator'));
+        */
         let p = new TestModel({ 
-            gctx: this.gctx, 
-            //sketch: x, 
-            sketch: shape, 
-            //xform: new XForm({origx: .5, origy: .5, grip: .5, fixedWidth: 220, fixedHeight: 220}),
+            sketch: anim, 
             xform: new XForm({origx: .5, origy: .5, grip: .3}),
             fitter: 'stretchRatio',
         });
         Hierarchy.adopt(cvs, p);
-        //let sv = new TestSketchView( { gctx: this.gctx, sketch: a, x: 100, y: 100, xform: new XForm({origx: 0, origy: 0})});
-        //Hierarchy.adopt(cvs, sv);
 
-        new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
+        //new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
 
 
     }

@@ -11,16 +11,16 @@ class UiVerticalSpacer extends UiView {
         super.cpost(spec);
         this.onChilded = this.onChilded.bind(this);
         this.onUnchilded = this.onUnchilded.bind(this);
-        Evts.listen(this, 'gizmo.childed', this.onChilded, this);
-        Evts.listen(this, 'gizmo.unchilded', this.onUnchilded, this);
+        //Evts.listen(this, 'GizmoChilded', this.onChilded, this);
+        //Evts.listen(this, 'GizmoUnchilded', this.onUnchilded, this);
         this.resize();
     }
 
-    onChilded(evt) {
+    onGizmoChilded(evt) {
         this.resize();
     }
 
-    onUnchilded(evt) {
+    onGizmoUnchilded(evt) {
         this.resize();
     }
 
@@ -59,8 +59,8 @@ class UiHorizontalSpacer extends UiView {
         super.cpost(spec);
         this.onChilded = this.onChilded.bind(this);
         this.onUnchilded = this.onUnchilded.bind(this);
-        Evts.listen(this, 'gizmo.childed', this.onChilded, this);
-        Evts.listen(this, 'gizmo.unchilded', this.onUnchilded, this);
+        Evts.listen(this, 'GizmoChilded', this.onChilded, this);
+        Evts.listen(this, 'GizmoUnchilded', this.onUnchilded, this);
         this.resize();
     }
 
