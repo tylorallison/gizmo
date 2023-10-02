@@ -6,6 +6,7 @@ import { ImageMedia } from './media.js';
 import { Asset } from './asset.js';
 import { Sprite } from './sprite.js';
 import { Evts } from './evt.js';
+import { Fmt } from './fmt.js';
 
 // =========================================================================
 /**
@@ -46,7 +47,7 @@ class Animator extends Sketch {
         // if linked to gizmo
         let self = this;
         let trunkKey = this.trunkKey;
-        if (trunk.$emiiter) {
+        if (trunk.$emitter) {
             Evts.listen(trunk, 'GizmoUpdated', (evt) => { 
                 self.state = evt.update[trunkKey]; 
             }, this, { filter: (evt) => (trunkKey in evt.update) });
@@ -115,8 +116,8 @@ class Animator extends Sketch {
             this.sketch = targetSketch;
             if (transition) {
                 let root = Gadget.root(this);
-                let path = `${this.$path}.done`;
-                if (root.$emiiter) {
+                let path = `${this.$path}.sketch.done`;
+                if (root.$emitter) {
                     Evts.listen(root, 'GizmoUpdated', (evt) => {
                         if (this.state === state) {
                             this.sketch.disable();
@@ -125,6 +126,7 @@ class Animator extends Sketch {
                             this.sketch.enable();
                         }
                     }, this, { once: true, filter: (evt) => (path in evt.update) });
+                    //}, this, {});
                 }
             }
             this.sketch.reset();
@@ -153,13 +155,20 @@ class Animator extends Sketch {
     }
 
     async load() {
-        // FIXME: transitions
-        return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => x.load()));
+        return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => ((x.sketch) ? x.sketch.load() : Promise.resolve())));
     }
 
     copy(overrides={}) {
         let sketches = Object.fromEntries(Object.entries(this.sketches || {}).map(([k,v]) => [k, v.copy()]));
-        let transitions = Object.fromEntries(Object.entries(this.transitions || {}).map(([k,v]) => [k, v.copy()]));
+        let transitions = Object.fromEntries(Object.entries(this.transitions || {}).map(([k,v]) => {
+            let matches = [];
+            for (const match of v) {
+                let nmatch = Object.assign({}, match);
+                if (nmatch.sketch) nmatch.sketch = nmatch.sketch.copy();
+                matches.push(nmatch);
+            }
+            return [ k, matches];
+        }));
         return new this.constructor(Object.assign({}, this.$store, { sketches: sketches, transitions: transitions }, overrides));
     }
 

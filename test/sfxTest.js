@@ -1,6 +1,6 @@
 
 import { SfxSystem } from '../js/sfxSystem.js';
-import { EvtSystem } from '../js/event.js';
+import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
 import { SfxRef } from '../js/refs.js';
@@ -15,8 +15,8 @@ class SfxTest extends Game {
     async prepare() {
         console.log(`${this} ready`);
         //let sys;
-        EvtSystem.listen(this.gctx, this, 'key.down', (evt) => { 
-            //console.log(`key event: ${Fmt.ofmt(evt)}`);
+        Evts.listen(null, 'KeyDown', (evt) => { 
+            console.log(`key event: ${Fmt.ofmt(evt)}`);
             //if (!sys) sys = new SfxSystem();
             SfxSystem.playSfx(this, 'test.sound', {});
         });

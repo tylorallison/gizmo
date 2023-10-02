@@ -77,7 +77,6 @@ class Game extends Gizmo {
         // -- config
         if (this.xcfgs) Configs.setValues(this.xcfgs);
         // -- assets
-        console.log(`xassets: ${Fmt.ofmt(this.xassets)}`);
         if (this.xassets) Assets.add(this.xassets);
         // game init
         await this.init();

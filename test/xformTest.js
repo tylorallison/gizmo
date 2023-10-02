@@ -31,16 +31,6 @@ class XFormTest extends Game {
         })
         Hierarchy.adopt(ucvs, view2);
 
-        //let r = new Rect({ xform: new XForm({ fixedWidth: 100, fixedHeight: 200, gripOffsetForceRatio: true})});
-        //Hierarchy.adopt(view2, r);
-
-        /*
-        Hierarchy.adopt( ucvs, new UiView({ xform: new XForm({grip: .2}), children: [
-            new Rect({ xform: new XForm({ left: 0, right: 1, origx: 0, fixedWidth: 100, fixedHeight: 200 })}),
-            new Rect({ xform: new XForm({ left: 0, right: 1, origx: 0, x: 100, fixedWidth: 100, fixedHeight: 200 })}),
-        ]}));
-        */
-
     }
 }
 

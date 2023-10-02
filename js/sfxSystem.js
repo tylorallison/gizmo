@@ -4,6 +4,7 @@ import { Assets } from './asset.js';
 import { Evts } from './evt.js';
 import { System } from './system.js';
 import { Global } from './global.js';
+import { Fmt } from './fmt.js';
 
 class SfxSystem extends System {
     // SCHEMA --------------------------------------------------------------
@@ -63,7 +64,7 @@ class SfxSystem extends System {
         let reqs = this.reqs;
         this.reqs = [];
         for (const req of reqs) {
-            if (req.tag === 'sfx.play.requested') {
+            if (req.tag === 'SfxPlay') {
                 this.playRequest(req.actor, req.assetTag, req.options);
             } else {
                 this.stopRequest(req.actor, req.assetTag);

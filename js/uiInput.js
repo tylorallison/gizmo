@@ -109,15 +109,20 @@ class UiInput extends UiPanel {
 
     // EVENT HANDLERS ------------------------------------------------------
     onMouseClicked(evt) {
+        console.log(`onMouseClicked`);
         // activate/deactivate
         this.updateSelected(!this.ttext.selected);
+        console.log(`super onMouseClicked`);
         super.onMouseClicked(evt);
     }
 
     onSystemMouseClicked(evt) {
-        if (!this.mouseOver && this.ttext.selected) {
+        /*
+        console.log(`onSystemMouseClicked: mouseOver: ${this.mouseOver} this.ttext.selected: ${this.ttext.selected}`);
+        if ((!this.mouseOver) && this.ttext.selected) {
             this.updateSelected(false);
         }
+        */
     }
 
     onKeyDown(evt) {

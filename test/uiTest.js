@@ -16,10 +16,11 @@ import { UiView } from '../js/uiView.js';
 import { Bounds } from '../js/bounds.js';
 import { Rect } from '../js/rect.js';
 import { UiToggle } from '../js/uiToggle.js';
+import { Media } from '../js/media.js';
 
 class UITest extends Game {
-    static assetSpecs = [
-        Sfx.xspec({ tag: 'test.sound', audio: new SfxRef({src: '../media/test.mp3'}) }),
+    static xassets = [
+        Sfx.xspec({ tag: 'test.sound', media: Media.from('../media/test.mp3') }),
     ];
 
     async prepare() {

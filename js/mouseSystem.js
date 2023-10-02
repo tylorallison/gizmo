@@ -109,8 +109,8 @@ class MouseSystem extends System {
         }
         if (e.mouseOver && !contains) {
             e.mouseOver = false;
-            Evts.trigger(e, 'MouseLeft', { mouse: this.pos });
-            if (this.dbg) console.log(`${this} mouse left: ${e}`);
+            Evts.trigger(e, 'MouseExited', { mouse: this.pos });
+            if (this.dbg) console.log(`${this} mouse exited: ${e}`);
         }
         if (e.mousePressed && (!contains || !this.pressed)) {
             e.mousePressed = false;

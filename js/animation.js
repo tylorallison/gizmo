@@ -175,7 +175,6 @@ class Animation extends Sketch {
      * @param {number} [height=0] - desired height to render, if unspecified, sketch will render at internal height
      */
     subrender(ctx, x=0, y=0, width=0, height=0) {
-        console.log(`subrender`)
         if (this.sketch) this.sketch.render(ctx, x, y, width, height);
     }
 

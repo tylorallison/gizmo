@@ -33,15 +33,14 @@ class AssetTest extends Game {
         Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), }),
         Shape.xspec({tag: 'test.shape', color: 'purple', border: 2, borderColor: 'red', verts: [{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}]}),
         Animation.xspec({tag: 'test.animation', jitter: true, sketches: [
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
-            Sprite.xspec({cls: 'Sprite', img: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 0, y: 0, scale: 4, smoothing: false}), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*1, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*2, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*3, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*4, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
+            Sprite.xspec({cls: 'Sprite', media: ImageMedia.xspec({src: '../media/token.png', width: 16, height: 16, x: 16*5, y: 0, scale: 4, smoothing: false }), ttl: 150 }),
         ]}),
 
-        /*
         Animator.xspec({ 
             tag: 'test.animator', state: 'on', 
             sketches: {
@@ -54,7 +53,6 @@ class AssetTest extends Game {
                 ]}) }],
             },
         }),
-        */
 
     ];
 
@@ -66,21 +64,21 @@ class AssetTest extends Game {
         let sprite = Assets.get('test.sprite');
         let shape = Assets.get('test.shape');
         let anim = Assets.get('test.animation');
+        let animator = Assets.get('test.animator');
 
         /*
         let c = new CompositeSprite();
         c.add('one', Generator.generate(Assets.get('rect.one')));
         c.add('two', Generator.generate(Assets.get('rect.two')));
-        let x = Generator.generate(Assets.get('test.animator'));
         */
         let p = new TestModel({ 
-            sketch: anim, 
+            sketch: animator, 
             xform: new XForm({origx: .5, origy: .5, grip: .3}),
             fitter: 'stretchRatio',
         });
         Hierarchy.adopt(cvs, p);
 
-        //new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
+        new Timer({ttl: 2000, cb: () => { console.log('turning state off'); p.state = 'off'}});
 
 
     }
