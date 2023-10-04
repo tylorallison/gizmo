@@ -115,6 +115,11 @@ class Gadget {
         if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
     }
 
+    static $gid = 1;
+    static getgid() {
+        return this.$gid++;
+    }
+
     static get cfgpath() {
         let cls = this;
         let p;
@@ -474,8 +479,8 @@ class Gizmo extends Gadget {
     // SCHEMA --------------------------------------------------------------
     /** @member {int} Gizmo#gctx - reference to gizmo context */
     //static { this.schema('gctx', { readonly: true, dflt: () => GizmoCtx.$instance.gid }); }
-    /** @member {int} Gizmo#gid - unique gizmo identifier*/
-    static { this.schema('gid', { readonly: true, dflt: () => (Gizmo.gid++) }); }
+    /** @member {int} Gizmo#gid - unique gadget identifier*/
+    static { this.schema('gid', { readonly: true, dflt: () => Gadget.getgid() }); }
     /** @member {string} Gizmo#tag - tag for this gizmo */
     static { this.schema('tag', { order: 1, readonly: true, dflt: (gdt) => `${gdt.constructor.name}.${gdt.gid}` }); }
     static { this.schema('parent', { link: false, serializable: false, parser: () => null }); }
@@ -487,7 +492,6 @@ class Gizmo extends Gadget {
     }
 
     // STATIC VARIABLES ----------------------------------------------------
-    static gid = 1;
     static cfgpathskip = true;
     static { this.prototype.$emitter = true; }
 

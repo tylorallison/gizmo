@@ -1,11 +1,12 @@
-import { EvtSystem } from '../js/event.js';
+import { Assets } from '../js/asset.js';
+import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
 import { Generator } from '../js/generator.js';
 import { Gadget } from '../js/gizmo.js';
 import { Hierarchy } from '../js/hierarchy.js';
 import { Mathf } from '../js/math.js';
-import { ImageRef, SheetRef } from '../js/refs.js';
+import { ImageMedia } from '../js/media.js';
 import { Sprite } from '../js/sprite.js';
 import { UiCanvas } from '../js/uiCanvas.js';
 import { UiPanel } from '../js/uiPanel.js';
@@ -33,13 +34,13 @@ class NSprite extends Sprite {
     }
 
     static {
-        this.schema('nimg', {readonly: true});
+        this.schema('nmedia', {readonly: true});
         this.schema('specularity', {dflt: 1});
         this.schema('specularPower', {dflt: 1});
         this.schema('shiny', {dflt: 1});
-        this.schema('idata', {readonly: true, parser: (o,x) => o.constructor.getDataFromImage(o.img)});
-        this.schema('ndata', {renderable: true, parser: () => null});
-        this.schema('normals', {readonly: true, parser: () => []});
+        this.schema('idata', {dflt: () => null});
+        this.schema('ndata', {renderable: true, dflt: () => null});
+        this.schema('normals', {readonly: true, dflt: () => []});
     }
 
     static getDataFromImage(img) {
@@ -50,12 +51,11 @@ class NSprite extends Sprite {
         return this._ctx.getImageData(0, 0, img.width, img.height);
     }
 
-    // FIXME: cache normals based on image... likely scenario is that image/normal image will be re-used across muliple normal-sketch instances... 
-    // don't want to calculate and keep separate normal data for each instance...
-    constructor(spec) {
-        super(spec);
-        this.data = this.constructor.getDataFromImage(this.img).data;
-        var data = this.constructor.getDataFromImage(this.nimg).data;
+    async load() {
+        if (this.media) await this.media.load();
+        if (this.nmedia) await this.nmedia.load();
+        this.idata = this.constructor.getDataFromImage(this.media.data);
+        let data = this.idata.data;
         // precalculate the normals
         for (let i=0; i<data.length; i+=4) {
             var nx = data[i]-127;
@@ -73,6 +73,14 @@ class NSprite extends Sprite {
             // normals applied to image data which includes alpha component
             this.normals.push(0);
         }
+        console.log(`-- this: ${this} this.idata: ${this.idata}`);
+        return Promise.resolve();
+    }
+
+    // FIXME: cache normals based on image... likely scenario is that image/normal image will be re-used across muliple normal-sketch instances... 
+    // don't want to calculate and keep separate normal data for each instance...
+    constructor(spec) {
+        super(spec);
     }
 
     xcalcLight(
@@ -164,6 +172,7 @@ class NSprite extends Sprite {
     */
 
     updateLight(view, light) {
+        //console.log(`this: ${this} this.idata: ${this.idata}`);
         let imgData = new ImageData(this.idata.data, this.idata.width);
         let odata = new Array();
         for (let i=0; i<this.idata.width*this.idata.height*4; i++) odata.push(127);
@@ -261,7 +270,7 @@ class NSprite extends Sprite {
 
     // METHODS -------------------------------------------------------------
     subrender(ctx, x=0, y=0, width=0, height=0) {
-        if (!this.img) return;
+        if (!this.media) return;
         // scale if necessary
         if ((width && width !== this.width) || (height && height !== this.height)) {
             if (this.width && this.height) {
@@ -271,12 +280,12 @@ class NSprite extends Sprite {
                 // dst dims
                 let dw = width;
                 let dh = height;
-                ctx.drawImage(this.ndata || this.img, 
+                ctx.drawImage(this.ndata || this.media.data, 
                     0, 0, sw, sh, 
                     x, y, dw, dh);
             }
         } else {
-            ctx.drawImage(this.ndata || this.img, x, y);
+            ctx.drawImage(this.ndata || this.media.data, x, y);
         }
     }
 
@@ -286,21 +295,27 @@ let tileSize = 26;
 
 class DLightTest extends Game {
 
-    static assetSpecs = [
-        Sprite.xspec({tag: 'test.sprite', img: new SheetRef({src: '../media/sphere-normal.png', width: tileSize, height: tileSize, x: 0, y: 0, smoothing: false}), smoothing: false }),
-        NSprite.xspec({tag: 'test.nsprite', img: new ImageRef({src: '../media/body.png'}), nimg: new ImageRef({src: '../media/body-n.png'}), specularity: .5, specularPower: 2}),
+    static xassets = [
+        Sprite.xspec({tag: 'test.sprite', media: ImageMedia.xspec({src: '../media/sphere-normal.png', width: tileSize, height: tileSize, smoothing: false}), }),
+        NSprite.xspec({
+            tag: 'test.nsprite', 
+            media: ImageMedia.xspec({src: '../media/body.png'}), 
+            nmedia: ImageMedia.xspec({src: '../media/body-n.png'}), 
+            specularity: .5, 
+            specularPower: 2,
+        }),
     ];
 
     async prepare() {
         let cvs = new UiCanvas({ gctx: this.gctx });
         let panel = new UiPanel({
             gctx: this.gctx, 
-            sketch: Generator.generate(this.assets.get('test.sprite')),
+            sketch: Assets.get('test.sprite'),
             xform: new XForm({grip: .5, x: -tileSize*3, fixedWidth: tileSize, fixedHeight: tileSize, scale: 4, smoothing: false}),
         });
         Hierarchy.adopt(cvs, panel);
 
-        let tsprite = this.assets.get('test.sprite');
+        //let tsprite = this.assets.get('test.sprite');
         let light = new Light({
             point: true,
             ambientIntensity: .5,
@@ -318,16 +333,17 @@ class DLightTest extends Game {
                 //let nsprite = new NSprite({img: tsprite.args[0].img, nimg: tsprite.args[0].img, specularity: .25*i, specularPower: 2.5*j});
                 let panel = new UiPanel({
                     gctx: this.gctx, 
-                    sketch: Generator.generate(this.assets.get('test.nsprite')),
+                    sketch: Assets.get('test.nsprite'),
                     xform: new XForm({grip: .5, x:-tileSize*2*scale+tileSize*i*scale, y:-tileSize*2*scale+tileSize*j*scale, fixedWidth: 16, fixedHeight: 32, scale: scale, smoothing: false}),
                 });
+                //Evts.listen(panel, 'GizmoUpdated', (evt) => { console.log(`panel updated: ${Fmt.ofmt(evt)}`)});
                 Hierarchy.adopt(cvs, panel);
                 panels.push(panel);
             }
         }
 
         let view = new Vect3({x:cvs.width/2,y:cvs.height/2,z:100});
-        EvtSystem.listen(this.gctx, this, 'mouse.moved', (evt) => {
+        Evts.listen(null, 'MouseMoved', (evt) => {
             for (const panel of panels) {
                 let lpos = panel.xform.getLocal(new Vect({x:evt.x,y:evt.y}));
                 light.v = new Vect3({x:lpos.x-panel.xform.minx, y:lpos.y-panel.xform.miny, z:32});

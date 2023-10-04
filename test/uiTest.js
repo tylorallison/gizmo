@@ -112,8 +112,6 @@ class UITest extends Game {
 
         let panel = new UiPanel({sketch: new Rect({color: 'green'}), tag: 'grid', xform: new XForm({ x: 32, y: 32, fixedWidth: 16, fixedHeight: 16})});
 
-        console.log(`panel: ${panel} size: ${panel.xform.width},${panel.xform.height} idxs: ${grid.idxof(panel)}`);
-
         new Timer({ ttl: 2000, cb: () => { 
             panel.xform.x = 64; 
             new Timer({ ttl: 2000, cb: () => { 

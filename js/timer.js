@@ -5,11 +5,10 @@ import { Stats } from './stats.js';
 
 class Timer extends Gadget {
     static dfltTTL = 1000;
-    static gid = 0;
 
     static {
         /** @member {int} Timer#gid - unique timer id used for event handling */
-        this.schema('gid', { readonly: true, dflt: () => (Timer.gid++) });
+        this.schema('gid', { readonly: true, dflt: () => (Gadget.getgid()) });
         this.schema('ttl', { eventable: false, dflt: this.dfltTTL });
         this.schema('startTTL', { readonly: true, parser: (o,x) => o.ttl });
         this.schema('loop', { readonly: true, dflt: false });

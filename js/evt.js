@@ -125,7 +125,12 @@ class EvtCtx extends GizmoCtx {
         if (links) {
             for (const link of links) {
                 let key = `${link.tag}:${link.emitter}`;
-                this.linksByTag.delete(key);
+                let tagLinks = this.linksByTag.get(key);
+                if (tagLinks) {
+                    let idx = tagLinks.indexOf(link);
+                    tagLinks.splice(idx, 1);
+                    if (!tagLinks.length) this.linksByTag.delete(key);
+                }
             }
         }
         this.linksByGid.delete(actor.gid);

@@ -14,11 +14,10 @@ import { Fmt } from './fmt.js';
  * @extends Sketch
  */
 class Animator extends Sketch {
-    static gid = 0;
 
     // SCHEMA --------------------------------------------------------------
     /** @member {int} Animator#gid - unique id used for event handling */
-    static { this.schema('gid', { readonly: true, dflt: () => (Animator.gid++) }); }
+    static { this.schema('gid', { readonly: true, dflt: () => Gadget.getgid() }); }
     /** @member {string} Animator#trunkKey='state' - if sketch came from asset, tag associated with asset definition */
     static { this.schema('trunkKey', { dflt: 'state', readonly: true }); }
     /** @member {Object} Animator#sketches - sketch state mapping <state:sketch> */

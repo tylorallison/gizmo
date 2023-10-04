@@ -16,7 +16,6 @@ class TextTest extends Game {
         let y = (this.row-Math.round(this.maxRows/2)) * this.size;
         let panel = new UiPanel({ fitter: fitter, alignx: alignx, aligny: aligny, sketch: tt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
         Hierarchy.adopt(cvs, panel)
-        //Hierarchy.adopt(panel, tt);
         this.col++;
         if (this.col >= this.maxCols) {
             this.row++;
@@ -27,6 +26,7 @@ class TextTest extends Game {
     testUiText(cvs, text, fmt, fitter='center', alignx=.5, aligny=.5) {
         let x = (this.col-Math.round(this.maxCols/2)) * this.size;
         let y = (this.row-Math.round(this.maxRows/2)) * this.size;
+        console.log(`pos: ${x},${y}`)
         if (!fmt) fmt = new TextFormat();
         let panel = new UiText({ fitter: fitter, alignx: alignx, aligny: aligny, text: text, fmt: fmt, dbg: { xform: true }, xform: new XForm({ grip: .5, x: x, y: y, fixedWidth: this.size, fixedHeight: this.size})});
         Hierarchy.adopt(cvs, panel)

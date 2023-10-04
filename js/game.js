@@ -160,7 +160,6 @@ class Game extends Gizmo {
     loop(timestamp) {
         // increment frame counter
         this.frame++;
-        if (this.frame > Number.MAX_SAFE_INTEGER) this.frame = 0;
         // compute delta time
         const dt = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
         this.lastUpdate = timestamp;
