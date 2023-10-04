@@ -154,7 +154,16 @@ class Animator extends Sketch {
     }
 
     async load() {
-        return Promise.all([...Object.values(this.sketches || {}), ...Object.values(this.transitions || {})].map((x) => ((x.sketch) ? x.sketch.load() : Promise.resolve())));
+        return Promise.all(
+            [
+                ...(Object.values(this.sketches || {})).map((x) => {
+                    return x.load();
+                }), 
+                ...Object.values(this.transitions || {}).map((x) => {
+                    return ((x.sketch) ? x.sketch.load() : Promise.resolve())
+                }),
+            ]
+        );
     }
 
     copy(overrides={}) {

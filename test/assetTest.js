@@ -1,4 +1,3 @@
-import { SheetRef } from '../js/refs.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
 import { Evts } from '../js/evt.js';
@@ -12,7 +11,7 @@ import { Generator } from '../js/generator.js';
 import { UiPanel } from '../js/uiPanel.js';
 import { Animator } from '../js/animator.js';
 import { Timer } from '../js/timer.js';
-import { CompositeSprite } from '../js/compositeSprite.js';
+//import { CompositeSprite } from '../js/compositeSprite.js';
 import { Shape } from '../js/shape.js';
 import { ImageMedia } from '../js/media.js';
 import { Assets } from '../js/asset.js';
@@ -67,6 +66,7 @@ class AssetTest extends Game {
         let animator = Assets.get('test.animator');
 
         /*
+        // FIXME: needs to be refactored
         let c = new CompositeSprite();
         c.add('one', Generator.generate(Assets.get('rect.one')));
         c.add('two', Generator.generate(Assets.get('rect.two')));

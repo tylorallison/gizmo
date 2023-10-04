@@ -9,7 +9,6 @@ import { UiText } from '../js/uiText.js';
 import { Timer } from '../js/timer.js';
 import { UiButton } from '../js/uiButton.js';
 import { Sfx } from '../js/sfx.js';
-import { SfxRef } from '../js/refs.js';
 import { UiInput, UiInputText } from '../js/uiInput.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';

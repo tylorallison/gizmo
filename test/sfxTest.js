@@ -3,7 +3,6 @@ import { SfxSystem } from '../js/sfxSystem.js';
 import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
 import { Game } from '../js/game.js';
-import { SfxRef } from '../js/refs.js';
 import { Sfx } from '../js/sfx.js';
 import { Media } from '../js/media.js';
 

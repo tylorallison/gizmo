@@ -16,7 +16,7 @@ describe('hierarchies', () => {
 
     it('can create parent child relationships', ()=>{
         let tevt = {};
-        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'GizmoAdopted', (evt) => tevt = evt);
         Hierarchy.adopt(parent, child);
         expect(tevt.actor).toEqual(child);
         expect(tevt.child).toEqual(child);
@@ -27,7 +27,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in parent', ()=>{
         let tevt = {};
-        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'GizmoAdopted', (evt) => tevt = evt);
         parent.children.push(child);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});
@@ -35,7 +35,7 @@ describe('hierarchies', () => {
 
     it('can detect hierarchy loops in child', ()=>{
         let tevt = {};
-        Evts.listen(null, 'gizmo.adopted', (evt) => tevt = evt);
+        Evts.listen(null, 'GizmoAdopted', (evt) => tevt = evt);
         child.children.push(parent);
         Hierarchy.adopt(parent, child);
         expect(tevt).toEqual({});

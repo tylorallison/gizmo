@@ -1,8 +1,9 @@
 export { CompositeSprite };
 
-import { resolveImage } from './refs.js';
+//import { resolveImage } from './refs.js';
 import { Sketch } from './sketch.js';
 
+// FIXME: this needs to be refactored
 class CompositeSprite extends Sketch {
 
     static {
