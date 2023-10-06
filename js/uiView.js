@@ -67,18 +67,18 @@ class UiView extends Gizmo {
     }
     
     // EVENT HANDLERS ------------------------------------------------------
-    onMouseClicked(evt) {
+    $onMouseClicked(evt) {
         if (this.mouseClickedSound) SfxSystem.playSfx(this, this.mouseClickedSound);
     }
 
-    onMouseEntered(evt) {
+    $onMouseEntered(evt) {
         if (this.mouseEnteredSound) SfxSystem.playSfx(this, this.mouseEnteredSound);
     }
-    onMouseExited(evt) {
+    $onMouseExited(evt) {
         if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
     }
 
-    onGizmoRooted(evt) {
+    $onGizmoRooted(evt) {
         this.xform.$regen();
         if (evt.root.constructor.canvasable && !this.active) {
             this.active = true;
@@ -86,7 +86,7 @@ class UiView extends Gizmo {
         }
     }
 
-    onGizmoOrphaned(evt) {
+    $onGizmoOrphaned(evt) {
         if (this.xform) this.xform.$regen();
         if (this.active) {
             this.disable();

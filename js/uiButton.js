@@ -33,7 +33,7 @@ class UiButton extends UiPanel {
     }
 
     // EVENT HANDLERS ------------------------------------------------------
-    onMouseEntered(evt) {
+    $onMouseEntered(evt) {
         super.onMouseEntered(evt);
         if (this.hltext) {
             this._text.text = this.hltext;
@@ -42,7 +42,7 @@ class UiButton extends UiPanel {
             Object.assign(this._text, this.hlTextSpec);
         }
     }
-    onMouseExited(evt) {
+    $onMouseExited(evt) {
         super.onMouseExited(evt);
         if (this.hltext) {
             this._text.text = this.text;

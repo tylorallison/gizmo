@@ -9,18 +9,14 @@ class UiVerticalSpacer extends UiView {
     static { this.schema('spacer', { dflt: 0 }); }
     cpost(spec) {
         super.cpost(spec);
-        this.onChilded = this.onChilded.bind(this);
-        this.onUnchilded = this.onUnchilded.bind(this);
-        //Evts.listen(this, 'GizmoChilded', this.onChilded, this);
-        //Evts.listen(this, 'GizmoUnchilded', this.onUnchilded, this);
         this.resize();
     }
 
-    onGizmoChilded(evt) {
+    $onGizmoChilded(evt) {
         this.resize();
     }
 
-    onGizmoUnchilded(evt) {
+    $onGizmoUnchilded(evt) {
         this.resize();
     }
 
@@ -57,18 +53,14 @@ class UiHorizontalSpacer extends UiView {
     static { this.schema('spacer', { dflt: 0 }); }
     cpost(spec) {
         super.cpost(spec);
-        this.onChilded = this.onChilded.bind(this);
-        this.onUnchilded = this.onUnchilded.bind(this);
-        Evts.listen(this, 'GizmoChilded', this.onChilded, this);
-        Evts.listen(this, 'GizmoUnchilded', this.onUnchilded, this);
         this.resize();
     }
 
-    onChilded(evt) {
+    $onGizmoChilded(evt) {
         this.resize();
     }
 
-    onUnchilded(evt) {
+    $onGizmoUnchilded(evt) {
         this.resize();
     }
 

@@ -17,19 +17,19 @@ class RenderSystem extends System {
         // -- bind event handlers
         this.onViewUpdated = this.onViewUpdated.bind(this);
         this.onRenderNeeded = this.onRenderNeeded.bind(this);
-        this.onEntityAdopted = this.onEntityAdopted.bind(this);
+        this.onGizmoAdopted = this.onGizmoAdopted.bind(this);
     }
     cpost(spec) {
         super.cpost(spec);
         // -- listen on events
         Evts.listen(null, 'GizmoUpdated', this.onViewUpdated, this);
         Evts.listen(null, 'RenderNeeded', this.onRenderNeeded, this);
-        Evts.listen(null, 'GizmoAdopted', this.onEntityAdopted, this);
+        Evts.listen(null, 'GizmoAdopted', this.onGizmoAdopted, this);
         this.stayActive = false;
     }
 
     // EVENT HANDLERS ------------------------------------------------------
-    onEntityAdded(evt) {
+    onGizmoCreated(evt) {
         let actor = evt.actor;
         if (this.matchFcn(actor)) {
             this.store.set(evt.actor.gid, evt.actor);
@@ -37,7 +37,7 @@ class RenderSystem extends System {
             if (this.iterating) this.stayActive = true;
         }
     }
-    onEntityRemoved(evt) {
+    onGizmoDestroyed(evt) {
         let actor = evt.actor;
         if (this.mathcFcn(actor)) {
             this.store.delete(evt.actor.gid);
@@ -62,7 +62,7 @@ class RenderSystem extends System {
     onRenderNeeded(evt) {
         this.active = true;
     }
-    onEntityAdopted(evt) {
+    onGizmoAdopted(evt) {
         let parent = evt.parent;
         let root = Hierarchy.root(parent);
         if (!this.store.has(root.gid)) return;

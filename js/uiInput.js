@@ -108,7 +108,7 @@ class UiInput extends UiPanel {
     }
 
     // EVENT HANDLERS ------------------------------------------------------
-    onMouseClicked(evt) {
+    $onMouseClicked(evt) {
         // activate/deactivate
         this.updateSelected(!this.ttext.selected);
         super.onMouseClicked(evt);

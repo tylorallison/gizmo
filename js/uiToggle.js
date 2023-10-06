@@ -58,8 +58,8 @@ class UiToggle extends UiView {
 
     // PROPERTIES ----------------------------------------------------------
     // EVENT HANDLERS ------------------------------------------------------
-    onMouseClicked(evt) {
-        super.onMouseClicked(evt);
+    $onMouseClicked(evt) {
+        super.$onMouseClicked(evt);
         this.value = !this.value;
     }
 

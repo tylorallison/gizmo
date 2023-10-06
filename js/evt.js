@@ -72,7 +72,7 @@ class EvtCtx extends GizmoCtx {
         }
         // emitter dispatch
         if (emitter) {
-            let handlerTag = 'on' + tag;
+            let handlerTag = '$on' + tag;
             if ((handlerTag in emitter) && (typeof emitter[handlerTag]) === 'function') {
                 emitter[handlerTag](evt);
             }
