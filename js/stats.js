@@ -35,7 +35,7 @@ class Stats {
 
     static update(ctx) {
         //if (!this.enabled) return;
-        this.elapsed += ctx.deltaTime;
+        this.elapsed += ctx.elapsed;
         this.updates++;
         if (this.elapsed >= this.interval) {
             this.last = this.kvs;

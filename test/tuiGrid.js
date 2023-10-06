@@ -136,16 +136,16 @@ describe('a UI grid', () => {
         grid.add(g1);
         grid.add(g2);
         //console.log(`-- before game tock 1`);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.xform.x = 96;
         g2.xform.x = 32;
         //console.log(`-- before game tock 2`);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         //console.log(`-- before game tock 3`);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(grid.idxof(g1)).toEqual([1]);
         expect(grid.idxof(g2)).toEqual([0]);
         expect(tevts.length).toEqual(2);
@@ -154,12 +154,12 @@ describe('a UI grid', () => {
     it('grid tracks gzo destroy', ()=>{
         grid.add(g1);
         grid.add(g2);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         tevts.splice(0);
         expect(grid.idxof(g1)).toEqual([0]);
         expect(grid.idxof(g2)).toEqual([1]);
         g1.destroy();
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(grid.idxof(g1)).toEqual([]);
         expect(grid.idxof(g2)).toEqual([1]);
         expect(tevts.length).toEqual(1);

@@ -1,4 +1,4 @@
-export { Timer };
+export { Timer, Ticker };
 import { Gadget } from './gizmo.js';
 import { Evts } from './evt.js';
 import { Stats } from './stats.js';
@@ -28,7 +28,7 @@ class Timer extends Gadget {
 
     onTock(evt) {
         Stats.count('timer.ontock');
-        this.ttl -= evt.deltaTime;
+        this.ttl -= evt.elapsed;
         if (this.ttl <= 0) {
             let overflow = -this.ttl;
             if (this.loop) {
@@ -41,4 +41,22 @@ class Timer extends Gadget {
         }
     }
 
+}
+
+class Ticker extends Timer {
+
+    onTock(evt) {
+        Stats.count('ticker.ontock');
+        this.ttl -= evt.ticks;
+        if (this.ttl <= 0) {
+            let overflow = -this.ttl;
+            if (this.loop) {
+                this.ttl += this.startTTL;
+                if (this.ttl < 0) this.ttl = 0;
+            } else {
+                Evts.ignore(null, 'GameTock', this.onTock, this);
+            }
+            this.cb(Object.assign( { overflow: overflow, elapsed: this.startTTL + overflow }, evt, this.data));
+        }
+    }
 }

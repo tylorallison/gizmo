@@ -32,7 +32,7 @@ describe('systems', () => {
         });
         system.iterate = (evt, e) => e.visited = true;
         Evts.trigger(null, 'GizmoCreated', { actor: e });
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(e.visited).toBeTrue();
     });
 

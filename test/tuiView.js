@@ -17,7 +17,7 @@ describe('a view', () => {
 
     it('xform updates trigger view event', ()=>{
         view.xform.x = 1;
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(tevts.length).toEqual(1);
         let tevt = tevts.pop() || {};
         expect(tevt.actor).toEqual(view);
@@ -28,7 +28,7 @@ describe('a view', () => {
     it('destroyed view does not trigger events', ()=>{
         view.destroy();
         view.visible = false;
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(tevts.length).toEqual(0);
     });
 

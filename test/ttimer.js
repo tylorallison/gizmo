@@ -18,7 +18,7 @@ describe('timers', () => {
             cb: incr,
             ttl: 500,
         });
-        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { elapsed: 500 });
         expect(counter).toBe(1);
     });
 
@@ -29,8 +29,8 @@ describe('timers', () => {
             ttl: 500,
             loop: true,
         });
-        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
-        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { elapsed: 500 });
+        Evts.trigger(null, 'GameTock', { elapsed: 500 });
         expect(counter).toBe(2);
     });
 
@@ -40,11 +40,11 @@ describe('timers', () => {
             ttl: 150,
             loop: true,
         });
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(counter).toBe(0);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(counter).toBe(1);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(counter).toBe(2);
     });
 
@@ -55,7 +55,7 @@ describe('timers', () => {
             loop: true,
         });
         timer.destroy();
-        Evts.trigger(null, 'GameTock', { deltaTime: 500 });
+        Evts.trigger(null, 'GameTock', { elapsed: 500 });
         expect(counter).toBe(0);
     });
 

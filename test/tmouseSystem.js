@@ -28,16 +28,16 @@ describe('a mouse system', () => {
         expect(moveEvt.x).toEqual(125);
         expect(moveEvt.y).toEqual(135);
         expect(sys.active).toBeTruthy();
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(v1.mouseOver).toBeTruthy();
         expect(v2.mouseOver).toBeFalsy();
 
         sys.onMoved({offsetX: 75, offsetY: 75});
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(v1.mouseOver).toBeFalsy();
         expect(v2.mouseOver).toBeFalsy();
         sys.onMoved({offsetX: 175, offsetY: 175});
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(v1.mouseOver).toBeTruthy();
         expect(v2.mouseOver).toBeTruthy();
     });
@@ -53,13 +53,13 @@ describe('a mouse system', () => {
         let v1clicked=false, v2clicked=false;
         Evts.listen(v1, 'MouseClicked', () => v1clicked = true);
         Evts.listen(v2, 'MouseClicked', () => v2clicked = true);
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(v1clicked).toBeTruthy();
         expect(v2clicked).toBeFalsy();
 
         v1clicked=false, v2clicked=false;
         sys.onClicked({offsetX: 175, offsetY: 175});
-        Evts.trigger(null, 'GameTock', { deltaTime: 100 });
+        Evts.trigger(null, 'GameTock', { elapsed: 100 });
         expect(v1clicked).toBeTruthy();
         expect(v2clicked).toBeTruthy();
 

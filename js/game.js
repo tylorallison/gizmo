@@ -54,6 +54,9 @@ class Game extends Gizmo {
     static { this.schema('userActive', { dflt: false }); }
     static { this.schema('xcfgs', {dflt: (o) => o.constructor.xcfgs}); }
     static { this.schema('xassets', {dflt: (o) => o.constructor.xassets}); }
+    /** @member {bool} Game#ticksPerMS - game clock runs on ticks per ms */
+    static { this.schema('ticksPerMS', {dflt: 1}); }
+    static { this.schema('elapsedRollover', {dflt: 0}); }
 
     // CONSTRUCTOR ---------------------------------------------------------
     cpre(spec) {
@@ -160,10 +163,15 @@ class Game extends Gizmo {
     loop(timestamp) {
         // increment frame counter
         this.frame++;
-        // compute delta time
-        const dt = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
+        // compute elapsed
+        const elapsed = Math.min(this.maxDeltaTime, timestamp - this.lastUpdate);
         this.lastUpdate = timestamp;
-        Evts.trigger(this, 'GameTock', { deltaTime: parseInt(dt), frame: this.frame });
+        // compute ticks on the game clock
+        let ticksTotal = (elapsed+this.elapsedRollover)*this.ticksPerMS;
+        let ticks = Math.floor(ticksTotal);
+        this.elapsedRollover = Math.round((ticksTotal - ticks)/this.ticksPerMS);
+        // trigger tock event
+        Evts.trigger(this, 'GameTock', { elapsed: parseInt(elapsed), ticks: ticks, frame: this.frame });
         // next iteration
         window.requestAnimationFrame(this.loop);
     }

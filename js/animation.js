@@ -1,7 +1,7 @@
 export { Animation };
 
 import { Sketch } from './sketch.js';
-import { Timer } from './timer.js';
+import { Ticker } from './timer.js';
 import { Random } from './random.js';
 import { Asset } from './asset.js';
 import { ImageMedia } from './media.js';
@@ -80,7 +80,7 @@ class Animation extends Sketch {
             }
             // otherwise, continue to advance cels while cel ttl is < overflow
             if (this.sketch.ttl >= overflow) {
-                this.timer = new Timer({ttl: this.sketch.ttl-overflow, cb: this.onTimer});
+                this.timer = new Ticker({ttl: this.sketch.ttl-overflow, cb: this.onTimer});
                 break;
             } else {
                 overflow -= this.sketch.ttl;
@@ -97,7 +97,7 @@ class Animation extends Sketch {
             if (this.sketch) this.sketch.enable();
             // start timer
             if ((!this.done) && (this.sketches.length > 1 || !this.loop)) {
-                this.timer = new Timer({ttl: this.sketch.ttl, cb: this.onTimer});
+                this.timer = new Ticker({ttl: this.sketch.ttl, cb: this.onTimer});
             }
         }
         super.enable();
