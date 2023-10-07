@@ -265,6 +265,7 @@ class Gadget {
                     pgdt.$trunkSentry.atUpdate(pgdt.$trunk, pgdt.$trunkKey, pgdt, pgdt);
                 }
                 pgdt.$v++;
+                //console.log(`target: ${target} ${key}->${value} pgdt: ${pgdt} v: ${pgdt.$v}`);
             }
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
@@ -590,6 +591,17 @@ function genProxy(target) {
             }
             return true;
         },
+        ownKeys(target) {
+            console.error(`target: ${target} store: ${Fmt.ofmt(target.$store)} keys: ${Object.keys(target.$store)}`);
+            return Object.keys(target.$store);
+        },
+        getOwnPropertyDescriptor(target, prop) {
+            return {
+                enumerable: true,
+                configurable: true,
+                value: target.$store[prop],
+            };
+        },
         deleteProperty(target, key) {
             target.constructor.$delete(target, key, target.esentry);
             return true;
@@ -687,6 +699,7 @@ class GadgetObject extends Gadget {
         this.$store = values;
         this.esentry = new GadgetSchemaEntry('wrap', {})
         for (const [k,v] of Object.entries(values)) {
+            console.log(`k: ${k} v: ${v}`)
             this.constructor.$set(this, k, v, this.esentry);
         }
     }

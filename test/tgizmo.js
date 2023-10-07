@@ -1,6 +1,6 @@
 import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
-import { Gizmo, Gadget } from '../js/gizmo.js';
+import { Gizmo, Gadget, GadgetObject } from '../js/gizmo.js';
 
 const gadgetClass = Gadget;
 const gSetter = (o, k, v) => o[k] = v;
@@ -507,6 +507,7 @@ describe('gadget objects', () => {
         static { this.prototype.$emitter = true}
         static { this.schema('atts', { dflt: () => ({}), link: true }); };
         static { this.schema('gid', { dflt: () => gid++ }); }
+        static { this.schema('gen', { dflt: 0, generator:(o, ov) => ov+1 }); }
     };
     let gzd, tevt = {};
     beforeEach(() => {
@@ -540,6 +541,27 @@ describe('gadget objects', () => {
         expect(tevt.tag).toEqual('GizmoSet');
         expect(tevt.actor).toBe(gzd);
         expect(tevt.set['atts.foo']).toEqual('bar');
+    });
+
+    it('can iterate object keys', ()=>{
+        gzd.atts['foo'] = 'bar';
+        gzd.atts['hello'] = 'there';
+        expect(Object.keys(gzd.atts)).toEqual(['foo', 'hello']);
+    });
+
+    it('can iterate object entries', ()=>{
+        gzd.atts['foo'] = 'bar';
+        gzd.atts['hello'] = 'there';
+        expect(Object.entries(gzd.atts)).toEqual([['foo', 'bar'], ['hello', 'there']]);
+    });
+
+    it('causes parent generator updates', ()=>{
+        expect(gzd.gen).toEqual(1);
+        gzd.atts['foo'] = 'bar';
+        expect(gzd.gen).toEqual(2);
+        gzd.atts['hello'] = 'there';
+        expect(gzd.gen).toEqual(3);
+        //expect(Object.entries(gzd.atts)).toEqual([['foo', 'bar'], ['hello', 'there']]);
     });
 
 });
