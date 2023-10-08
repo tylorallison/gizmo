@@ -1,7 +1,7 @@
 export { Action };
 
 import { Gizmo } from './gizmo.js';
-import { EvtSystem } from './event.js';
+import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 import { Util } from './util.js';
 import { SfxSystem } from './sfxSystem.js';
@@ -9,9 +9,9 @@ import { SfxSystem } from './sfxSystem.js';
 class Action extends Gizmo {
 
     static {
-        // FIXME
-        this.schema('dbg', {dflt: true});
+        this.schema('dbg', {dflt: false});
         this.schema('done', { dflt: false });
+        this.schema('started', { dflt: false });
         this.schema('ok', { dflt: true });
         this.schema('atts', { readonly: true });
         this.schema('actor', { gizmo: true });
@@ -25,10 +25,10 @@ class Action extends Gizmo {
     static dfltOkSfx = undefined;
     static dfltFailSfx = undefined;
 
-    static async waitfor(actor, action) {
+    static async waitfor(actor, action, ctx) {
         let p = new Promise( resolve => {
-            EvtSystem.listen(actor, actor, 'action.done', (evt) => resolve(), { filter: (evt) => evt.action === action, once: true });
-            action.perform(actor, action);
+            Evts.listen(actor, actor, 'ActionDone', (evt) => resolve(), { filter: (evt) => evt.action === action, once: true });
+            action.perform(actor, ctx);
         })
         return p;
     }
@@ -36,15 +36,17 @@ class Action extends Gizmo {
     // METHODS -------------------------------------------------------------
     doperform(ctx) {
         this.done = true;
+        this.finish(true);
     }
 
     perform(actor, ctx) {
+        if (this.started) return;
+        this.started = true;
         this.actor = actor;
         if (this.dbg) console.log(`${this} started for actor ${actor}`);
-        EvtSystem.trigger(actor, 'action.started', { action: this });
+        Evts.trigger(actor, 'ActionStarted', { action: this });
         if (this.startSfx) SfxSystem.playSfx(this.actor, this.startSfx);
         this.doperform(ctx);
-        //if (this.done) this.finish(this.ok);
         return this.done;
     }
 
@@ -55,9 +57,17 @@ class Action extends Gizmo {
         if (this.ok && this.okSfx) SfxSystem.playSfx(this.actor, this.okSfx);
         if (!this.ok && this.failSfx) SfxSystem.playSfx(this.actor, this.failSfx);
         if (this.dbg) console.log(`${this} finished for actor ${this.actor}`);
-        EvtSystem.trigger(this.actor, 'action.done', { action: this, ok: this.ok });
+        Evts.trigger(this.actor, 'ActionDone', { action: this, ok: this.ok });
         this.actor = null;
         this.destroy();
+    }
+
+    async wait(actor, ctx) {
+        let p = new Promise( resolve => {
+            Evts.listen(actor, actor, 'ActionDone', (evt) => resolve(), { filter: (evt) => evt.action === this, once: true });
+            this.perform(actor, ctx);
+        })
+        return p;
     }
 
 }

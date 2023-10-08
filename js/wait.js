@@ -2,7 +2,7 @@
 export { WaitAction };
 
 import { Action } from './action.js';
-import { EvtSystem } from './event.js';
+import { Evts } from './evt.js';
 import { Fmt } from './fmt.js';
 
 
@@ -18,10 +18,10 @@ class WaitAction extends Action {
 
     // METHODS -------------------------------------------------------------
     doperform(ctx) {
-        EvtSystem.listen(this.gctx, this, 'GameTock', (evt) => {
-            this.ttl -= evt.deltaTime;
-            if (this.ttl <= 0) this.finish(this.ok);
-        });
+        Evts.listen(null, 'GameTock', (evt) => {
+            this.ttl -= evt.elapsed;
+            if (this.ttl <= 0) this.finish(true);
+        }, this);
     }
 
 }
