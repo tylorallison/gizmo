@@ -62,6 +62,7 @@ class UiGrid extends UiView {
     cpost(spec) {
         super.cpost(spec);
         // -- resize offscreen canvases
+        console.log(`cpost xform dim: ${this.xform.width},${this.xform.height}`);
         this.gridCanvas.width = this.xform.width;
         this.gridCanvas.height = this.xform.height;
         this.chunkCanvas.width = this.chunks.colSize;
@@ -191,6 +192,7 @@ class UiGrid extends UiView {
 
     resize() {
         console.log(`-- resize`);
+        console.log(`cpost xform dim: ${this.xform.width},${this.xform.height}`);
         // FIXME
         if ((this.bounds.width !== this.gridCanvas.width) || (this.bounds.height !== this.gridCanvas.height)) {
             this.rowSize = this.bounds.height/this.chunks.rows;
@@ -245,6 +247,7 @@ class UiGrid extends UiView {
     }
 
     subrender(ctx) {
+        console.log(`subrender xform dim: ${this.xform.width},${this.xform.height}`);
         // compute delta between xform space and grid space
         let dx = this.xform.minx;
         let dy = this.xform.miny;
@@ -267,6 +270,7 @@ class UiGrid extends UiView {
             }
         }
         // render grid canvas
+        console.log(`grid canvas: ${this.gridCanvas} dim: ${this.gridCanvas.width},${this.gridCanvas.height}`)
         ctx.drawImage(this.gridCanvas, dx, dy);
         // overlay grid
         if (this.dbg && this.dbg.grid) {
