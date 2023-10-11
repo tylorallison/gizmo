@@ -561,7 +561,6 @@ describe('gadget objects', () => {
         expect(gzd.gen).toEqual(2);
         gzd.atts['hello'] = 'there';
         expect(gzd.gen).toEqual(3);
-        //expect(Object.entries(gzd.atts)).toEqual([['foo', 'bar'], ['hello', 'there']]);
     });
 
 });

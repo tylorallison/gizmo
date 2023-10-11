@@ -111,8 +111,10 @@ class Gadget {
 
     static $registry = new Map();
     static register() {
-        this.prototype.$registered = true;
-        if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
+        if (!Object.hasOwn(this.prototype, '$registered')) {
+            this.prototype.$registered = true;
+            if (!this.$registry.has(this.name)) this.$registry.set(this.name, this);
+        }
     }
 
     static $gid = 1;
@@ -259,13 +261,11 @@ class Gadget {
         target.$store[key] = value;
         if (target.$flags & FDEFINED) {
             if (sentry.atUpdate) sentry.atUpdate( target, key, storedValue, value );
-            let pgdt = target;
             for (const pgdt of this.eachInPath(target)) {
                 if (pgdt.$trunkSentry && pgdt.$trunkSentry.atUpdate) {
                     pgdt.$trunkSentry.atUpdate(pgdt.$trunk, pgdt.$trunkKey, pgdt, pgdt);
                 }
                 pgdt.$v++;
-                //console.log(`target: ${target} ${key}->${value} pgdt: ${pgdt} v: ${pgdt.$v}`);
             }
             if ((target.$flags & FEVENTABLE) && sentry.eventable) {
                 let gemitter = this.findInPath(target, (gdt) => (gdt && gdt.$emitter));
@@ -381,7 +381,7 @@ class Gadget {
     set $v(v) { this.#v = v };
 
     constructor(...args) {
-        if (!this.$registered) this.constructor.register();
+        this.constructor.register();
         if (this.$emitter) this.$flags |= FEVENTABLE;
         this.cpre(...args);
         this.cparse(...args);
@@ -592,7 +592,6 @@ function genProxy(target) {
             return true;
         },
         ownKeys(target) {
-            console.error(`target: ${target} store: ${Fmt.ofmt(target.$store)} keys: ${Object.keys(target.$store)}`);
             return Object.keys(target.$store);
         },
         getOwnPropertyDescriptor(target, prop) {
@@ -615,7 +614,7 @@ class GadgetArray extends Gadget {
     cparse(values) {
         if (!values) values = [];
         this.$store = [];
-        this.esentry = new GadgetSchemaEntry('wrap', {})
+        this.esentry = new GadgetSchemaEntry('wrap', {link: true});
         for (let i=0; i<values.length; i++) {
             this.constructor.$set(this, i, values[i], this.esentry);
         }
@@ -687,6 +686,11 @@ class GadgetArray extends Gadget {
         for (const v of this.$values) yield v;
     }
 
+    xify(sdata) {
+        let xargs = this.xifyArgs(sdata);
+        return Object.values(xargs);
+    }
+
     toString() {
         return Fmt.toString(this.constructor.name, ...this.$values);
     }
@@ -697,9 +701,8 @@ class GadgetObject extends Gadget {
     cparse(values) {
         if (!values) values = {};
         this.$store = values;
-        this.esentry = new GadgetSchemaEntry('wrap', {})
+        this.esentry = new GadgetSchemaEntry('wrap', { link: true });
         for (const [k,v] of Object.entries(values)) {
-            console.log(`k: ${k} v: ${v}`)
             this.constructor.$set(this, k, v, this.esentry);
         }
     }
@@ -708,5 +711,9 @@ class GadgetObject extends Gadget {
         super(...args);
         const proxy = genProxy(this);
         return proxy;
+    }
+
+    xify(sdata) {
+        return this.xifyArgs(sdata);
     }
 }

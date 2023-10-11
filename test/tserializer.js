@@ -1,4 +1,5 @@
 import { Assets } from '../js/asset.js';
+import { Fmt } from '../js/fmt.js';
 import { Generator } from '../js/generator.js';
 import { Gizmo, Gadget } from '../js/gizmo.js';
 import { Rect } from '../js/rect.js';
@@ -164,6 +165,38 @@ describe('a serializer', () => {
         expect(gzos.length).toEqual(1);
         expect(gzos[0].tag).toEqual('root');
         expect(gzos[0].asset.tag).toEqual('test.rect');
+    });
+
+    it('can xify a gadget with linked GizmoObject', ()=>{
+        let g = new TSerializerData({ sub: {
+            foo: 'bar',
+            hello: 'there',
+        }});
+        let rslt = Serializer.xify(sdata, g);
+        console.log(`rslt: ${Fmt.ofmt(rslt)}`)
+        expect(rslt).toEqual({ 
+            $gzx: true, 
+            cls: 'TSerializerData', 
+            args: [{
+                sub: {
+                    foo: 'bar',
+                    hello: 'there',
+                },
+            }],
+        });
+    });
+
+    it('can xify a gadget with linked GizmoArray', ()=>{
+        let g = new TSerializerData({ sub: [ 'foo', 'hello' ]});
+        let rslt = Serializer.xify(sdata, g);
+        console.log(`rslt: ${Fmt.ofmt(rslt)}`)
+        expect(rslt).toEqual({ 
+            $gzx: true, 
+            cls: 'TSerializerData', 
+            args: [{
+                sub: ['foo', 'hello'],
+            }],
+        });
     });
 
 });

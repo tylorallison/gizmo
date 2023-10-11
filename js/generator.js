@@ -50,7 +50,8 @@ class Generator extends GizmoSingleton {
             console.error(`generator failed for ${Fmt.ofmt(spec)} -- undefined class ${spec.cls}`);
             return undefined;
         }
-        if (cls) return new cls(...spec.args);
+        let gzd = new cls(...spec.args);
+        if (gzd) return gzd;
         console.error(`generator failed for ${Fmt.ofmt(spec)} -- constructor failed`);
         return undefined;
     }
