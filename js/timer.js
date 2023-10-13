@@ -4,12 +4,10 @@ import { Evts } from './evt.js';
 import { Stats } from './stats.js';
 
 class Timer extends Gadget {
-    static dfltTTL = 1000;
-
     static {
         /** @member {int} Timer#gid - unique timer id used for event handling */
         this.schema('gid', { readonly: true, dflt: () => (Gadget.getgid()) });
-        this.schema('ttl', { eventable: false, dflt: this.dfltTTL });
+        this.schema('ttl', { eventable: false, dflt: 1000 });
         this.schema('startTTL', { readonly: true, parser: (o,x) => o.ttl });
         this.schema('loop', { readonly: true, dflt: false });
         this.schema('cb', { readonly: true, dflt: () => false });

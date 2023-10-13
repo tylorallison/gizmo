@@ -11,10 +11,9 @@ class HexGrid extends HexBucketArray {
     // SCHEMA --------------------------------------------------------------
     static {
         this.schema('bounder', { readonly: true, dflt: ((v) => v.xform) });
-        //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema('dbg', { eventable: false, dflt: false });
-        this.schema('rowSize', { readonly: true, dflt: 32 });
-        this.schema('colSize', { readonly: true, dflt: 32 });
+        this.schema('rowSize', { dflt: 32 });
+        this.schema('colSize', { dflt: 32 });
     }
 
     // CONSTRUCTOR ---------------------------------------------------------
@@ -343,7 +342,14 @@ class HexGrid extends HexBucketArray {
     }
 
     resize(bounds, cols, rows) {
-        // FIXME
+        let gzos = Array.from(this);
+        // handle grid array resize
+        if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
+        // handle spatial resize
+        this.colSize = bounds.width/cols;
+        this.rowSize = bounds.height/rows;
+        // recheck position of all assigned objects
+        for (const gzo of gzos) this.recheck(gzo);
     }
 
     render(ctx, x=0, y=0, width=0, height=0, color='rgba(0,255,255,.5)', occupiedColor='red') {

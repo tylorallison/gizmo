@@ -11,7 +11,7 @@ import { Evts } from './evt.js';
 class MouseSystem extends System {
     // STATIC VARIABLES ----------------------------------------------------
     static dfltIterateTTL = 0;
-    static dfltMatchFcn = (v) => v.constructor.mousable;
+    static dfltMatchFcn = (v) => v.mousable;
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
     cpre(spec={}) {
@@ -104,6 +104,7 @@ class MouseSystem extends System {
         // -- translate to local position
         let lpos = e.xform.getLocal(this.pos);
         let contains = Contains.bounds(e.xform, lpos);
+        //if (e.tag.startsWith('Xild')) console.log(`mouse ${this.pos}=>${lpos} ${e} ${e.xform} contains: ${contains}`);
         if (contains) {
             this.targets.push(e);
         }

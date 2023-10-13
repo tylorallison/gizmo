@@ -1,17 +1,86 @@
 import { Bounds } from '../js/bounds.js';
 import { Evts } from '../js/evt.js';
 import { Fmt } from '../js/fmt.js';
+import { Gizmo } from '../js/gizmo.js';
 import { UiGrid } from '../js/uiGrid.js';
 import { UiView } from '../js/uiView.js';
 import { UpdateSystem } from '../js/updateSystem.js';
 import { XForm } from '../js/xform.js';
+
+describe('a UI grid override functions', () => {
+    class tgzo extends Gizmo {
+        static { this.schema('xform', { link: true }); }
+    }
+
+    for (const test of [
+        { 
+            grid: new UiGrid({cols: 4, rows: 4, xform: new XForm({fixedWidth: 100, fixedHeight: 100, grip: .5, orig: .5})}),
+            point: {x:0,y:0},
+            ij: {x:2,y:2},
+            idx: 10,
+            gzo: new tgzo({ xform: new XForm({ orig: 0, fixedWidth: 4, fixedHeight: 4, x: 0, y: 0})}),
+        },
+        { 
+            grid: new UiGrid({cols: 4, rows: 4, xform: new XForm({fixedWidth: 100, fixedHeight: 100, grip: .5, orig: .5})}),
+            point: {x:-50,y:-50},
+            ij: {x:0,y:0},
+            idx: 0,
+            gzo: new tgzo({ xform: new XForm({ orig: 0, fixedWidth: 4, fixedHeight: 4, x: -50, y: -50})}),
+        },
+        { 
+            grid: new UiGrid({cols: 4, rows: 4, xform: new XForm({fixedWidth: 100, fixedHeight: 100, grip: .5, orig: .5})}),
+            point: {x:25,y:25},
+            ij: {x:3,y:3},
+            idx: 15,
+            gzo: new tgzo({ xform: new XForm({ orig: 0, fixedWidth: 4, fixedHeight: 4, x: 25, y: 25})}),
+        },
+        { 
+            grid: new UiGrid({cols: 4, rows: 4, xform: new XForm({fixedWidth: 100, fixedHeight: 100, grip: .5, orig: 0})}),
+            point: {x:0,y:0},
+            ij: {x:0,y:0},
+            idx: 0,
+            gzo: new tgzo({ xform: new XForm({ orig: 0, fixedWidth: 4, fixedHeight: 4, x: 0, y: 0})}),
+        },
+    ]) {
+        it(`ij from point ${test.point} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.ijFromPoint(test.point);
+            expect(rslt).toEqual(test.ij);
+        });
+        it(`ij from idx ${test.idx} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.ijFromIdx(test.idx);
+            expect(rslt).toEqual(test.ij);
+        });
+        it(`idx from point ${test.point} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.idxFromPoint(test.point);
+            expect(rslt).toEqual(test.idx);
+        });
+        it(`idx from ij ${test.ij} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.idxFromIJ(test.ij);
+            expect(rslt).toEqual(test.idx);
+        });
+        it(`point from idx ${test.idx} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.pointFromIdx(test.idx);
+            expect(rslt).toEqual(test.point);
+        });
+        it(`point from ij ${test.ij} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.pointFromIJ(test.ij);
+            expect(rslt).toEqual(test.point);
+        });
+        it(`idxs from gzo ${test.gzo.xform} with grid: ${test.grid.xform}`, ()=>{
+            let rslt = test.grid.idxsFromGzo(test.gzo);
+            expect(rslt.length).toEqual(1);
+            expect(rslt[0]).toEqual(test.idx);
+        });
+    };
+
+});
 
 describe('a UI grid', () => {
 
     let grid, sys, tevts;
     let g1, g2, g3, g4;
     beforeEach(() => {
-        grid = new UiGrid({alignx: 0, cols: 2, rows: 2, aligny: 0, xform: new XForm({fixedWidth: 128, fixedHeight: 128, grip: .5})});
+        grid = new UiGrid({cols: 2, rows: 2, xform: new XForm({orig: 0, fixedWidth: 128, fixedHeight: 128, grip: .5})});
         sys = new UpdateSystem( { dbg: false });
         tevts = [];
         Evts.listen(grid, 'GizmoUpdated', (evt) => {

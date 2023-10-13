@@ -15,14 +15,14 @@ import { XForm } from './xform.js';
 class UiView extends Gizmo {
 
     // STATIC VARIABLES ----------------------------------------------------
-    static mousable = true;
-    static renderable = true;
+    static { this.prototype.mousable = true; }
+    static { this.prototype.renderable = true; }
 
     // SCHEMA --------------------------------------------------------------
     static {
+        this.schema('xform', { order: -1, link: true, dflt: () => new XForm() });
         this.schema('visible', { dflt: true});
         this.schema('active', { dflt: false});
-        this.schema('xform', { link: true, parser: (o,x) => x.xform || new XForm()});
         this.schema('smoothing', { dflt: null});
         this.schema('alpha', { dflt: 1});
         this.schema('dbg', { dflt: false, eventable: false});
@@ -37,24 +37,6 @@ class UiView extends Gizmo {
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------
-    cpre(spec={}) {
-        super.cpre(spec);
-        //this.onMouseEntered = this.onMouseEntered.bind(this);
-        //this.onMouseExited = this.onMouseExited.bind(this);
-        //this.onMouseClicked = this.onMouseClicked.bind(this);
-        //this.onRooted = this.onRooted.bind(this);
-        //this.onOrphaned = this.onOrphaned.bind(this);
-    }
-
-    cpost(spec={}) {
-        super.cpost(spec);
-        //Evts.listen(this, 'MouseClicked', this.onMouseClicked, this);
-        //Evts.listen(this, 'GizmoUpdated', this.onMouseEntered, this, { filter: (evt) => evt.update && evt.update.mouseOver === true});
-        //Evts.listen(this, 'GizmoUpdated', this.onMouseExited, this, { filter: (evt) => evt.update && evt.update.mouseOver === false});
-        //Evts.listen(this, 'GizmoRooted', this.onRooted, this);
-        //Evts.listen(this, 'GizmoOrphaned', this.onOrphaned, this);
-
-    }
     cfinal(spec) {
         super.cfinal(spec);
         // activate if required
@@ -76,6 +58,10 @@ class UiView extends Gizmo {
     }
     $onMouseExited(evt) {
         if (this.mouseExitedSound) SfxSystem.playSfx(this, this.mouseExitedSound);
+    }
+
+    $onCanvasResized(evt) {
+        this.xform.$regen();
     }
 
     $onGizmoRooted(evt) {

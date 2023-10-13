@@ -9,12 +9,7 @@ import { Fmt } from './fmt.js';
 class WaitAction extends Action {
 
     // SCHEMA --------------------------------------------------------------
-    static {
-        this.schema('ttl', { parser: (o,x) => x.hasOwnProperty('ttl') ? x.ttl : o.constructor.dfltTTL });
-    }
-
-    // STATIC VARIABLES ----------------------------------------------------
-    static dfltTTL = 500;
+    static { this.schema('ttl', { dflt: 500 }); }
 
     // METHODS -------------------------------------------------------------
     doperform(ctx) {

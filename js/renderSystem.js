@@ -39,7 +39,7 @@ class RenderSystem extends System {
     }
     onGizmoDestroyed(evt) {
         let actor = evt.actor;
-        if (this.mathcFcn(actor)) {
+        if (this.matchFcn(actor)) {
             this.store.delete(evt.actor.gid);
             this.active = true;
             if (this.iterating) this.stayActive = true;
@@ -48,7 +48,7 @@ class RenderSystem extends System {
     onViewUpdated(evt) {
         // renderable?
         let actor = evt.actor;
-        if (!actor.constructor.renderable) return;
+        if (!actor.renderable) return;
         if (this.dbg) console.log(`${this} view updated: ${evt.actor} ${Fmt.ofmt(evt)}`);
         // skip non-visible entities
         if (!actor.visible) return;

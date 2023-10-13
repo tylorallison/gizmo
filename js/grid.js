@@ -17,10 +17,9 @@ class Grid extends GridBucketArray {
 
     static {
         this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((v) => v.xform) )});
-        //this.schema(this, 'bounds', { readonly: true, parser: (o,x) => x.bounds || Bounds.zero });
         this.schema('dbg', { eventable: false, dflt: false });
-        this.schema('rowSize', { readonly: true, dflt: 32 });
-        this.schema('colSize', { readonly: true, dflt: 32 });
+        this.schema('rowSize', { dflt: 32 });
+        this.schema('colSize', { dflt: 32 });
     }
 
     constructor(spec={}) {
@@ -236,27 +235,30 @@ class Grid extends GridBucketArray {
     }
 
     resize(bounds, cols, rows) {
-        // FIXME
-        // array/grid resize
+        let gzos = Array.from(this);
+        // handle grid array resize
         if (this.cols != cols || this.rows != rows) super.resize(cols, rows);
-        // bounds resize
-        //this.bounds = bounds;
+        // handle spatial resize
+        this.colSize = bounds.width/cols;
+        this.rowSize = bounds.height/rows;
         // recheck position of all assigned objects
-        for (const gzo of this) this.recheck(gzo);
+        for (const gzo of gzos) this.recheck(gzo);
     }
 
     render(ctx, x=0, y=0, color='rgba(0,255,255,.5)', occupiedColor='red') {
+        ctx.translate(x,y);
         for (let i=0; i<this.cols; i++) {
             for (let j=0; j<this.rows; j++) {
-               let idx = this._idxFromIJ(i, j);
+                let idx = this._idxFromIJ(i, j);
                 let entries = this.entries[idx] || [];
                 ctx.strokeStyle = (entries.length) ? occupiedColor : color;
                 //ctx.setLineDash([5,5]);
                 ctx.lineWidth = 1;
-                ctx.strokeRect(x + i*this.colSize, y + j*this.rowSize, this.colSize, this.rowSize);
+                ctx.strokeRect(i*this.colSize, j*this.rowSize, this.colSize, this.rowSize);
                 //ctx.setLineDash([]);
             }
         }
+        ctx.translate(-x,-y);
     }
 
     toString() {

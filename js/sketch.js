@@ -14,12 +14,6 @@ import { Stats } from './stats.js';
  */
 class Sketch extends Asset {
 
-    // STATIC VARIABLES ----------------------------------------------------
-    /** @const {boolean} Sketch.renderable=true - indicates if instance of class is renderable by render system */
-    static renderable = true;
-
-    static dfltTTL = 100;
-
     // STATIC PROPERTIES ---------------------------------------------------
     /**
      * @member {Sketch} - get a new instance of a default sketch, useful for null rendering.
