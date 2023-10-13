@@ -23,7 +23,7 @@ class XForm extends Gadget {
         // -- if value is numeric, uses value as forced aspect ratio (width/height);
         this.schema('gripOffsetForceRatio', {dflt: false});
         // origin
-        // -- origin x/y offset (in pixels)
+        // -- origin x/y offset (in pixels) (in parent space)
         // -- applicable when grips are overlapping
         this.schema('x', {dflt: 0});
         this.schema('y', {dflt: 0});

@@ -22,6 +22,15 @@ class UiGrid extends UiView {
         //this.schema('bounder', { readonly: true, parser: (o,x) => ((x.bounder) ? x.bounder : ((gzo) => new Bounds({x:gzo.xform.bounds.minx+gzo.xform.x, y:gzo.xform.bounds.miny+gzo.xform.y, width:gzo.xform.bounds.width, height:gzo.xform.bounds.height})) )});
         this.schema('bounder', { readonly: true, dflt: (o) => ((gzo) => {
             //console.log(`bounder x: ${gzo.xform.x}-${o.xform.minx}=${gzo.xform.x-o.xform.x} y: ${gzo.xform.y}-${o.xform.miny}=${gzo.xform.y+o.xform.miny}`);
+            //let wp = gzo.xform.getWorld({x:gzo.xform.x-gzo.xform.minx, y:gzo.xform.y-gzo.xform.miny}, false);
+            let min = gzo.xform.getWorld({x:gzo.xform.minx, y:gzo.xform.miny}, false);
+            let omin = {
+                x: gzo.xform.bounds.minx+gzo.xform.x,
+                y: gzo.xform.bounds.miny+gzo.xform.y,
+            };
+            let fmin = Vect.sub(min, { x: o.xform.minx, y: o.xform.miny });
+            let fomin = Vect.sub(omin, { x: o.xform.minx, y: o.xform.miny });
+            console.log(`${gzo.xform} min: ${Fmt.ofmt(min)} omin: ${Fmt.ofmt(omin)}} d: ${o.xform.minx},${o.xform.miny} fmin: ${fmin} fomin: ${fomin}`)
             return new Bounds({
                 x: gzo.xform.bounds.minx+gzo.xform.x-o.xform.minx, 
                 y: gzo.xform.bounds.miny+gzo.xform.y-o.xform.miny, 
@@ -262,52 +271,34 @@ class UiGrid extends UiView {
 
     renderChunk(idx, dx, dy) {
         // everything from the grid 'chunk' is rendered to an offscreen chunk canvas
-        let t = this.chunks.pointFromIdx(idx);
+        let chunkOffset = this.chunks.pointFromIdx(idx);
         // FIXME bounds on optimized rendering...
         if (this.parent && this.optimizeRender) {
-            const min = this.xform.getWorld({x:t.x+dx, y:t.y+dy}, false);
-            const max = this.xform.getWorld({x:t.x+dx+this.chunks.colSize, y:t.y+dy+this.chunks.rowSize}, false);
+            const min = this.xform.getWorld({x:chunkOffset.x+dx, y:chunkOffset.y+dy}, false);
+            const max = this.xform.getWorld({x:chunkOffset.x+dx+this.chunks.colSize, y:chunkOffset.y+dy+this.chunks.rowSize}, false);
             if (!Overlaps.bounds(this.parent.xform.bounds, {minx:min.x, miny:min.y, maxx: max.x, maxy:max.y})) {
                 //if (this.dbg) console.log(`-- chunk: ${idx} ${t.x},${t.y} is out of bounds against ${this.xform.bounds}`);
                 return;
             }
         }
         this.chunkCtx.clearRect( 0, 0, this.chunks.colSize, this.chunks.rowSize );
-        //let tx = dx+t.x;
-
-        //let tx = -t.x;
-
-        // origin delta
-        //let originDeltaX = this.xform.width * this.xform.origx;
-        //console.log(`originDeltaX: ${originDeltaX} t.x: ${t.x}`);
-        //let tx = -originDeltaX + t.x;
-        let tx = dx-t.x;
-        let ty = 0;
-
-        //let ij = this.ijFromIdx(idx);
-        //let l = xform.getLocal(Vect.smult(ij, 100), false);
-        //console.log(`${Fmt.ofmt(ij)} gives: ${Fmt.ofmt(l)}`);
-        //let tx = -(dx + this.xform.width*ij.x/this.chunks.cols);
-        //let ty = -(dy + this.xform.height*ij.y/this.chunks.rows);
-
+        let tx = -(dx+dx+chunkOffset.x);
+        let ty = -(dy+dy+chunkOffset.y);
         //console.log(`-- computed t: ${tx},${ty}`);
         this.chunkCtx.translate(tx, ty);
         // iterate through all views at given idx
         for (const view of this.getidx(idx)) {
             if (this.renderFilter(idx, view)) {
-                console.log(`render view: ${view} @ ${view.xform.x} idx: ${idx} dx: ${dx} t.x: ${t.x} tx: ${tx}`);
-                //console.log(`${Fmt.ofmt(ij)} gives: ${Fmt.ofmt(l)}`);
-                //this.chunkCtx.fillStyle = 'green';
-                //this.chunkCtx.fillRect(0,0, 20, 20);
+                console.log(`render view: ${view} @ ${view.xform.x} idx: ${idx} dx: ${dx} chunkOffset.x: ${chunkOffset.x} tx: ${tx}`);
                 view.render(this.chunkCtx);
             }
         }
         //this.chunkCtx.translate(t.x, t.y);
         this.chunkCtx.translate(-tx, -ty);
         // -- resulting chunk is rendered to grid canvas
-        this.gridCtx.clearRect(t.x, t.y, this.chunks.colSize, this.chunks.rowSize);
+        this.gridCtx.clearRect(chunkOffset.x, chunkOffset.y, this.chunks.colSize, this.chunks.rowSize);
         //console.log(`render chunk ${idx} to grid: ${t.x},${t.y}`)
-        this.gridCtx.drawImage(this.chunkCanvas, t.x, t.y);
+        this.gridCtx.drawImage(this.chunkCanvas, chunkOffset.x, chunkOffset.y);
     }
 
     subrender(ctx) {
