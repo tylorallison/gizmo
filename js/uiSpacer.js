@@ -9,7 +9,6 @@ class UiVerticalSpacer extends UiView {
     static { this.schema('spacer', { dflt: 0 }); }
     cpost(spec) {
         super.cpost(spec);
-        console.log(`children: ${this.children}`);
         this.resize();
     }
 
@@ -22,13 +21,11 @@ class UiVerticalSpacer extends UiView {
     }
 
     resize() {
-        console.log(`this.children: ${this.children}`);
         if (this.children && this.children.length) {
             // calculate row size
             let size = this.size;
             let spacer = this.spacer;
             let maxSize = this.children.length * size + (this.children.length-1)*spacer;
-            console.log(`size: ${size} spacer: ${spacer} max: ${maxSize}`);
             let otop = 0;
             if (maxSize > 1) {
                 let factor = 1/maxSize;
