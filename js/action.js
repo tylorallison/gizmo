@@ -57,6 +57,9 @@ class Action extends Gizmo {
         if (this.ok && this.okSfx) SfxSystem.playSfx(this.actor, this.okSfx);
         if (!this.ok && this.failSfx) SfxSystem.playSfx(this.actor, this.failSfx);
         if (this.dbg) console.log(`${this} finished for actor ${this.actor}`);
+        // -- the action is done
+        Evts.trigger(this, 'ActionDone', { action: this, ok: this.ok });
+        // -- the actor is done w/ action
         Evts.trigger(this.actor, 'ActionDone', { action: this, ok: this.ok });
         this.actor = null;
         this.destroy();

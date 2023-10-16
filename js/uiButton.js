@@ -14,6 +14,7 @@ class UiButton extends UiPanel {
         this.schema('inactive', { link: true, dflt: (o) => o.constructor.dfltInactive });
         this.schema('text', { link: true, dflt: 'default text', atUpdate: (o,k,ov,nv) => o._text.text = nv });
         this.schema('hltext', { link: true });
+        this.schema('highlighted', { dflt: false });
         this.schema('textSpec', { eventable: false, dflt: (o) => ({}), onset: (o,k,v) => Object.assign(o._text, v)});
         this.schema('hlTextSpec', { eventable: false, dflt: (o) => ({}) });
         this.schema('_text', { link: true, readonly: true, serializable: false, parser: (o,x) => {
@@ -67,7 +68,7 @@ class UiButton extends UiPanel {
                 this.renderSketch(ctx, this.unpressed);
             }
             // render highlight
-            if (this.mouseOver && !this.mousePressed) {
+            if (this.highlighted || (this.mouseOver && !this.mousePressed)) {
                 this.renderSketch(ctx, this.highlight);
             }
         }
