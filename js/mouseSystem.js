@@ -6,6 +6,7 @@ import { UiCanvas } from './uiCanvas.js';
 import { Vect } from './vect.js';
 import { Contains } from './intersect.js';
 import { Evts } from './evt.js';
+import { Fmt } from './fmt.js';
 
 
 class MouseSystem extends System {
@@ -124,6 +125,7 @@ class MouseSystem extends System {
         // handle targets (click, enter, down)
         if (this.targets.length) {
             this.targets.sort((a,b) => b.mousePriority-a.mousePriority);
+            //console.log(`targets: ${this.targets}`);
             for (const e of this.targets) {
                 // trigger clicked
                 if (this.clicked) {

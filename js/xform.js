@@ -260,7 +260,6 @@ class XForm extends Gadget {
         let deltax = this.deltax;
         let deltay = this.deltay;
         this.#savedTransform = ctx.getTransform();
-        console.log(`xform translate: ${deltax},${deltay}`)
         if (deltax || deltay) ctx.translate(deltax, deltay);
         if (this.angle) ctx.rotate(this.angle);
         if (this.scalex !== 1|| this.scaley !== 1) ctx.scale(this.scalex, this.scaley);

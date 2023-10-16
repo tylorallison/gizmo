@@ -17,8 +17,8 @@ class UpdateSystem extends System {
 
     // SCHEMA --------------------------------------------------------------
     static {
-        this.schema('updates', { link: false, parser: (o,x) => new Map() });
-        this.schema('waiting', { link: false, parser: (o,x) => [] });
+        this.schema('updates', { eventable: false, link: false, parser: (o,x) => new Map() });
+        this.schema('waiting', { eventable: false, link: false, parser: (o,x) => [] });
     }
 
     // CONSTRUCTOR/DESTRUCTOR ----------------------------------------------

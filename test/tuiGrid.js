@@ -87,10 +87,10 @@ describe('a UI grid', () => {
             //console.log(`-- received evt: ${Fmt.ofmt(evt)}`);
             tevts.push(evt);
         });
-        g1 = new UiView({tag: 'g1', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
-        g2 = new UiView({tag: 'g2', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 96, y: 32})});
-        g3 = new UiView({tag: 'g3', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 32, y: 96})});
-        g4 = new UiView({tag: 'g4', xform: new XForm({ grip: .5, fixedWidth: 4, fixedHeight: 4, x: 64, y: 64})});
+        g1 = new UiView({tag: 'g1', xform: new XForm({ left: 0, right: 1, top: 0, bottom: 1, fixedWidth: 4, fixedHeight: 4, x: 32, y: 32})});
+        g2 = new UiView({tag: 'g2', xform: new XForm({ left: 0, right: 1, top: 0, bottom: 1, fixedWidth: 4, fixedHeight: 4, x: 96, y: 32})});
+        g3 = new UiView({tag: 'g3', xform: new XForm({ left: 0, right: 1, top: 0, bottom: 1, fixedWidth: 4, fixedHeight: 4, x: 32, y: 96})});
+        g4 = new UiView({tag: 'g4', xform: new XForm({ left: 0, right: 1, top: 0, bottom: 1, fixedWidth: 4, fixedHeight: 4, x: 64, y: 64})});
     });
     afterEach(() => {
         Evts.clear();
