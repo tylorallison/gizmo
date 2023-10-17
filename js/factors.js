@@ -1,4 +1,4 @@
-export { WeightedFactor }
+export { WeightedFactor, MultiFactor }
 
 class WeightedFactor {
     constructor(value=0, weight=0) {
@@ -13,5 +13,21 @@ class WeightedFactor {
 
     get value() {
         return this.sum/this.weights;
+    }
+}
+
+class MultiFactor {
+
+    constructor(value=0, weight=0) {
+        this._value = 1;
+        if (weight) this.add(value, weight);
+    }
+
+    add(value, weight) {
+        this._value *= (value + ((1/weight)-1))/(1/weight);
+    }
+
+    get value() {
+        return this._value;
     }
 }
