@@ -84,10 +84,10 @@ class MoveSystem extends System {
         if (e.accel) {
             // handle acceleration
             if (e.currentSpeed < e.speed) {
-                e.currentSpeed = Math.min(e.currentSpeed + e.accel * evt.elapsed, e.speed);
+                e.currentSpeed = Math.min(e.currentSpeed + e.accel * evt.ticks, e.speed);
             // handle deceleration
             } else if (e.currentSpeed > e.speed) {
-                e.currentSpeed = Math.max(e.currentSpeed - e.accel * evt.elapsed, 0);
+                e.currentSpeed = Math.max(e.currentSpeed - e.accel * evt.ticks, 0);
                 if (e.currentSpeed < this.minSpeed) e.currentSpeed = 0;
             }
             elapsedSpeed = (e.currentSpeed + startSpeed)*.5;
@@ -110,7 +110,7 @@ class MoveSystem extends System {
             e.heading = newHeading;
         }
         // move actor based on current speed and heading
-        elapsedSpeed = elapsedSpeed * evt.elapsed;
+        elapsedSpeed = elapsedSpeed * evt.ticks;
         // determine desired position based on speed and heading
         let dx = elapsedSpeed * e.dx + e.overx;
         let dy = elapsedSpeed * e.dy + e.overy;
