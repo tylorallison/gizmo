@@ -1,4 +1,4 @@
-export { Action };
+export { Action, SerialAction };
 
 import { Gizmo } from './gizmo.js';
 import { Evts } from './evt.js';
@@ -71,6 +71,36 @@ class Action extends Gizmo {
             this.perform(actor, ctx);
         })
         return p;
+    }
+
+}
+
+class SerialAction extends Action {
+    static { this.schema('subs', {readonly: true, dflt: () => []}); }
+    static { this.schema('current', { link: true }); }
+
+    doperform(ctx) {
+        this.onActionDone = this.onActionDone.bind(this);
+        if (this.subs.length) {
+            this.current = this.subs.shift();
+            Evts.listen(this.current, 'ActionDone', (evt) => this.onActionDone(evt, ctx), this, { once: true });
+            this.current.perform(this.actor, ctx);
+        } else {
+            this.done = true;
+            this.finish(true);
+        }
+    }
+
+    onActionDone(evt, ctx) {
+        this.ok = this.current.ok;
+        if (this.ok && this.subs.length) {
+            this.current = this.subs.shift();
+            Evts.listen(this.current, 'ActionDone', (evt) => this.onActionDone(evt, ctx), this, { once: true });
+            this.current.perform(this.actor, ctx);
+        } else {
+            this.done = true;
+            this.finish(this.ok);
+        }
     }
 
 }
