@@ -682,6 +682,11 @@ class GadgetArray extends Gadget {
         return dvs;
     }
 
+    // FIXME: missing a bunch of array functions
+    filter(...args) {
+        return this.$store.filter(...args);
+    }
+
     *[Symbol.iterator]() {
         for (const v of this.$values) yield v;
     }
