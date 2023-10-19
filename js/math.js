@@ -17,12 +17,15 @@ class Mathf {
         return (val > max) ? max : ((val < min) ? min : val);
     }
 
-    static roundTo(val, base=1) {
-        return Math.round(val/base)*base;
+    static roundTo(val, digits=1) {
+        //console.log(`r: ${Math.round(val/base)}`)
+        //return Math.round(val/base)*base;
+        return +val.toFixed(digits);
     }
 
-    static floorTo(val, base=1) {
-        return Math.floor(val/base)*base;
+    static floorTo(val, digits=1) {
+        let base = 1/(10**digits);
+        return +(Math.floor(val/base)*base).toFixed(digits);
     }
 
     static round(val, places) {

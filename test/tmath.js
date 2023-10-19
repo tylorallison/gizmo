@@ -143,3 +143,33 @@ describe("a line distance function", () => {
         });
     }
 });
+
+describe("a roundto function", () => {
+    // intersects
+    for (const test of [
+        {args: [5.019, 2], xrslt: 5.02},
+        {args: [5.0151, 2], xrslt: 5.02},
+        {args: [5.011, 2], xrslt: 5.01},
+        {args: [-5.011, 2], xrslt: -5.01},
+    ]) {
+        it(`can compute ${test.args}`, ()=>{
+            const rslt = Mathf.roundTo(...test.args);
+            expect(rslt).toEqual(test.xrslt);
+        });
+    }
+});
+
+describe("a floorto function", () => {
+    // intersects
+    for (const test of [
+        {args: [5.019, 2], xrslt: 5.01},
+        {args: [5.0151, 2], xrslt: 5.01},
+        {args: [5.011, 2], xrslt: 5.01},
+        {args: [-5.011, 2], xrslt: -5.02},
+    ]) {
+        it(`can compute ${test.args}`, ()=>{
+            const rslt = Mathf.floorTo(...test.args);
+            expect(rslt).toEqual(test.xrslt);
+        });
+    }
+});
