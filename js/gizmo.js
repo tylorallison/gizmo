@@ -4,7 +4,7 @@ import { Fmt } from './fmt.js';
 import { Hierarchy } from './hierarchy.js';
 import { Serializer } from './serializer.js';
 import { Evts } from './evt.js';
-import { Configs } from './config.js';
+//import { Configs } from './config.js';
 //import { GizmoCtx } from './gizmoCtx.js';
 
 const FDEFINED=1;
@@ -45,9 +45,11 @@ class GadgetSchemaEntry {
         this.order = spec.order || 0;
     }
     getDefault(o) {
+        /*
         if (Configs.hasForGdt(o, this.key)) {
             return Configs.getForGdt(o, this.key);
         }
+        */
         return (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
     }
     toString() {

@@ -1,17 +1,41 @@
 export { ConfigCtx, Configs };
 
+import { Gadget } from './gizmo.js';
 import { GizmoCtx } from './gizmoCtx.js';
 import { Util } from './util.js';
 
+/**
+ * ConfigCtx allows for overriding and restoring Gadget schema defaults for any key
+ * When new defaults are set in the context, the target class schema will be updated to reflect
+ * the new specified default, which can be either a value or a function
+ * The original class schema default is retained and can be restored by deleting the context setting.
+ */
 class ConfigCtx extends GizmoCtx {
 
     constructor(spec={}) {
         super(spec);
+        this.defaults = {};
         this.values = {};
         if (spec.values) {
             for (const [key, value] of Object.entries(spec.values)) {
                 Util.setpath(this.values, key, value);
             }
+        }
+    }
+
+    apply(key, dflt) {
+        let [clstag, atttag] = key.split('.');
+        console.log(`clstag: ${clstag}`)
+        console.log(`atttag: ${atttag}`)
+        let cls = Gadget.$registry.get(clstag);
+        console.log(`cls: ${cls.name}`)
+        let schema = cls.prototype.$schema;
+        console.log(`schema: ${schema} entries: ${schema._entries}`)
+        let sentry;
+        if (schema) {
+            sentry = schema.get(atttag);
+            console.log(`sentry: ${sentry} dflt: ${sentry.dflt}`)
+            sentry.dflt = dflt;
         }
     }
 

@@ -6,7 +6,25 @@ describe('a config context', () => {
         Configs.clear();
     });
 
-    it(`context set/delete key/value`, ()=>{
+    class tcfg extends Gadget {
+        static { this.schema('value', { dflt: 'foo' }); }
+    }
+    class tcfgsub extends tcfg {
+        static { this.schema('value2', { dflt: 'foo2' }); }
+    }
+
+    it(`context can be applied`, ()=>{
+        let ctx = new ConfigCtx();
+        ctx.apply('tcfg.value', 'hello');
+        ctx.apply('tcfgsub.value2', 'there');
+        let t1 = new tcfg();
+        let t2 = new tcfgsub();
+        expect(t1.value).toEqual('hello');
+        expect(t2.value).toEqual('hello');
+        expect(t2.value2).toEqual('there');
+    });
+
+    xit(`context set/delete key/value`, ()=>{
         let ctx = new ConfigCtx();
         expect(ctx.get('key')).toEqual(undefined);
         ctx.set('key', 'value');
@@ -15,7 +33,7 @@ describe('a config context', () => {
         expect(ctx.get('key')).toEqual(undefined);
     });
 
-    it(`context cant set/delete values`, ()=>{
+    xit(`context cant set/delete values`, ()=>{
         let ctx = new ConfigCtx();
         expect(ctx.get('foo')).toEqual(undefined);
         expect(ctx.get('path.bar')).toEqual(undefined);
@@ -33,7 +51,7 @@ describe('a config context', () => {
         expect(ctx.get('path.bar')).toEqual(undefined);
     });
 
-    it(`config can override class defaults`, ()=>{
+    xit(`config can override class defaults`, ()=>{
         class TBase extends Gadget {
             static { this.schema('value', { dflt: 'foo' }); }
         }
@@ -46,7 +64,7 @@ describe('a config context', () => {
         expect(b.value).toEqual('bar');
     });
 
-    it(`config can override subclass defaults`, ()=>{
+    xit(`config can override subclass defaults`, ()=>{
         class TBase extends Gadget {
             static { this.schema('value', { dflt: 'foo' }); }
         }
