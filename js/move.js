@@ -38,8 +38,10 @@ class MoveToAction extends MoveAction {
         this.schema('chained', { dflt: false });
     }
 
+    doperform(ctx) { console.log(`${this} chained: ${this.chained}`)}
+
     toString() {
-        return Fmt.toString(this.constructor.name, this.currentSpeed, this.target);
+        return Fmt.toString(this.constructor.name, this.currentSpeed, Fmt.ofmt(this.target));
     }
 }
 
@@ -81,7 +83,7 @@ class MoveSystem extends System {
         let startSpeed = e.currentSpeed;
         let elapsedSpeed = e.currentSpeed;
         // adjust speed based on acceleration
-        if (e.accel) {
+        if (e.accel && !e.chained) {
             // handle acceleration
             if (e.currentSpeed < e.speed) {
                 e.currentSpeed = Math.min(e.currentSpeed + e.accel * evt.ticks, e.speed);
@@ -146,7 +148,7 @@ class MoveSystem extends System {
         if (!targetReached && e.target) {
             targetDistance = Mathf.distance(targetLoc.x, targetLoc.y, actorLoc.x, actorLoc.y);
             // as we approach target, calculate distance required to slow down, start slowing down when we reach that distance
-            if (e.accel) {
+            if (e.accel && !e.chained) {
                 let decelDistance = (e.currentSpeed * e.currentSpeed) / (2 * e.accel);
                 if (targetDistance < decelDistance) e.speed = 0;
             }
@@ -154,7 +156,6 @@ class MoveSystem extends System {
             if (targetDistance <= e.range) {
                 targetReached = true;
                 if (this.dbg) console.log(`${e.actor} arrived in range of target: ${targetLoc}`);
-                // if movement is chained, target speed is maintained and action is done... 
                 // snap to target if set
                 if (e.snap) this.actorMover(e.actor, targetLoc);
             }
