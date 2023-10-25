@@ -177,8 +177,8 @@ class tVect8 {
 
 const clss = [
     baseVect,
-    subVect,
     tVect1,
+    subVect,
     subVect,
     baseVect,
     //tVect2,
@@ -199,6 +199,19 @@ describe('perf tests', () => {
             console.time(tag);
             for (var i = 0; i < iterations; i++) {
                 let v = new cls(1,2);
+            };
+            console.timeEnd(tag)
+        }
+    });
+
+    it('performance to add two vectors', ()=>{
+        for (const cls of clss) {
+            let tag = `add test:${cls.name}`;
+            console.time(tag);
+            for (var i = 0; i < iterations; i++) {
+                let v1 = new cls(1,2);
+                let v2 = new cls(3,4);
+                let t = new cls(v1.x+v2.x,v1.y,v2.y);
             };
             console.timeEnd(tag)
         }
