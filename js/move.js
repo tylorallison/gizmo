@@ -38,7 +38,7 @@ class MoveToAction extends MoveAction {
         this.schema('chained', { dflt: false });
     }
 
-    doperform(ctx) { console.log(`${this} chained: ${this.chained}`)}
+    //doperform(ctx) { console.log(`${this} chained: ${this.chained}`)}
 
     toString() {
         return Fmt.toString(this.constructor.name, this.currentSpeed, Fmt.ofmt(this.target));

@@ -173,7 +173,7 @@ describe('a serializer', () => {
             hello: 'there',
         }});
         let rslt = Serializer.xify(sdata, g);
-        console.log(`rslt: ${Fmt.ofmt(rslt)}`)
+        //console.log(`rslt: ${Fmt.ofmt(rslt)}`)
         expect(rslt).toEqual({ 
             $gzx: true, 
             cls: 'TSerializerData', 
@@ -189,7 +189,7 @@ describe('a serializer', () => {
     it('can xify a gadget with linked GizmoArray', ()=>{
         let g = new TSerializerData({ sub: [ 'foo', 'hello' ]});
         let rslt = Serializer.xify(sdata, g);
-        console.log(`rslt: ${Fmt.ofmt(rslt)}`)
+        //console.log(`rslt: ${Fmt.ofmt(rslt)}`)
         expect(rslt).toEqual({ 
             $gzx: true, 
             cls: 'TSerializerData', 

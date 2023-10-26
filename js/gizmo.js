@@ -1,10 +1,9 @@
-export { Gadget, GadgetArray, GadgetObject, Gizmo };
+export { Gadget, GadgetSchemaEntry, GadgetArray, GadgetObject, Gizmo };
 
 import { Fmt } from './fmt.js';
 import { Hierarchy } from './hierarchy.js';
 import { Serializer } from './serializer.js';
 import { Evts } from './evt.js';
-//import { Configs } from './config.js';
 //import { GizmoCtx } from './gizmoCtx.js';
 
 const FDEFINED=1;
@@ -45,11 +44,11 @@ class GadgetSchemaEntry {
         this.order = spec.order || 0;
     }
     getDefault(o) {
-        /*
-        if (Configs.hasForGdt(o, this.key)) {
-            return Configs.getForGdt(o, this.key);
+        // class schema $dflts overrides sentry defaults
+        if (o.$schema && o.$schema.$dflts.has(this.key)) {
+            return o.$schema.$dflts.get(this.key);
         }
-        */
+        // sentry default
         return (this.dflt instanceof Function) ? this.dflt(o) : this.dflt;
     }
     toString() {
@@ -57,55 +56,64 @@ class GadgetSchemaEntry {
     }
 }
 
+class GadgetDflts {
+    constructor(base) {
+        if (base) Object.setPrototypeOf(this, base);
+    }
+    set(key, dflt) {
+        this[key] = dflt;
+    }
+    has(key) {
+        return key in this;
+    }
+    get(key) {
+        return this[key];
+    }
+    clear(key) {
+        if (Object.hasOwn(this, key)) delete this[key];
+    }
+}
+
 class GadgetSchema {
     constructor(base) {
-        this.map = {};
-        this._entries = [];
-        if (base) {
-            for (const oentry of base.entries) {
-                this.set(oentry.key, oentry);
-            }
-        }
+        this.$order = [];
+        this.$dflts = new GadgetDflts((base) ? base.$dflts : null);
+        this.$order = (base) ? Array.from(base.$order) : [];
+        if (base) Object.setPrototypeOf(this, base);
     }
 
-    get entries() {
-        return Array.from(this._entries);
+    get $entries() {
+        let entries = [];
+        for (const key of this.$order) entries.push(this[key]);
+        return entries;
     }
 
     has(key) {
-        return key in this.map;
+        return key in this;
     }
 
     get(key) {
-        return this.map[key];
+        return this[key];
     }
 
     /**
      * assign class schema entry
-     * @param {*} key 
      * @param {*} entry 
      */
-    set(key, entry) {
-        // if schema already exists for given key, strip the old schema from the current schema list (_entries)
-        if (key in this.map) {
-            let oentry = this.map[key];
-            let idx = this._entries.indexOf(oentry);
-            if (idx !== -1) this._entries.splice(idx, 1);
-        }
-        this.map[key] = entry;
-        // add entry to current schema list (_entries), minding entry order
-        let idx;
-        for (idx=0; (idx<this._entries.length) && (entry.order>=this._entries[idx].order); idx++);
-        this._entries.splice(idx, 0, entry);
+    set(entry) {
+        let key = entry.key;
+        this[key] = entry;
+        if (!this.$order.includes(key)) this.$order.push(key);
+        // adjust order for sentries appropriately
+        this.$order.sort(((self) => {
+            return (a, b) => (self[a].order - self[b].order);
+        })(this));
     }
 
     clear(key) {
-        if (key in this.map) {
-            let oentry = this.map[key];
-            let idx = this._entries.indexOf(oentry);
-            if (!idx !== -1) this._entries.splice(idx, 1);
-        }
-        delete this.map[key];
+        let idx = this.$order.indexOf(key);
+        if (idx !== -1) this.$order.splice(idx, 1);
+        if (Object.hasOwn(this, key)) delete this[key];
     }
 }
 
@@ -312,7 +320,7 @@ class Gadget {
             schema = clsp.$schema;
         }
         let sentry = new GadgetSchemaEntry(key, spec);
-        schema.set(key, sentry);
+        schema.set(sentry);
         let property = {
             enumerable: true,
             get() {
@@ -330,7 +338,7 @@ class Gadget {
     static xparse(o, spec) {
         const schema = o.$schema;
         if (schema) {
-            for (const sentry of schema.entries) {
+            for (const sentry of schema.$entries) {
                 if (sentry.generator) continue;
                 this.$set(o, sentry.key, sentry.parser(o, spec), sentry);
             }

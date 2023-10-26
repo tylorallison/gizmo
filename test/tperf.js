@@ -2,7 +2,7 @@ import { Fmt } from '../js/fmt.js';
 //import { GizmoData } from '../js/gizmoData.js';
 //import { Schema } from '../js/schema.js';
 
-import { Gadget } from '../js/gizmo4.js';
+import { Gadget } from '../js/gizmo.js';
 
 class baseVect {
     constructor(x,y) {
@@ -27,8 +27,8 @@ class subVect extends base {
 
 class tVect1 extends Gadget { 
     static {
-        this.schema('x', { dflter: () => 0 });
-        this.schema('y', { dflter: () => 0 });
+        this.schema('x', { dflt: 0 });
+        this.schema('y', { dflt: 0 });
     }
     cparse(x, y) {
         //this.$values.x = x;
@@ -153,6 +153,28 @@ class tVect6 {
     }
 }
 
+class tVect7 {
+    constructor(x,y) {
+        Object.defineProperty(this, 'x', {
+            value: x,
+            writable: true,
+            enumerable: true,
+        });
+        Object.defineProperty(this, 'y', {
+            value: y,
+            writable: true,
+            enumerable: true,
+        });
+    }
+}
+
+class tVect8 {
+    constructor(spec={}) {
+        this.x = spec.x || 0;
+        this.y = spec.y || 0;
+    }
+}
+
 const clss = [
     baseVect,
     subVect,
@@ -163,7 +185,8 @@ const clss = [
     //tVect3,
     //tVect4,
     tVect6,
-    //tVect5,
+    tVect7,
+    tVect8,
 ]
 
 const iterations = 3000000;

@@ -8,7 +8,7 @@ describe('an animator', () => {
     it('can be async loaded from map of URLs', async ()=>{
         let asset = Animator.from({idle: '../media/token.png', walk: '../media/token.png'});
         await asset.load();
-        console.log(`asset: ${asset} sketches: ${Fmt.ofmt(asset.sketches)}`);
+        //console.log(`asset: ${asset} sketches: ${Fmt.ofmt(asset.sketches)}`);
         expect(asset.sketches instanceof Object).toBeTruthy();
         expect(asset.sketches.idle.height).toEqual(48);
         expect(asset.sketches.idle.width).toEqual(96);

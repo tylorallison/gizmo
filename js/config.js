@@ -14,71 +14,52 @@ class ConfigCtx extends GizmoCtx {
 
     constructor(spec={}) {
         super(spec);
-        this.defaults = {};
         this.values = {};
-        if (spec.values) {
-            for (const [key, value] of Object.entries(spec.values)) {
-                Util.setpath(this.values, key, value);
-            }
-        }
+        this.setValues(spec.values || {});
     }
 
     apply(key, dflt) {
         let [clstag, atttag] = key.split('.');
-        console.log(`clstag: ${clstag}`)
-        console.log(`atttag: ${atttag}`)
         let cls = Gadget.$registry.get(clstag);
-        console.log(`cls: ${cls.name}`)
+        if (!cls) return;
         let schema = cls.prototype.$schema;
-        console.log(`schema: ${schema} entries: ${schema._entries}`)
-        let sentry;
-        if (schema) {
-            sentry = schema.get(atttag);
-            console.log(`sentry: ${sentry} dflt: ${sentry.dflt}`)
-            sentry.dflt = dflt;
-        }
+        schema.$dflts.set(atttag, dflt);
     }
 
-    hasForGdt(gdt, key) {
-        let path = `${gdt.constructor.cfgpath}.${key}`;
-        return this.has(path);
-    }
-    getForGdt(gdt, key, dflt) {
-        let path = `${gdt.constructor.cfgpath}.${key}`;
-        return this.get(path, dflt);
-    }
-    setForGdt(gdt, key, value) {
-        let path = `${gdt.constructor.cfgpath}.${key}`;
-        this.set(path, value);
+    revert(key) {
+        let [clstag, atttag] = key.split('.');
+        let cls = Gadget.$registry.get(clstag);
+        if (!cls) return;
+        let schema = cls.prototype.$schema;
+        schema.$dflts.clear(atttag);
     }
 
 
-    has(path) {
-        if (Util.haspath(this.values, path)) return true;
-        return false;
+    set(key, dflt) {
+        this.values[key] = dflt;
+        this.apply(key, dflt);
     }
-    get(path, dflt) {
-        if (Util.haspath(this.values, path)) return Util.getpath(this.values, path, dflt);
-        return dflt;
+
+    delete(key) {
+        delete this.values[key];
+        this.revert(key);
     }
-    set(path, value) {
-        Util.setpath(this.values, path, value);
-    }
-    delete(path) {
-        Util.delpath(this.values, path);
-    }
+
     setValues(values) {
         for (const [key, value] of Object.entries(values)) {
-            Util.setpath(this.values, key, value);
+            this.set(key, value);
         }
     }
     deleteValues(values) {
         for (const key of Object.keys(values)) {
-            Util.delpath(this.values, key);
+            this.delete(key);
         }
     }
 
     clear() {
+        for (const key of Array.from(Object.keys(this.values))) {
+            this.delete(key);
+        }
         this.values = {};
     }
     
