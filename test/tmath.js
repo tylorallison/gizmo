@@ -1,5 +1,27 @@
 import { Mathf } from "../js/math.js";
 
+describe("a multi point lerp function", () => {
+    for (const test of [
+        {args: [.5, 0, 0], xrslt: NaN},
+        {args: [.5, 0, 0, 1, 2], xrslt: 1},
+        {args: [-.5, 0, 0, 1, 2], xrslt: -1},
+        {args: [1, 0, 0, 1, 2], xrslt: 2},
+        {args: [1.5, 0, 0, 1, 2], xrslt: 3},
+        {args: [-.25, 0, 0, .5, 1, 1, 4], xrslt: -.5},
+        {args: [0, 0, 0, .5, 1, 1, 4], xrslt: 0},
+        {args: [.25, 0, 0, .5, 1, 1, 4], xrslt: .5},
+        {args: [.5, 0, 0, .5, 1, 1, 4], xrslt: 1},
+        {args: [.75, 0, 0, .5, 1, 1, 4], xrslt: 2.5},
+        {args: [1, 0, 0, .5, 1, 1, 4], xrslt: 4},
+        {args: [1.25, 0, 0, .5, 1, 1, 4], xrslt: 5.5},
+    ]) {
+        it("can check interp for " + test.args, ()=>{
+            const rslt = Mathf.mlerp(...test.args);
+            expect(rslt).toEqual(test.xrslt);
+        });
+    }
+});
+
 describe("a rect/segment intersect function", () => {
 
     // intersects

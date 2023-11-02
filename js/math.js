@@ -116,6 +116,23 @@ class Mathf {
         return minw + (maxw-minw) * (v-min)/(max-min);
     }
 
+    static mlerp(v, ...args) {
+        if ((args.length%2) || (args.length < 2)) return v;
+        let min=args[0];
+        let minw=args[1];
+        let max=min, maxw=minw;
+        for (let i=2; i<args.length-1; i+=2) {
+            if (i !== 2) {
+                min = max;
+                minw = maxw;
+            }
+            max = args[i];
+            maxw = args[i+1];
+            if (v < max) break;
+        }
+        return minw + (maxw-minw) * (v-min)/(max-min);
+    }
+
     static addAvgTerm(terms, avg, newTerm) {
         return (terms*avg + newTerm)/(terms+1);
     }
