@@ -35,16 +35,11 @@ class Shape extends Sketch {
         return path;
     }
 
-    // CONSTRUCTOR ---------------------------------------------------------
-    constructor(spec={}) {
-        super(spec);
-        let verts =[{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:5, y:15}, {x:0, y:10}];
-        let min = Vect.min(verts);
-        let max = Vect.max(verts);
-    }
-
     // METHODS -------------------------------------------------------------
     subrender(ctx, x=0, y=0, width=0, height=0) {
+        // default width/height to internal width/height if not specified
+        if (!width) width = this.width;
+        if (!height) height = this.height;
         // translate
         let cform = ctx.getTransform();
         if (x || y) ctx.translate(x, y);
@@ -54,7 +49,7 @@ class Shape extends Sketch {
             scaley = height/this.height;
             ctx.scale(scalex, scaley);
         }
-        if (this.min.x || this.min.y) ctx.translate(-this.min.x, -this.min.y);
+        //if (this.min.x || this.min.y) ctx.translate(-this.min.x, -this.min.y);
         if (this.fill) {
             ctx.fillStyle = this.color;
             ctx.fill(this.path);
