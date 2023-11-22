@@ -65,7 +65,7 @@ class UiHorizontalSpacer extends UiView {
     }
 
     resize() {
-        if (this.children.length) {
+        if (this.children && this.children.length) {
             // calculate column size
             let size = this.size;
             let spacer = this.spacer;
