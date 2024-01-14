@@ -1,4 +1,4 @@
-export { Gadget, GadgetSchemaEntry, GadgetArray, GadgetObject, Gizmo };
+export { Gadget, GadgetSchemaEntry, GadgetSchema, GadgetArray, GadgetObject, Gizmo };
 
 import { Fmt } from './fmt.js';
 import { Hierarchy } from './hierarchy.js';
