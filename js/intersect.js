@@ -355,6 +355,7 @@ class Overlaps {
 
 }
 
+// FIXME
 class Intersect {
 
     static tris(tri1, tri2) {

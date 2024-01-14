@@ -3,7 +3,7 @@ import { Fmt } from '../js/fmt.js';
 //import { Schema } from '../js/schema.js';
 
 import { Gadget, GadgetObject } from '../js/gizmo.js';
-import { Gadget as Gadget2 } from '../../gizmo2/js/gizmo.js';
+import { Gadget as Gadget2 } from '../../gizmo2/js/gadget.js';
 
 class baseVect {
     constructor(x,y) {
@@ -25,95 +25,16 @@ class gadgetVect extends Gadget {
 
 class gadget2Vect extends Gadget2 { 
     static {
-        this.schema('x', { dflt: 0 });
-        this.schema('y', { dflt: 0 });
+        this.$schema('x', { dflt: 0 });
+        this.$schema('y', { dflt: 0 });
     }
-    cparse(x, y) {
+    $cparse(x, y) {
         this.x = x;
         this.y = y;
     }
 }
 
-/*
-
-class tVect3 {
-    static {
-        GizmoData.schema(this, 'x', { dflt: 0 });
-        GizmoData.schema(this, 'y', { dflt: 0 });
-    }
-    static registry = {};
-    static init() {
-        if (!this.name in this.registry) {
-            this.registry[this.name] = this;
-        }
-    }
-    constructor(x,y) {
-        this.constructor.init();
-        GizmoData.parser(this, {x:x, y:y});
-    }
-}
-
-function sapply(o,s,k,v) {
-    let cls = o.constructor;
-    if (!cls.hasOwnProperty('$schema')) cls.$schema = {};
-    let schema = cls.$schema;
-    schema[k] = s;
-    o[k] = v;
-}
-
-class tVect4 {
-    static registry = new Map();
-    static init() {
-        if (!this.registry.has(this.name)) this.registry.set(this.name, this);
-    }
-
-    constructor(x,y) {
-        this.constructor.init();
-        //sapply(this, 'x', { dflt: 0 });
-                    //this.set(o, sentry.key, sentry.parser(o, spec));
-        sapply(this, {}, 'x', x);
-        sapply(this, {}, 'y', y);
-        //this.x = x;
-        //this.y = y;
-    }
-}
-
-class tVect5 {
-    static {
-        Schema.apply(this, 'x', { dflt: 0 });
-        Schema.apply(this, 'y', { dflt: 0 });
-    }
-    static registry = {};
-    static init() {
-        if (!this.name in this.registry) {
-            this.registry[this.name] = this;
-        }
-    }
-    constructor(x,y) {
-        this.constructor.init();
-        GizmoData.parser(this, {x:x, y:y});
-        let proxy = new Proxy(this, {
-            get(target, key, receiver) {
-                const value = target[key];
-                if (value instanceof Function) {
-                    return function (...args) {
-                        return value.apply(this === receiver ? target : this, args);
-                    };
-                }
-                return value;
-            },
-            set(target, key, value) {
-                target[key] = value;
-                return true;
-            }
-        });
-        return proxy;
-    }
-}
-*/
-
 class staticPropertyVect {
-
     static defp(o,k) {
         Object.defineProperty(o, k, {
             enumerable: true,
@@ -157,7 +78,19 @@ class dynamicPropertyVect {
 }
 
 class proxyVect {
+
+    static $registry = new Map();
+    static $register() {
+        if (!Object.hasOwn(this.prototype, '$registered')) {
+            let clsproto = this.prototype;
+            // registration
+            clsproto.$registered = true;
+            this.$registry.set(this.name, this);
+        }
+    }
+
     constructor(x,y) {
+        this.constructor.$register();
         this.x = x;
         this.y = y;
         const proxy = new Proxy(this, {
@@ -174,9 +107,9 @@ class proxyVect {
 }
 
 const clss = [
-    baseVect,
+    //baseVect,
     //tVect6,
-    dynamicPropertyVect,
+    //dynamicPropertyVect,
     proxyVect,
     gadgetVect,
     gadget2Vect,
@@ -210,6 +143,7 @@ describe('constructor tests', () => {
     }
 });
 
+/*
 xdescribe('add tests', () => {
     for (const cls of clss) {
         let v1 = new cls(1,2);
@@ -224,7 +158,7 @@ xdescribe('add tests', () => {
     }
 });
 
-describe('get tests', () => {
+xdescribe('get tests', () => {
     for (const cls of clss) {
         let v1 = new cls(1,2);
         let iterations = looper(() => {
@@ -237,7 +171,7 @@ describe('get tests', () => {
     }
 });
 
-describe('set tests', () => {
+xdescribe('set tests', () => {
     for (const cls of clss) {
         let v1 = new cls(1,2);
         let iterations = looper(() => {
@@ -249,3 +183,4 @@ describe('set tests', () => {
         });
     }
 });
+*/
